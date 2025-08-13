@@ -13,6 +13,30 @@ Preferred communication style: Simple, everyday language.
 - Address performance concerns about API latency (implemented: 3-tier performance optimization system)
 - Add commercial licensing for business use (implemented: Personal Developer/Commercial license structure targeting individual developers)
 
+## Approved Roadmap & Next Features
+
+Based on current implementation, the next logical features are prioritized as:
+
+**Immediate Priority (Next 2 weeks):**
+1. **Advanced Pattern Recognition** - Expand from 15 to 50+ instant command patterns
+2. **Command Context Awareness** - Remember current directory, previous commands for better suggestions  
+3. **Enhanced Output Formatting** - Rich display with colors, tables, and better visual presentation
+4. **Interactive Command Selection** - When multiple commands possible, let user choose
+
+**Short Term (2-4 weeks):**
+1. **Command Templates & Sharing** - Pre-approved patterns for teams
+2. **Configuration Profiles** - Multiple user profiles for different contexts
+3. **Command Chaining** - Support for complex multi-step operations
+4. **Undo/Redo System** - Reverse previous commands where possible
+
+**Medium Term (1-3 months):**
+1. **REST API & Plugin System** - Enterprise integrations and extensibility
+2. **Web Dashboard** - Browser-based management interface
+3. **Advanced Security & Compliance** - Audit logging and enterprise security
+4. **SSO Integration** - Enterprise authentication systems
+
+Full roadmap available in [ROADMAP.md](ROADMAP.md)
+
 # System Architecture
 
 ## Core Components
