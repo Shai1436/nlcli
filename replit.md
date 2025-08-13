@@ -17,6 +17,7 @@ Preferred communication style: Simple, everyday language.
 - Add command history with arrow key navigation (implemented: interactive input with readline support)
 - Build command filter for direct execution without AI translation (implemented: 70+ direct commands with sub-5ms performance)
 - Fix failing tests and increase coverage (implemented: 38% overall coverage, fixed 12+ test failures, API consistency improvements)
+- Support intelligent command variations with parameters (implemented: Enhanced command filter with regex patterns and parameter detection for commands like "show processes on port 8080")
 
 ## Approved Roadmap & Next Features
 

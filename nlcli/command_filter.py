@@ -5,7 +5,7 @@ Bypasses AI translation for exact command matches
 
 import re
 import platform
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Callable
 from .utils import setup_logging
 
 logger = setup_logging()
@@ -17,6 +17,7 @@ class CommandFilter:
         """Initialize command filter with platform-specific patterns"""
         self.platform = platform.system().lower()
         self._load_direct_commands()
+        self._load_intelligent_patterns()
     
     def _load_direct_commands(self):
         """Load platform-specific direct command mappings"""
@@ -143,6 +144,148 @@ class CommandFilter:
                 'find': {'command': 'find', 'explanation': 'Search for files and directories', 'confidence': 1.0},
                 'locate': {'command': 'locate', 'explanation': 'Find files by name', 'confidence': 1.0},
             })
+        
+        # Initialize custom commands storage
+        self.custom_commands = {}
+    
+    def _load_intelligent_patterns(self):
+        """Load intelligent command patterns with parameter detection"""
+        
+        # Pattern-based command detection with parameter extraction
+        self.intelligent_patterns = [
+            # Process monitoring with port detection
+            {
+                'patterns': [
+                    r'show.*processes.*(?:on\s+)?port\s+(\d+)',
+                    r'processes.*(?:on\s+)?port\s+(\d+)',
+                    r'what.*running.*(?:on\s+)?port\s+(\d+)',
+                    r'check.*port\s+(\d+)',
+                    r'list.*processes.*port\s+(\d+)'
+                ],
+                'command_generator': self._generate_port_check_command,
+                'explanation': 'Show processes using specific port',
+                'confidence': 0.95
+            },
+            
+            # File finding with extensions
+            {
+                'patterns': [
+                    r'find.*\.(\w+)\s+files?',
+                    r'search.*\.(\w+)\s+files?',
+                    r'list.*\.(\w+)\s+files?',
+                    r'show.*\.(\w+)\s+files?'
+                ],
+                'command_generator': self._generate_find_files_command,
+                'explanation': 'Find files by extension',
+                'confidence': 0.9
+            },
+            
+            # Disk usage for specific directory
+            {
+                'patterns': [
+                    r'disk\s+usage\s+(?:of\s+|for\s+)?(.+)',
+                    r'how\s+much\s+space.*?(\S+)',
+                    r'size\s+of\s+(.+)',
+                    r'du\s+(.+)'
+                ],
+                'command_generator': self._generate_disk_usage_command,
+                'explanation': 'Check disk usage for directory',
+                'confidence': 0.9
+            },
+            
+            # Network connections
+            {
+                'patterns': [
+                    r'network\s+connections?',
+                    r'active\s+connections?',
+                    r'show\s+connections?',
+                    r'netstat'
+                ],
+                'command_generator': self._generate_network_connections_command,
+                'explanation': 'Show network connections',
+                'confidence': 0.95
+            },
+            
+            # Log monitoring
+            {
+                'patterns': [
+                    r'tail.*logs?',
+                    r'follow.*logs?',
+                    r'watch.*logs?',
+                    r'monitor.*logs?'
+                ],
+                'command_generator': self._generate_log_tail_command,
+                'explanation': 'Monitor log files',
+                'confidence': 0.9
+            },
+            
+            # Process killing
+            {
+                'patterns': [
+                    r'kill.*process.*(\d+)',
+                    r'stop.*process.*(\d+)',
+                    r'terminate.*(\d+)',
+                    r'kill.*pid.*(\d+)'
+                ],
+                'command_generator': self._generate_kill_process_command,
+                'explanation': 'Kill process by PID',
+                'confidence': 0.95
+            }
+        ]
+    
+    def _generate_port_check_command(self, match_groups: List[str]) -> str:
+        """Generate platform-specific command to check processes on a port"""
+        port = match_groups[0] if match_groups else "8080"
+        
+        if self.platform == 'windows':
+            return f'netstat -ano | findstr :{port}'
+        elif self.platform == 'darwin':  # macOS
+            return f'lsof -i :{port}'
+        else:  # Linux and other Unix
+            return f'netstat -tulpn | grep :{port}'
+    
+    def _generate_find_files_command(self, match_groups: List[str]) -> str:
+        """Generate command to find files by extension"""
+        extension = match_groups[0] if match_groups else "txt"
+        
+        if self.platform == 'windows':
+            return f'dir /s *.{extension}'
+        else:
+            return f'find . -name "*.{extension}"'
+    
+    def _generate_disk_usage_command(self, match_groups: List[str]) -> str:
+        """Generate command to check disk usage"""
+        path = match_groups[0].strip() if match_groups else "."
+        
+        if self.platform == 'windows':
+            return f'dir "{path}" /-c'
+        else:
+            return f'du -sh "{path}"'
+    
+    def _generate_network_connections_command(self, match_groups: List[str]) -> str:
+        """Generate command to show network connections"""
+        if self.platform == 'windows':
+            return 'netstat -an'
+        elif self.platform == 'darwin':  # macOS
+            return 'netstat -an'
+        else:  # Linux
+            return 'netstat -tulpn'
+    
+    def _generate_log_tail_command(self, match_groups: List[str]) -> str:
+        """Generate command to tail log files"""
+        if self.platform == 'windows':
+            return 'Get-Content -Path *.log -Wait'
+        else:
+            return 'tail -f /var/log/syslog'
+    
+    def _generate_kill_process_command(self, match_groups: List[str]) -> str:
+        """Generate command to kill a process"""
+        pid = match_groups[0] if match_groups else ""
+        
+        if self.platform == 'windows':
+            return f'taskkill /PID {pid} /F'
+        else:
+            return f'kill {pid}'
     
     def is_direct_command(self, user_input: str) -> bool:
         """
@@ -169,6 +312,10 @@ class CommandFilter:
         # Check if it starts with a known command
         first_word = normalized.split()[0] if normalized.split() else ""
         if first_word in self.direct_commands:
+            return True
+        
+        # Check intelligent patterns
+        if self._check_intelligent_patterns(user_input):
             return True
         
         return False
@@ -218,6 +365,37 @@ class CommandFilter:
                 'source': 'base_command_with_args'
             }
             return result
+        
+        # Check intelligent patterns
+        intelligent_result = self._check_intelligent_patterns(user_input)
+        if intelligent_result:
+            return intelligent_result
+        
+        return None
+    
+    def _check_intelligent_patterns(self, user_input: str) -> Optional[Dict]:
+        """Check if input matches intelligent patterns and return generated command"""
+        
+        normalized = user_input.strip().lower()
+        
+        for pattern_group in self.intelligent_patterns:
+            for pattern in pattern_group['patterns']:
+                match = re.search(pattern, normalized, re.IGNORECASE)
+                if match:
+                    # Extract captured groups
+                    groups = match.groups() if match.groups() else []
+                    
+                    # Generate command using the pattern's generator
+                    generated_command = pattern_group['command_generator'](groups)
+                    
+                    return {
+                        'command': generated_command,
+                        'explanation': pattern_group['explanation'],
+                        'confidence': pattern_group['confidence'],
+                        'direct': True,
+                        'source': 'intelligent_pattern',
+                        'pattern_matched': pattern
+                    }
         
         return None
     
