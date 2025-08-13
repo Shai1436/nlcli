@@ -61,13 +61,13 @@ def cli(ctx, config_path, verbose):
 def interactive_mode(obj):
     """Interactive mode for natural language command translation with modern cursor"""
     
-    # Setup modern cursor and terminal
-    setup_modern_cursor()
-    
     try:
-        # Show enhanced welcome banner
+        # Show enhanced welcome banner first
         formatter = obj['formatter']
         formatter.format_welcome_banner()
+        
+        # Initialize modern cursor after banner to ensure proper loading
+        setup_modern_cursor()
     
         history = obj['history']
         ai_translator = obj['ai_translator']

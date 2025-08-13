@@ -56,14 +56,23 @@ class ModernCursor:
             sys.stdout.flush()
     
     def enable_modern_cursor(self):
-        """Enable modern cursor styling"""
-        # Set modern bar cursor
-        self.set_cursor_shape('bar')
-        self.show_cursor()
-        
-        # Enable cursor blinking
-        sys.stdout.write('\033[?12h')  # Enable cursor blink
-        sys.stdout.flush()
+        """Enable modern cursor styling with reliable initialization"""
+        try:
+            # Set modern bar cursor with multiple attempts for reliability
+            self.set_cursor_shape('bar')
+            self.show_cursor()
+            
+            # Enable cursor blinking
+            sys.stdout.write('\033[?12h')  # Enable cursor blink
+            sys.stdout.flush()
+            
+            # Additional cursor styling for better visibility
+            sys.stdout.write('\033[?25h')  # Ensure cursor is visible
+            sys.stdout.flush()
+            
+        except Exception:
+            # Fallback to basic cursor if modern features fail
+            self.show_cursor()
     
     def disable_modern_cursor(self):
         """Restore default cursor"""
@@ -122,15 +131,19 @@ class TerminalEnhancer:
         """Get input with modern prompt and cursor styling"""
         
         try:
-            # Setup modern terminal
-            self.setup_modern_terminal()
-            
-            # Create and display modern prompt
+            # Create and display modern prompt with immediate cursor setup
             prompt_text = Text()
             prompt_text.append(prompt, style=f"bold {color}")
             prompt_text.append(" ", style="")
             
             self.console.print(prompt_text, end="")
+            
+            # Apply modern cursor immediately before input
+            self.cursor.enable_modern_cursor()
+            
+            # Small delay to ensure cursor is applied
+            import time
+            time.sleep(0.01)
             
             # Get user input with modern cursor
             user_input = input().strip()
@@ -139,9 +152,6 @@ class TerminalEnhancer:
             
         except (EOFError, KeyboardInterrupt):
             return ""
-        finally:
-            # Always restore terminal state
-            self.restore_terminal()
     
     def create_gradient_prompt(self, text: str = "❯") -> Text:
         """Create a gradient-styled prompt for modern appearance"""
@@ -173,5 +183,7 @@ def restore_cursor():
     terminal_enhancer.restore_terminal()
 
 def get_styled_input(prompt: str = "❯", color: str = "bright_blue") -> str:
-    """Get input with modern styling"""
+    """Get input with modern styling and reliable cursor setup"""
+    # Ensure cursor is set up properly each time
+    setup_modern_cursor()
     return terminal_enhancer.get_modern_input(prompt, color)
