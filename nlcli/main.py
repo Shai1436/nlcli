@@ -112,86 +112,86 @@ def interactive_mode(obj):
                 try:
                     api_timeout = float(obj['config'].get('performance', 'api_timeout', fallback='8.0'))
                     translation_result = ai_translator.translate(user_input, timeout=api_timeout)
-                        
-                        # Show performance info
-                        elapsed = time.time() - start_time
-                        if translation_result:
-                            if translation_result.get('direct'):
-                                console.print(f"[dim blue]🚀 Direct execution ({elapsed:.3f}s)[/dim blue]")
-                            elif translation_result.get('context_aware'):
-                                context_type = translation_result.get('context_type', 'unknown')
-                                console.print(f"[dim cyan]🎯 Context-aware ({context_type}) ({elapsed:.3f}s)[/dim cyan]")
-                            elif translation_result.get('instant'):
-                                console.print(f"[dim green]⚡ Instant match ({elapsed:.3f}s)[/dim green]")
-                            elif translation_result.get('cached'):
-                                console.print(f"[dim green]📋 Cached result ({elapsed:.3f}s)[/dim green]")
-                            else:
-                                console.print(f"[dim yellow]🤖 AI translation ({elapsed:.3f}s)[/dim yellow]")
-                        
-                        if not translation_result:
-                            console.print("[red]Could not translate the command. Please try rephrasing.[/red]")
-                            continue
                     
-                        command = translation_result['command']
-                        explanation = translation_result['explanation']
-                        confidence = translation_result.get('confidence', 0.8)
-                        
-                        # Display enhanced command result
-                        result_data = {
-                            'command': command,
-                            'explanation': explanation,
-                            'confidence': confidence,
-                            'source': translation_result.get('source', 'ai_translation')
-                        }
-                        formatter.format_command_result(result_data, elapsed)
-                        
-                        # Safety check
-                        safety_result = safety_checker.check_command(command)
-                        
-                        if not safety_result['safe']:
-                            console.print(f"[red]⚠️  Safety Warning: {safety_result['reason']}[/red]")
-                            if not Confirm.ask("Do you want to proceed anyway?", default=False):
-                                console.print("[yellow]Command cancelled.[/yellow]")
-                                continue
-                        
-                        # Auto-execute read-only commands, confirm others
-                        is_read_only = safety_checker.is_read_only_command(command)
-                        if not is_read_only and not Confirm.ask(f"Execute this command?", default=True):
+                    # Show performance info
+                    elapsed = time.time() - start_time
+                    if translation_result:
+                        if translation_result.get('direct'):
+                            console.print(f"[dim blue]🚀 Direct execution ({elapsed:.3f}s)[/dim blue]")
+                        elif translation_result.get('context_aware'):
+                            context_type = translation_result.get('context_type', 'unknown')
+                            console.print(f"[dim cyan]🎯 Context-aware ({context_type}) ({elapsed:.3f}s)[/dim cyan]")
+                        elif translation_result.get('instant'):
+                            console.print(f"[dim green]⚡ Instant match ({elapsed:.3f}s)[/dim green]")
+                        elif translation_result.get('cached'):
+                            console.print(f"[dim green]📋 Cached result ({elapsed:.3f}s)[/dim green]")
+                        else:
+                            console.print(f"[dim yellow]🤖 AI translation ({elapsed:.3f}s)[/dim yellow]")
+                    
+                    if not translation_result:
+                        console.print("[red]Could not translate the command. Please try rephrasing.[/red]")
+                        continue
+                    
+                    command = translation_result['command']
+                    explanation = translation_result['explanation']
+                    confidence = translation_result.get('confidence', 0.8)
+                    
+                    # Display enhanced command result
+                    result_data = {
+                        'command': command,
+                        'explanation': explanation,
+                        'confidence': confidence,
+                        'source': translation_result.get('source', 'ai_translation')
+                    }
+                    formatter.format_command_result(result_data, elapsed)
+                    
+                    # Safety check
+                    safety_result = safety_checker.check_command(command)
+                    
+                    if not safety_result['safe']:
+                        console.print(f"[red]⚠️  Safety Warning: {safety_result['reason']}[/red]")
+                        if not Confirm.ask("Do you want to proceed anyway?", default=False):
                             console.print("[yellow]Command cancelled.[/yellow]")
                             continue
-                        
-                        # Execute command
-                        console.print("[green]Executing...[/green]")
-                        result = executor.execute(command)
-                        
-                        # Store in history
-                        history.add_command(user_input, command, explanation, result['success'])
-                        
-                        # Update context with command execution
-                        ai_translator.context_manager.update_command_history(command, result['success'])
-                        
-                        # Display enhanced results
-                        if result.get('output'):
-                            formatter.format_command_output(
-                                result['output'], 
-                                command,
-                                result['success']
-                            )
-                        
-                        if not result['success']:
-                            formatter.format_error(f"Command failed with exit code {result.get('exit_code', 'unknown')}")
-                        else:
-                            console.print("[green]✓ Command executed successfully[/green]")
-                        
-                    except Exception as e:
-                        console.print(f"[red]Error: {str(e)}[/red]")
-                        logger.error(f"Error in interactive mode: {str(e)}")
-                        
-                except KeyboardInterrupt:
-                    console.print("\n[yellow]Use 'quit' to exit.[/yellow]")
-                except EOFError:
-                    console.print("\n[green]Goodbye![/green]")
-                    break
+                    
+                    # Auto-execute read-only commands, confirm others
+                    is_read_only = safety_checker.is_read_only_command(command)
+                    if not is_read_only and not Confirm.ask(f"Execute this command?", default=True):
+                        console.print("[yellow]Command cancelled.[/yellow]")
+                        continue
+                    
+                    # Execute command
+                    console.print("[green]Executing...[/green]")
+                    result = executor.execute(command)
+                    
+                    # Store in history
+                    history.add_command(user_input, command, explanation, result['success'])
+                    
+                    # Update context with command execution
+                    ai_translator.context_manager.update_command_history(command, result['success'])
+                    
+                    # Display enhanced results
+                    if result.get('output'):
+                        formatter.format_command_output(
+                            result['output'], 
+                            command,
+                            result['success']
+                        )
+                    
+                    if not result['success']:
+                        formatter.format_error(f"Command failed with exit code {result.get('exit_code', 'unknown')}")
+                    else:
+                        console.print("[green]✓ Command executed successfully[/green]")
+                    
+                except Exception as e:
+                    console.print(f"[red]Error: {str(e)}[/red]")
+                    logger.error(f"Error in interactive mode: {str(e)}")
+                    
+            except KeyboardInterrupt:
+                console.print("\n[yellow]Use 'quit' to exit.[/yellow]")
+            except EOFError:
+                console.print("\n[green]Goodbye![/green]")
+                break
     
 
 
