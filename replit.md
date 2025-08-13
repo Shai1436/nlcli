@@ -23,6 +23,7 @@ Preferred communication style: Simple, everyday language.
 - Style terminal prompt with simple design for clean CLI aesthetics (implemented: Simple > prompt, enhanced welcome banner with prompt instructions)
 - Implement modern and sleek cursor styling with animations (reverted: Custom cursor system caused loading issues, reverted to reliable default cursor while maintaining blue chevron prompt styling)
 - Prompt for OpenAI API key only for first unknown commands (implemented: Smart API key prompting with 343 commands available without setup, user-friendly onboarding with clear instructions)
+- Interactive command selection for ambiguous requests (implemented: 13 ambiguous patterns with multiple options, smart parameter extraction, user preference learning, seamless integration with existing command pipeline)
 
 ## Approved Roadmap & Next Features
 
@@ -33,7 +34,7 @@ Based on current implementation, the next logical features are prioritized as:
 2. **Command Context Awareness** - Remember current directory, previous commands for better suggestions (COMPLETED)
 3. **Interactive Command History** - Arrow key navigation, search, management commands (COMPLETED)
 4. **Enhanced Output Formatting** - Rich display with colors, tables, and better visual presentation (COMPLETED)
-5. **Interactive Command Selection** - When multiple commands possible, let user choose
+5. **Interactive Command Selection** - When multiple commands possible, let user choose (COMPLETED)
 
 **Short Term (2-4 weeks):**
 1. **Command Templates & Sharing** - Pre-approved patterns for teams
@@ -103,6 +104,14 @@ The application follows a modular architecture with clear separation of concerns
 - Custom command support for user-defined mappings
 - Performance monitoring and statistics tracking
 - Extensive natural language variations (list files, show processes, current directory, etc.)
+
+**Interactive Command Selection** (`command_selector.py`)
+- 13 ambiguous patterns with multiple command options each
+- Smart parameter extraction from natural language context
+- User preference learning with automatic selection
+- Comprehensive coverage: file operations, text processing, process management, network operations
+- Rich visual presentation with tables and clear descriptions
+- Seamless integration with existing 6-tier performance pipeline
 
 **Typo Correction System** (`typo_corrector.py`)
 - 175+ common typo mappings with automatic correction

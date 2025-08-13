@@ -55,6 +55,10 @@ class AITranslator:
         from .typo_corrector import TypoCorrector
         self.typo_corrector = TypoCorrector()
         
+        # Command selector for interactive choice handling
+        from .command_selector import CommandSelector
+        self.command_selector = CommandSelector()
+        
         # Common command patterns for instant recognition (50+ patterns)
         self.instant_patterns = {
             # File and Directory Operations
@@ -250,6 +254,41 @@ class AITranslator:
                 if cached_result:
                     logger.debug(f"Cache hit for: {natural_language}")
                     return cached_result
+            
+            # Step 2.8: Check for ambiguous commands and offer interactive selection
+            if self.command_selector.is_ambiguous(natural_language):
+                options = self.command_selector.get_command_options(natural_language)
+                if options:
+                    # Check if user has a learned preference
+                    preferred = self.command_selector.get_preferred_option(natural_language, options)
+                    if preferred:
+                        # Use learned preference
+                        command = self.command_selector.suggest_parameters(preferred['command'], natural_language)
+                        explanation = f"{preferred['description']} (auto-selected based on your preference)"
+                        logger.debug(f"Interactive selection (auto): {natural_language} -> {command}")
+                        return {
+                            'command': command,
+                            'explanation': explanation,
+                            'confidence': 0.95,
+                            'cached': False,
+                            'instant': False,
+                            'interactive_selected': True
+                        }
+                    else:
+                        # Present options for user selection
+                        selected = self.command_selector.present_options(natural_language, options)
+                        if selected:
+                            command = self.command_selector.suggest_parameters(selected['command'], natural_language)
+                            explanation = f"{selected['description']} - {selected['use_case']}"
+                            logger.debug(f"Interactive selection (manual): {natural_language} -> {command}")
+                            return {
+                                'command': command,
+                                'explanation': explanation,
+                                'confidence': 0.95,
+                                'cached': False,
+                                'instant': False,
+                                'interactive_selected': True
+                            }
             
             # Step 3: AI translation with timeout (2-5 second response)
             api_result = self._translate_with_ai(natural_language, timeout)

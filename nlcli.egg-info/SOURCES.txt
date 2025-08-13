@@ -8,6 +8,7 @@ nlcli/ai_translator.py
 nlcli/cache_manager.py
 nlcli/command_executor.py
 nlcli/command_filter.py
+nlcli/command_selector.py
 nlcli/config_manager.py
 nlcli/context_cli.py
 nlcli/context_manager.py
