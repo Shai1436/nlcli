@@ -233,6 +233,59 @@ class CommandFilter:
             }
         ]
     
+    def check_command(self, user_input: str) -> Dict:
+        """
+        Check if user input matches any direct commands or intelligent patterns
+        
+        Args:
+            user_input: Natural language input from user
+            
+        Returns:
+            Dictionary with matched command info or None if no match
+        """
+        
+        # Strip whitespace and normalize input
+        normalized_input = user_input.strip().lower()
+        
+        # Check exact direct commands first
+        if normalized_input in self.direct_commands:
+            result = self.direct_commands[normalized_input].copy()
+            result['matched'] = True
+            result['direct'] = True
+            result['source'] = 'direct_command'
+            return result
+        
+        # Check direct commands with arguments
+        for pattern, cmd_info in self.direct_commands_with_args.items():
+            if normalized_input.startswith(pattern):
+                result = cmd_info.copy()
+                result['matched'] = True
+                result['direct'] = True
+                result['source'] = 'direct_command_with_args'
+                return result
+        
+        # Check intelligent patterns
+        for pattern_info in self.intelligent_patterns:
+            for pattern in pattern_info['patterns']:
+                match = re.search(pattern, normalized_input, re.IGNORECASE)
+                if match:
+                    try:
+                        command = pattern_info['command_generator'](list(match.groups()))
+                        return {
+                            'matched': True,
+                            'command': command,
+                            'explanation': pattern_info['explanation'],
+                            'confidence': pattern_info['confidence'],
+                            'instant': True,
+                            'source': 'intelligent_pattern'
+                        }
+                    except Exception as e:
+                        logger.warning(f"Error generating command for pattern {pattern}: {e}")
+                        continue
+        
+        # No match found
+        return {'matched': False}
+    
     def _generate_port_check_command(self, match_groups: List[str]) -> str:
         """Generate platform-specific command to check processes on a port"""
         port = match_groups[0] if match_groups else "8080"

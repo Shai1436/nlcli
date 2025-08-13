@@ -205,7 +205,7 @@ class OutputFormatter:
         )
         
         perf_table.add_column("Metric", style=f"bold {self.current_theme['accent']}")
-        perf_table.add_column("Value", justify="center", style=self.current_theme['success']))
+        perf_table.add_column("Value", justify="center", style=self.current_theme['success'])
         perf_table.add_column("Description", style=self.current_theme['info'])
         
         # Add performance data

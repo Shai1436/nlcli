@@ -93,7 +93,7 @@ class ModernCursor:
         styled_prompt.append(prompt_text, style=f"bold {color}")
         styled_prompt.append(" ", style="")
         
-        return styled_prompt
+        return str(styled_prompt)
 
 class TerminalEnhancer:
     """Terminal enhancement utilities for modern CLI experience"""
