@@ -40,7 +40,7 @@ setup(
         'Intended Audience :: System Administrators',
         'Topic :: System :: Shells',
         'Topic :: Utilities',
-        'License :: OSI Approved :: MIT License',
+        'License :: Other/Proprietary License',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
@@ -85,7 +85,7 @@ setup(
         'Commercial License': 'https://nlcli.dev/license',
         'Enterprise Support': 'https://nlcli.dev/enterprise',
     },
-    license='MIT',
+    license='Commercial/Personal Developer License',
     include_package_data=True,
     zip_safe=False,
 )

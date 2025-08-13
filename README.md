@@ -189,14 +189,17 @@ nlcli/
 
 ## 📄 License
 
-NLCLI is dual-licensed:
+NLCLI uses a developer-friendly licensing structure:
 
-### Open Source License
-- **MIT License** for open source projects, personal use, and small businesses
-- See [LICENSE](LICENSE) file for details
+### Personal Developer License (Free)
+- **Individual developers** - Personal projects, learning, portfolios
+- **Small freelancers** - Projects under $10,000 annual revenue
+- **Educational use** - Students, teachers, academic research
+- **Open source projects** - Non-commercial open source contributions
 
-### Commercial License
-- **Commercial License** available for enterprise use, proprietary products, and organizations requiring:
+### Commercial License (Paid)
+- **Business use** - Companies with 5+ employees or revenue-generating use
+- **Enterprise organizations** - Requiring legal protection and support
   - Legal indemnification and warranty
   - Priority support and SLA
   - Custom features and integrations

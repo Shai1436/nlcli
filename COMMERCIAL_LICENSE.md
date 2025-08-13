@@ -8,10 +8,11 @@ NLCLI is dual-licensed under both the MIT License (for open source use) and a Co
 
 A Commercial License is required for:
 
-### Enterprise Use (100+ Employees)
-- Companies with 100 or more employees
+### Business Use (5+ Employees)
+- Companies with 5 or more employees
+- Startups generating revenue using NLCLI
 - Government organizations and agencies
-- Large non-profit organizations
+- Non-profit organizations with paid staff
 
 ### Commercial Products
 - Integration into proprietary software products
@@ -47,23 +48,23 @@ A Commercial License is required for:
 
 ## Pricing Tiers
 
-### Starter Commercial License
-**$2,999/year**
-- Up to 100 users
+### Startup Commercial License
+**$999/year**
+- Up to 25 users
 - Email support
-- Standard SLA (48-hour response)
-- Basic enterprise features
+- Standard SLA (72-hour response)
+- Basic commercial features
 
 ### Professional Commercial License
-**$9,999/year**
-- Up to 500 users
+**$4,999/year**
+- Up to 100 users
 - Priority support
 - Enhanced SLA (24-hour response)
 - Advanced enterprise features
 - Custom integrations (limited)
 
 ### Enterprise Commercial License
-**$24,999/year**
+**$19,999/year**
 - Unlimited users
 - Dedicated support team
 - Premium SLA (4-hour response)

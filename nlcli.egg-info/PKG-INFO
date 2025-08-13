@@ -5,18 +5,20 @@ Summary: Universal CLI that translates natural language to OS commands
 Home-page: https://github.com/nlcli/nlcli
 Author: NLCLI Team
 Author-email: NLCLI Team <team@nlcli.dev>
-License: MIT
+License: Commercial/Personal Developer License
 Project-URL: Homepage, https://github.com/nlcli/nlcli
 Project-URL: Bug Reports, https://github.com/nlcli/nlcli/issues
 Project-URL: Source, https://github.com/nlcli/nlcli
 Project-URL: Documentation, https://nlcli.readthedocs.io
+Project-URL: Commercial License, https://nlcli.dev/license
+Project-URL: Enterprise Support, https://nlcli.dev/enterprise
 Keywords: cli,natural language,command line,ai,automation,shell
 Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: System Administrators
 Classifier: Topic :: System :: Shells
 Classifier: Topic :: Utilities
-Classifier: License :: OSI Approved :: MIT License
+Classifier: License :: Other/Proprietary License
 Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
@@ -233,7 +235,25 @@ nlcli/
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+NLCLI uses a developer-friendly licensing structure:
+
+### Personal Developer License (Free)
+- **Individual developers** - Personal projects, learning, portfolios
+- **Small freelancers** - Projects under $10,000 annual revenue
+- **Educational use** - Students, teachers, academic research
+- **Open source projects** - Non-commercial open source contributions
+
+### Commercial License (Paid)
+- **Business use** - Companies with 5+ employees or revenue-generating use
+- **Enterprise organizations** - Requiring legal protection and support
+  - Legal indemnification and warranty
+  - Priority support and SLA
+  - Custom features and integrations
+  - Enterprise security features
+
+📋 **[View Commercial License Options](COMMERCIAL_LICENSE.md)**
+
+**Need help choosing?** Contact us at license@nlcli.dev
 
 ## 🤝 Support
 

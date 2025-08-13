@@ -11,7 +11,7 @@ Preferred communication style: Simple, everyday language.
 - Make tool installable like any other CLI tool (implemented: pip installable with console scripts)
 - Design for enterprise SaaS expansion (architecture supports this)
 - Address performance concerns about API latency (implemented: 3-tier performance optimization system)
-- Add commercial licensing for business use (implemented: dual MIT/Commercial license structure)
+- Add commercial licensing for business use (implemented: Personal Developer/Commercial license structure targeting individual developers)
 
 # System Architecture
 
