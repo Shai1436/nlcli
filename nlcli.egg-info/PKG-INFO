@@ -33,6 +33,7 @@ Requires-Dist: click>=8.0.0
 Requires-Dist: openai>=1.0.0
 Requires-Dist: rich>=13.0.0
 Requires-Dist: psutil>=5.0.0
+Requires-Dist: setuptools>=75.3.2
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0.0; extra == "dev"
 Requires-Dist: pytest-cov>=4.0.0; extra == "dev"

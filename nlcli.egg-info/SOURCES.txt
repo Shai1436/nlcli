@@ -18,3 +18,8 @@ nlcli.egg-info/entry_points.txt
 nlcli.egg-info/not-zip-safe
 nlcli.egg-info/requires.txt
 nlcli.egg-info/top_level.txt
+tests/test_ai_translator.py
+tests/test_cache_manager.py
+tests/test_command_executor.py
+tests/test_instant_patterns_only.py
+tests/test_safety_checker.py

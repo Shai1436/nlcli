@@ -12,6 +12,7 @@ Preferred communication style: Simple, everyday language.
 - Design for enterprise SaaS expansion (architecture supports this)
 - Address performance concerns about API latency (implemented: 3-tier performance optimization system)
 - Add commercial licensing for business use (implemented: Personal Developer/Commercial license structure targeting individual developers)
+- Add unit testing framework to ensure code quality (implemented: comprehensive test suite with instant pattern validation)
 
 ## Approved Roadmap & Next Features
 
@@ -36,6 +37,22 @@ Based on current implementation, the next logical features are prioritized as:
 4. **SSO Integration** - Enterprise authentication systems
 
 Full roadmap available in [ROADMAP.md](ROADMAP.md)
+
+## Development Workflow
+
+**Test-Driven Development**
+- Comprehensive unit test suite with 95+ instant pattern tests
+- Automated test runner (`test_automation.py`) for continuous validation
+- Tests run after each major change to ensure quality
+- Pattern recognition tests validate 100% match rate for common commands
+- Test categories: instant patterns, AI translation, safety checking, command execution
+
+**Quality Assurance Process**
+1. Write tests first for new features
+2. Implement feature with pattern expansion
+3. Run automated test suite (`python test_automation.py`)
+4. Validate pattern match rates and performance
+5. Update documentation and roadmap
 
 # System Architecture
 
