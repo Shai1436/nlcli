@@ -526,6 +526,8 @@ class AITranslator:
             
             # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
             # do not change this unless explicitly requested by the user
+            if not self.client:
+                return None
             response = self.client.chat.completions.create(
                 model="gpt-4o-mini",  # Using mini for faster response
                 messages=[
@@ -537,12 +539,20 @@ class AITranslator:
                 max_tokens=300   # Reduced tokens for faster response
             )
             
-            return json.loads(response.choices[0].message.content)
+            content = response.choices[0].message.content
+            if content is None:
+                return None
+            return json.loads(content)
         
         try:
             # Execute API call with timeout
             future = self.executor.submit(api_call)
             result = future.result(timeout=timeout)
+            
+            # Check if result is None
+            if result is None:
+                logger.error("AI response was None")
+                return None
             
             # Add performance metadata
             result['cached'] = False
@@ -557,23 +567,6 @@ class AITranslator:
             
         except TimeoutError:
             logger.warning(f"AI translation timeout after {timeout} seconds")
-            return None
-        except Exception as e:
-            logger.error(f"AI translation error: {str(e)}")
-            return None
-            
-            # Validate required fields
-            if not all(key in result for key in ['command', 'explanation']):
-                logger.error("AI response missing required fields")
-                return None
-            
-            # Log successful translation
-            logger.info(f"Translated '{natural_language}' to '{result['command']}'")
-            
-            return result
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse AI response JSON: {str(e)}")
             return None
         except Exception as e:
             logger.error(f"AI translation error: {str(e)}")
@@ -661,6 +654,8 @@ class AITranslator:
             
             # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
             # do not change this unless explicitly requested by the user
+            if not self.client:
+                return []
             response = self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": prompt}],
@@ -669,7 +664,10 @@ class AITranslator:
                 max_tokens=300
             )
             
-            result = json.loads(response.choices[0].message.content)
+            content = response.choices[0].message.content
+            if content is None:
+                return []
+            result = json.loads(content)
             return result.get('suggestions', [])
             
         except Exception as e:

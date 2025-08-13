@@ -202,7 +202,9 @@ class CommandSelector:
                 default="1"
             )
             
-            selected_option = options[choice - 1]
+            # Ensure choice is an integer and convert to 0-based index
+            choice_index = int(choice) - 1
+            selected_option = options[choice_index]
             
             # Track user preference for learning
             self._record_user_choice(natural_language, selected_option)
