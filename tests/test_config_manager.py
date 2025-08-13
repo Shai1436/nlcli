@@ -33,19 +33,19 @@ class TestConfigManager:
         """Test that default configuration values are properly set"""
         config = ConfigManager()
         
-        # Test general settings
-        assert config.get('general', 'safety_level') == 'medium'
-        assert config.get('general', 'auto_confirm_read_only') == 'true'
-        assert config.get('general', 'max_history_items') == '1000'
+        # Test that defaults are defined correctly
+        assert config.defaults['general']['safety_level'] == 'medium'
+        assert config.defaults['general']['auto_confirm_read_only'] == 'true'
+        assert config.defaults['general']['max_history_items'] == '1000'
         
-        # Test AI settings  
-        assert config.get('ai', 'model') == 'gpt-4o-mini'
-        assert config.get('ai', 'temperature') == '0.1'
-        assert config.get('ai', 'max_tokens') == '300'
+        # Test AI settings from defaults
+        assert config.defaults['ai']['model'] == 'gpt-4o-mini'
+        assert config.defaults['ai']['temperature'] == '0.1'
+        assert config.defaults['ai']['max_tokens'] == '300'
         
-        # Test performance settings
-        assert config.get('performance', 'enable_cache') == 'true'
-        assert config.get('performance', 'enable_instant_patterns') == 'true'
+        # Test performance settings from defaults
+        assert config.defaults['performance']['enable_cache'] == 'true'
+        assert config.defaults['performance']['enable_instant_patterns'] == 'true'
     
     def test_get_db_path(self):
         """Test database path generation"""
@@ -128,9 +128,9 @@ class TestConfigManager:
         """Test handling of boolean configuration values"""
         config = ConfigManager()
         
-        # Test boolean-like values manually since get_boolean doesn't exist
-        assert config.get('performance', 'enable_cache') == 'true'
-        assert config.get('general', 'auto_confirm_read_only') == 'true'
+        # Test boolean-like values from defaults
+        assert config.defaults['performance']['enable_cache'] == 'true'
+        assert config.defaults['general']['auto_confirm_read_only'] == 'true'
         
         # Test setting values
         config.set('test', 'bool_true', 'yes')

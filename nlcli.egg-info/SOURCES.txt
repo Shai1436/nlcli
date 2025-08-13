@@ -36,7 +36,10 @@ tests/test_config_manager.py
 tests/test_context_manager.py
 tests/test_history_manager.py
 tests/test_instant_patterns_only.py
+tests/test_integration.py
 tests/test_interactive_input.py
+tests/test_main.py
+tests/test_main_cli.py
 tests/test_new_coverage.py
 tests/test_output_formatter.py
 tests/test_safety_checker.py

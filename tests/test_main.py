@@ -96,11 +96,10 @@ class TestMainCLI:
         mock_formatter_instance = Mock()
         mock_formatter.return_value = mock_formatter_instance
         
-        # Test that interactive mode handles quit gracefully
-        try:
-            interactive_mode()
-        except SystemExit:
-            pass  # Expected behavior
+        # Test that interactive mode handles quit gracefully  
+        result = self.runner.invoke(cli, ['interactive'], input='quit\n')
+        # Should exit cleanly (exit code 0 for normal quit)
+        assert result.exit_code == 0
     
     def test_cli_with_invalid_command(self):
         """Test CLI with invalid subcommand"""

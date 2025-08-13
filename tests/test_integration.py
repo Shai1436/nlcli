@@ -63,7 +63,7 @@ class TestIntegration:
             'command': 'ls',
             'explanation': 'List directory contents',
             'confidence': 1.0
-        })
+        }, platform="linux")
         
         # Retrieve from cache
         cached = self.cache.get_cached_translation("list files")
@@ -138,7 +138,7 @@ class TestIntegration:
                 'command': command,
                 'explanation': explanation,
                 'confidence': confidence
-            })
+            }, platform="linux")
         
         # Step 6: Verify complete workflow
         recent = self.history.get_recent_commands(1)
@@ -224,7 +224,7 @@ class TestIntegration:
         # Simulate multiple operations happening in sequence
         operations = [
             lambda: self.history.add_command("cmd1", "ls", "List", True),
-            lambda: self.cache.cache_translation("cmd1", {'command': 'ls', 'explanation': 'List'}),
+            lambda: self.cache.cache_translation("cmd1", {'command': 'ls', 'explanation': 'List'}, platform="linux"),
             lambda: self.filter.check_command("pwd"),
             lambda: self.history.get_recent_commands(5),
             lambda: self.cache.get_cache_stats()
