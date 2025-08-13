@@ -69,7 +69,57 @@ class CommandFilter:
             'unzip': {'command': 'unzip', 'explanation': 'Extract zip archives', 'confidence': 1.0},
             'gzip': {'command': 'gzip', 'explanation': 'Compress files', 'confidence': 1.0},
             'gunzip': {'command': 'gunzip', 'explanation': 'Decompress gzip files', 'confidence': 1.0},
+            
+            # Editor commands
+            'nano': {'command': 'nano', 'explanation': 'Simple text editor', 'confidence': 1.0},
+            'vim': {'command': 'vim', 'explanation': 'Vi text editor', 'confidence': 1.0},
+            'vi': {'command': 'vi', 'explanation': 'Vi text editor', 'confidence': 1.0},
+            'emacs': {'command': 'emacs', 'explanation': 'Emacs text editor', 'confidence': 1.0},
+            
+            # System control
+            'sudo': {'command': 'sudo', 'explanation': 'Execute as superuser', 'confidence': 0.8},
+            'su': {'command': 'su', 'explanation': 'Switch user', 'confidence': 0.8},
+            'chmod': {'command': 'chmod', 'explanation': 'Change file permissions', 'confidence': 1.0},
+            'chown': {'command': 'chown', 'explanation': 'Change file ownership', 'confidence': 1.0},
+            'chgrp': {'command': 'chgrp', 'explanation': 'Change group ownership', 'confidence': 1.0},
+            
+            # Git commands (exact)
+            'git': {'command': 'git', 'explanation': 'Git version control', 'confidence': 1.0},
+            'git status': {'command': 'git status', 'explanation': 'Show repository status', 'confidence': 1.0},
+            'git log': {'command': 'git log', 'explanation': 'Show commit history', 'confidence': 1.0},
+            'git diff': {'command': 'git diff', 'explanation': 'Show file differences', 'confidence': 1.0},
+            'git branch': {'command': 'git branch', 'explanation': 'List or manage branches', 'confidence': 1.0},
+            'git checkout': {'command': 'git checkout', 'explanation': 'Switch branches or restore files', 'confidence': 1.0},
+            'git merge': {'command': 'git merge', 'explanation': 'Merge branches', 'confidence': 1.0},
+            'git reset': {'command': 'git reset', 'explanation': 'Reset changes', 'confidence': 0.8},
+            
+            # Package managers
+            'npm': {'command': 'npm', 'explanation': 'Node package manager', 'confidence': 1.0},
+            'pip': {'command': 'pip', 'explanation': 'Python package installer', 'confidence': 1.0},
+            'apt': {'command': 'apt', 'explanation': 'APT package manager', 'confidence': 1.0},
+            'brew': {'command': 'brew', 'explanation': 'Homebrew package manager', 'confidence': 1.0},
+            'yum': {'command': 'yum', 'explanation': 'YUM package manager', 'confidence': 1.0},
+            
+            # Development tools
+            'node': {'command': 'node', 'explanation': 'Node.js runtime', 'confidence': 1.0},
+            'python': {'command': 'python', 'explanation': 'Python interpreter', 'confidence': 1.0},
+            'python3': {'command': 'python3', 'explanation': 'Python 3 interpreter', 'confidence': 1.0},
+            'java': {'command': 'java', 'explanation': 'Java runtime', 'confidence': 1.0},
+            'javac': {'command': 'javac', 'explanation': 'Java compiler', 'confidence': 1.0},
+            'gcc': {'command': 'gcc', 'explanation': 'GNU C compiler', 'confidence': 1.0},
+            'make': {'command': 'make', 'explanation': 'Build automation tool', 'confidence': 1.0},
+            'cmake': {'command': 'cmake', 'explanation': 'Cross-platform build system', 'confidence': 1.0},
+            
+            # Database commands
+            'mysql': {'command': 'mysql', 'explanation': 'MySQL client', 'confidence': 1.0},
+            'psql': {'command': 'psql', 'explanation': 'PostgreSQL client', 'confidence': 1.0},
+            'sqlite3': {'command': 'sqlite3', 'explanation': 'SQLite client', 'confidence': 1.0},
+            'mongo': {'command': 'mongo', 'explanation': 'MongoDB client', 'confidence': 1.0},
+            'redis-cli': {'command': 'redis-cli', 'explanation': 'Redis client', 'confidence': 1.0},
         }
+        
+        # Add typo variations for common commands
+        self._add_typo_variations()
         
         # Common command variations with flags
         self.direct_commands_with_args = {
@@ -147,6 +197,102 @@ class CommandFilter:
         
         # Initialize custom commands storage
         self.custom_commands = {}
+    
+    def _add_typo_variations(self):
+        """Add common typos and variations for frequently used commands"""
+        
+        typo_mappings = {
+            # ls variations and typos
+            'list': {'command': 'ls', 'explanation': 'List directory contents', 'confidence': 0.95},
+            'l': {'command': 'ls', 'explanation': 'List directory contents', 'confidence': 0.95},
+            'll': {'command': 'ls -la', 'explanation': 'List files with details', 'confidence': 0.95},
+            'lls': {'command': 'ls', 'explanation': 'List directory contents', 'confidence': 0.90},
+            'sl': {'command': 'ls', 'explanation': 'List directory contents (typo corrected)', 'confidence': 0.85},
+            'lsit': {'command': 'ls', 'explanation': 'List directory contents (typo corrected)', 'confidence': 0.85},
+            'lst': {'command': 'ls', 'explanation': 'List directory contents (typo corrected)', 'confidence': 0.85},
+            
+            # pwd variations
+            'print working directory': {'command': 'pwd', 'explanation': 'Print working directory', 'confidence': 0.95},
+            'where am i': {'command': 'pwd', 'explanation': 'Print working directory', 'confidence': 0.90},
+            'current directory': {'command': 'pwd', 'explanation': 'Print working directory', 'confidence': 0.95},
+            'pwdd': {'command': 'pwd', 'explanation': 'Print working directory (typo corrected)', 'confidence': 0.85},
+            
+            # cd variations and typos
+            'change directory': {'command': 'cd', 'explanation': 'Change directory', 'confidence': 0.95},
+            'go to': {'command': 'cd', 'explanation': 'Change directory', 'confidence': 0.90},
+            'navigate to': {'command': 'cd', 'explanation': 'Change directory', 'confidence': 0.90},
+            'cd..': {'command': 'cd ..', 'explanation': 'Go to parent directory', 'confidence': 0.95},
+            'cdd': {'command': 'cd', 'explanation': 'Change directory (typo corrected)', 'confidence': 0.85},
+            
+            # git typos
+            'gti': {'command': 'git', 'explanation': 'Git version control (typo corrected)', 'confidence': 0.85},
+            'gt': {'command': 'git', 'explanation': 'Git version control (typo corrected)', 'confidence': 0.80},
+            'git stauts': {'command': 'git status', 'explanation': 'Show repository status (typo corrected)', 'confidence': 0.85},
+            'git staus': {'command': 'git status', 'explanation': 'Show repository status (typo corrected)', 'confidence': 0.85},
+            'git stat': {'command': 'git status', 'explanation': 'Show repository status', 'confidence': 0.90},
+            
+            # ps variations
+            'processes': {'command': 'ps', 'explanation': 'Show running processes', 'confidence': 0.95},
+            'running processes': {'command': 'ps aux', 'explanation': 'Show all running processes', 'confidence': 0.95},
+            'show processes': {'command': 'ps', 'explanation': 'Show running processes', 'confidence': 0.95},
+            'pss': {'command': 'ps', 'explanation': 'Show running processes (typo corrected)', 'confidence': 0.85},
+            
+            # rm variations (with caution)
+            'remove': {'command': 'rm', 'explanation': 'Remove files', 'confidence': 0.85},
+            'delete': {'command': 'rm', 'explanation': 'Remove files', 'confidence': 0.85},
+            'del': {'command': 'rm', 'explanation': 'Remove files', 'confidence': 0.85},
+            'rmm': {'command': 'rm', 'explanation': 'Remove files (typo corrected)', 'confidence': 0.80},
+            
+            # cp variations
+            'copy': {'command': 'cp', 'explanation': 'Copy files', 'confidence': 0.95},
+            'duplicate': {'command': 'cp', 'explanation': 'Copy files', 'confidence': 0.90},
+            'cpp': {'command': 'cp', 'explanation': 'Copy files (typo corrected)', 'confidence': 0.85},
+            
+            # mv variations
+            'move': {'command': 'mv', 'explanation': 'Move/rename files', 'confidence': 0.95},
+            'rename': {'command': 'mv', 'explanation': 'Move/rename files', 'confidence': 0.95},
+            'mvv': {'command': 'mv', 'explanation': 'Move/rename files (typo corrected)', 'confidence': 0.85},
+            
+            # mkdir variations
+            'make directory': {'command': 'mkdir', 'explanation': 'Create directory', 'confidence': 0.95},
+            'create directory': {'command': 'mkdir', 'explanation': 'Create directory', 'confidence': 0.95},
+            'new folder': {'command': 'mkdir', 'explanation': 'Create directory', 'confidence': 0.90},
+            'mkdirr': {'command': 'mkdir', 'explanation': 'Create directory (typo corrected)', 'confidence': 0.85},
+            
+            # cat variations
+            'show file': {'command': 'cat', 'explanation': 'Display file contents', 'confidence': 0.90},
+            'read file': {'command': 'cat', 'explanation': 'Display file contents', 'confidence': 0.90},
+            'display file': {'command': 'cat', 'explanation': 'Display file contents', 'confidence': 0.90},
+            'catt': {'command': 'cat', 'explanation': 'Display file contents (typo corrected)', 'confidence': 0.85},
+            
+            # grep variations  
+            'search': {'command': 'grep', 'explanation': 'Search text patterns', 'confidence': 0.90},
+            'find text': {'command': 'grep', 'explanation': 'Search text patterns', 'confidence': 0.90},
+            'grepp': {'command': 'grep', 'explanation': 'Search text patterns (typo corrected)', 'confidence': 0.85},
+            
+            # top variations
+            'system monitor': {'command': 'top', 'explanation': 'Display running processes', 'confidence': 0.90},
+            'task manager': {'command': 'top', 'explanation': 'Display running processes', 'confidence': 0.90},
+            'topp': {'command': 'top', 'explanation': 'Display running processes (typo corrected)', 'confidence': 0.85},
+            
+            # clear variations
+            'clear screen': {'command': 'clear', 'explanation': 'Clear terminal screen', 'confidence': 0.95},
+            'claer': {'command': 'clear', 'explanation': 'Clear terminal screen (typo corrected)', 'confidence': 0.85},
+            'clr': {'command': 'clear', 'explanation': 'Clear terminal screen', 'confidence': 0.90},
+            
+            # npm variations and typos
+            'node package manager': {'command': 'npm', 'explanation': 'Node package manager', 'confidence': 0.95},
+            'nppm': {'command': 'npm', 'explanation': 'Node package manager (typo corrected)', 'confidence': 0.85},
+            'nmp': {'command': 'npm', 'explanation': 'Node package manager (typo corrected)', 'confidence': 0.80},
+            
+            # python variations
+            'py': {'command': 'python', 'explanation': 'Python interpreter', 'confidence': 0.95},
+            'pytho': {'command': 'python', 'explanation': 'Python interpreter (typo corrected)', 'confidence': 0.85},
+            'pythoon': {'command': 'python', 'explanation': 'Python interpreter (typo corrected)', 'confidence': 0.85},
+        }
+        
+        # Add typo mappings to direct commands
+        self.direct_commands.update(typo_mappings)
     
     def _load_intelligent_patterns(self):
         """Load intelligent command patterns with parameter detection"""

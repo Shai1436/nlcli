@@ -42,6 +42,10 @@ class AITranslator:
         from .command_filter import CommandFilter
         self.command_filter = CommandFilter()
         
+        # Typo corrector for enhanced recognition
+        from .typo_corrector import TypoCorrector
+        self.typo_corrector = TypoCorrector()
+        
         # Common command patterns for instant recognition (50+ patterns)
         self.instant_patterns = {
             # File and Directory Operations
@@ -173,6 +177,13 @@ class AITranslator:
         """
         
         try:
+            # Step 0: Try typo correction first
+            corrected_input = self.typo_corrector.correct_typo(natural_language)
+            if corrected_input != natural_language:
+                logger.debug(f"Typo corrected: '{natural_language}' -> '{corrected_input}'")
+                # Use corrected input for further processing
+                natural_language = corrected_input
+            
             # Step 1: Check for direct command execution (fastest)
             if self.command_filter.is_direct_command(natural_language):
                 direct_result = self.command_filter.get_direct_command_result(natural_language)
@@ -181,7 +192,8 @@ class AITranslator:
                     return {
                         **direct_result,
                         'cached': False,
-                        'instant': True
+                        'instant': True,
+                        'typo_corrected': corrected_input != natural_language
                     }
             
             # Step 2: Check for instant pattern matches (sub-millisecond response)
@@ -189,6 +201,20 @@ class AITranslator:
             if instant_result:
                 logger.debug(f"Instant pattern match for: {natural_language}")
                 return instant_result
+            
+            # Step 2.5: Try fuzzy matching for typos and variations
+            fuzzy_result = self.typo_corrector.fuzzy_match(natural_language, threshold=0.7)
+            if fuzzy_result:
+                command, confidence = fuzzy_result
+                logger.debug(f"Fuzzy match found: '{natural_language}' -> '{command}' (confidence: {confidence:.2f})")
+                return {
+                    'command': command,
+                    'explanation': self._get_command_explanation(command),
+                    'confidence': confidence,
+                    'cached': False,
+                    'instant': True,
+                    'fuzzy_matched': True
+                }
             
             # Step 1.5: Check context-aware suggestions
             context_suggestions = self.context_manager.get_context_suggestions(natural_language)
