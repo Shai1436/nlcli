@@ -50,6 +50,7 @@ class CommandExecutor:
             'success': False,
             'output': '',
             'error': '',
+            'exit_code': None,
             'return_code': None,
             'command': command,
             'timeout': False
@@ -86,6 +87,7 @@ class CommandExecutor:
             
             # Process results
             result['return_code'] = process.returncode
+            result['exit_code'] = process.returncode
             result['output'] = process.stdout.strip()
             result['error'] = process.stderr.strip()
             result['success'] = process.returncode == 0
@@ -97,11 +99,13 @@ class CommandExecutor:
             
         except subprocess.TimeoutExpired:
             result['timeout'] = True
+            result['exit_code'] = -1
             result['error'] = f"Command timed out after {timeout} seconds"
             logger.error(f"Command timeout: {command}")
             
         except subprocess.CalledProcessError as e:
             result['return_code'] = e.returncode
+            result['exit_code'] = e.returncode
             result['error'] = e.stderr if e.stderr else str(e)
             logger.error(f"Command error: {command} - {result['error']}")
             
@@ -178,6 +182,7 @@ class CommandExecutor:
                 )
             
             result['return_code'] = process.returncode
+            result['exit_code'] = process.returncode
             result['success'] = process.returncode == 0
             result['output'] = "Interactive command completed"
             

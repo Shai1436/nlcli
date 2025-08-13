@@ -22,8 +22,15 @@ class CacheManager:
             cache_dir = Path.home() / '.nlcli'
             cache_dir.mkdir(exist_ok=True)
             cache_path = str(cache_dir / 'translation_cache.db')
+        else:
+            # If cache_path is a directory, create the db file inside it
+            cache_path_obj = Path(cache_path)
+            if cache_path_obj.is_dir() or not cache_path_obj.suffix:
+                cache_path_obj.mkdir(exist_ok=True)
+                cache_path = str(cache_path_obj / 'translation_cache.db')
         
         self.cache_path = cache_path
+        self.db_path = cache_path  # For backward compatibility
         self._init_database()
         
     def _init_database(self):
@@ -167,7 +174,7 @@ class CacheManager:
             logger.error(f"Error getting popular commands: {str(e)}")
             return []
     
-    def cleanup_old_entries(self, days_old: int = 30):
+    def cleanup_old_entries(self, days: int = 30) -> int:
         """Remove cache entries older than specified days"""
         
         try:
@@ -175,7 +182,7 @@ class CacheManager:
                 cursor = conn.execute('''
                     DELETE FROM translation_cache 
                     WHERE last_used < datetime('now', '-{} days')
-                '''.format(days_old))
+                '''.format(days))
                 
                 deleted_count = cursor.rowcount
                 conn.commit()
@@ -183,8 +190,11 @@ class CacheManager:
                 if deleted_count > 0:
                     logger.info(f"Cleaned up {deleted_count} old cache entries")
                     
+                return deleted_count
+                    
         except Exception as e:
             logger.error(f"Error cleaning up cache: {str(e)}")
+            return 0
     
     def get_cache_stats(self) -> Dict:
         """Get cache statistics"""
@@ -200,13 +210,21 @@ class CacheManager:
                 cursor = conn.execute('SELECT AVG(use_count) as avg_uses FROM translation_cache')
                 avg_uses = cursor.fetchone()[0] or 0
                 
+                # Calculate hit rate as percentage of entries with multiple uses
+                hit_rate = ((total_uses - total) / max(total_uses, 1)) if total_uses > total else 0.0
+                
                 return {
                     'total_entries': total,
-                    'total_uses': total_uses,
+                    'total_hits': total_uses,
                     'average_uses': round(avg_uses, 2),
-                    'cache_hit_potential': f"{min(100, (total_uses - total) / max(total_uses, 1) * 100):.1f}%"
+                    'hit_rate': hit_rate
                 }
                 
         except Exception as e:
             logger.error(f"Error getting cache stats: {str(e)}")
-            return {}
+            return {
+                'total_entries': 0,
+                'total_hits': 0,
+                'average_uses': 0.0,
+                'hit_rate': 0.0
+            }

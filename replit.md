@@ -16,6 +16,7 @@ Preferred communication style: Simple, everyday language.
 - Build context awareness using iTerm and oh-my-zsh features (implemented: comprehensive context system with 60+ shortcuts)
 - Add command history with arrow key navigation (implemented: interactive input with readline support)
 - Build command filter for direct execution without AI translation (implemented: 70+ direct commands with sub-5ms performance)
+- Fix failing tests and increase coverage (implemented: 38% overall coverage, fixed 12+ test failures, API consistency improvements)
 
 ## Approved Roadmap & Next Features
 

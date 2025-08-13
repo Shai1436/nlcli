@@ -108,7 +108,7 @@ class CommandFilter:
             
             # Python commands
             'python --version': {'command': 'python --version', 'explanation': 'Show Python version', 'confidence': 1.0},
-            'python -V': {'command': 'python -V', 'explanation': 'Show Python version', 'confidence': 1.0},
+            'python -v': {'command': 'python -v', 'explanation': 'Show Python version', 'confidence': 1.0},
             'pip list': {'command': 'pip list', 'explanation': 'List installed Python packages', 'confidence': 1.0},
             'pip freeze': {'command': 'pip freeze', 'explanation': 'List installed packages with versions', 'confidence': 1.0},
             

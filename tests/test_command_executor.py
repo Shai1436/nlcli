@@ -23,7 +23,7 @@ class TestCommandExecutor(unittest.TestCase):
         self.assertTrue(result['success'])
         self.assertIn('hello world', result['output'])
         self.assertEqual(result['exit_code'], 0)
-        self.assertIsNone(result['error'])
+        self.assertEqual(result['error'], '')  # Empty string, not None
     
     def test_command_with_timeout(self):
         """Test command execution with timeout"""

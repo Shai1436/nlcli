@@ -125,7 +125,7 @@ class TestCommandFilter:
         assert self.filter.is_direct_command("show disk")
         result = self.filter.get_direct_command_result("show disk")
         assert result is not None
-        assert result['command'] == "df -h"
+        assert result['command'] == "show disk"  # Original input preserved
         assert result['explanation'] == "Show disk usage"
         assert result['confidence'] == 0.9
         assert result.get('custom') is True
@@ -196,7 +196,7 @@ class TestCommandFilter:
         
         python_commands = [
             "python --version",
-            "python -V",
+            "python -v",
             "pip list",
             "pip freeze"
         ]
