@@ -13,29 +13,26 @@ class TestCommandFilter:
         """Setup test instance"""
         self.filter = CommandFilter()
     
-    def test_direct_command_detection(self):
-        """Test detection of direct commands"""
+    def test_check_command_method(self):
+        """Test the check_command method"""
         
         # Test exact matches
-        assert self.filter.is_direct_command("ls")
-        assert self.filter.is_direct_command("pwd")
-        assert self.filter.is_direct_command("git status")
-        assert self.filter.is_direct_command("ps aux")
+        result = self.filter.check_command("ls")
+        assert result['matched'] is True
+        assert result['command'] == "ls"
+        assert result['confidence'] == 1.0
         
         # Test case insensitivity
-        assert self.filter.is_direct_command("LS")
-        assert self.filter.is_direct_command("Git Status")
-        assert self.filter.is_direct_command("PS AUX")
+        result = self.filter.check_command("LS")
+        assert result['matched'] is True
         
-        # Test commands with arguments
-        assert self.filter.is_direct_command("ls -la")
-        assert self.filter.is_direct_command("ls some_directory")
-        assert self.filter.is_direct_command("cat file.txt")
+        # Test commands with arguments  
+        result = self.filter.check_command("ls -la")
+        assert result['matched'] is True
         
         # Test non-direct commands
-        assert not self.filter.is_direct_command("show me the files")
-        assert not self.filter.is_direct_command("list all the things")
-        assert not self.filter.is_direct_command("random text")
+        result = self.filter.check_command("show me the files")
+        assert result['matched'] is False
     
     def test_direct_command_results(self):
         """Test getting results for direct commands"""

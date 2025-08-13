@@ -32,8 +32,12 @@ tests/test_ai_translator.py
 tests/test_cache_manager.py
 tests/test_command_executor.py
 tests/test_command_filter.py
+tests/test_config_manager.py
 tests/test_context_manager.py
+tests/test_history_manager.py
 tests/test_instant_patterns_only.py
 tests/test_interactive_input.py
 tests/test_new_coverage.py
+tests/test_output_formatter.py
 tests/test_safety_checker.py
+tests/test_utils.py
