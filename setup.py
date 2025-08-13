@@ -82,7 +82,10 @@ setup(
         'Bug Reports': 'https://github.com/nlcli/nlcli/issues',
         'Source': 'https://github.com/nlcli/nlcli',
         'Documentation': 'https://nlcli.readthedocs.io',
+        'Commercial License': 'https://nlcli.dev/license',
+        'Enterprise Support': 'https://nlcli.dev/enterprise',
     },
+    license='MIT',
     include_package_data=True,
     zip_safe=False,
 )

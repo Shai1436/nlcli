@@ -189,7 +189,22 @@ nlcli/
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+NLCLI is dual-licensed:
+
+### Open Source License
+- **MIT License** for open source projects, personal use, and small businesses
+- See [LICENSE](LICENSE) file for details
+
+### Commercial License
+- **Commercial License** available for enterprise use, proprietary products, and organizations requiring:
+  - Legal indemnification and warranty
+  - Priority support and SLA
+  - Custom features and integrations
+  - Enterprise security features
+
+📋 **[View Commercial License Options](COMMERCIAL_LICENSE.md)**
+
+**Need help choosing?** Contact us at license@nlcli.dev
 
 ## 🤝 Support
 

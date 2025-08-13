@@ -26,6 +26,7 @@ Classifier: Programming Language :: Python :: 3.12
 Classifier: Operating System :: OS Independent
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
+License-File: LICENSE
 Requires-Dist: click>=8.0.0
 Requires-Dist: openai>=1.0.0
 Requires-Dist: rich>=13.0.0
@@ -38,6 +39,7 @@ Requires-Dist: flake8>=6.0.0; extra == "dev"
 Requires-Dist: mypy>=1.0.0; extra == "dev"
 Dynamic: author
 Dynamic: home-page
+Dynamic: license-file
 Dynamic: requires-python
 
 # Natural Language CLI Tool (nlcli)
