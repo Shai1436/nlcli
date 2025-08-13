@@ -16,6 +16,8 @@ nlcli/history_cli.py
 nlcli/history_manager.py
 nlcli/interactive_input.py
 nlcli/main.py
+nlcli/output_formatter.py
+nlcli/output_formatter_old.py
 nlcli/safety_checker.py
 nlcli/utils.py
 nlcli.egg-info/PKG-INFO

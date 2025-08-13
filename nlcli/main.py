@@ -17,6 +17,7 @@ from .history_manager import HistoryManager
 from .safety_checker import SafetyChecker
 from .config_manager import ConfigManager
 from .command_executor import CommandExecutor
+from .output_formatter import OutputFormatter
 from .context_cli import context
 from .history_cli import history as history_cli
 from .filter_cli import filter as filter_cli
@@ -50,6 +51,7 @@ def cli(ctx, config_path, verbose):
     )
     ctx.obj['safety_checker'] = SafetyChecker(config.get_safety_level())
     ctx.obj['executor'] = CommandExecutor()
+    ctx.obj['formatter'] = OutputFormatter()
     
     # If no subcommand provided, start interactive mode
     if ctx.invoked_subcommand is None:
@@ -58,20 +60,9 @@ def cli(ctx, config_path, verbose):
 def interactive_mode(obj):
     """Interactive mode for natural language command translation"""
     
-    # Show capabilities and welcome message
-    capabilities = get_input_capabilities()
-    capability_text = "Type your command in natural language, or 'quit' to exit\n"
-    
-    if capabilities['supports_arrow_keys']:
-        capability_text += "Use ↑/↓ arrow keys to browse command history\n"
-    
-    capability_text += "Use 'history' to view command history, 'help' for more options"
-    
-    console.print(Panel.fit(
-        f"[bold]Natural Language CLI[/bold]\n{capability_text}",
-        title="Welcome",
-        border_style="blue"
-    ))
+    # Show enhanced welcome banner
+    formatter = obj['formatter']
+    formatter.format_welcome_banner()
     
     history = obj['history']
     ai_translator = obj['ai_translator']
@@ -143,8 +134,14 @@ def interactive_mode(obj):
                     explanation = translation_result['explanation']
                     confidence = translation_result.get('confidence', 0.8)
                     
-                    # Display command and explanation
-                    display_translation(command, explanation, confidence)
+                    # Display enhanced command result
+                    result_data = {
+                        'command': command,
+                        'explanation': explanation,
+                        'confidence': confidence,
+                        'source': translation_result.get('source', 'ai_translation')
+                    }
+                    formatter.format_command_result(result_data, elapsed)
                     
                     # Safety check
                     safety_result = safety_checker.check_command(command)
@@ -171,8 +168,18 @@ def interactive_mode(obj):
                     # Update context with command execution
                     ai_translator.context_manager.update_command_history(command, result['success'])
                     
-                    # Display result
-                    display_execution_result(result)
+                    # Display enhanced results
+                    if result.get('output'):
+                        formatter.format_command_output(
+                            result['output'], 
+                            command,
+                            result['success']
+                        )
+                    
+                    if not result['success']:
+                        formatter.format_error(f"Command failed with exit code {result.get('exit_code', 'unknown')}")
+                    else:
+                        console.print("[green]✓ Command executed successfully[/green]")
                     
                 except Exception as e:
                     console.print(f"[red]Error: {str(e)}[/red]")
@@ -211,7 +218,7 @@ def display_execution_result(result):
             console.print(Panel(result['error'], title="Error", border_style="red"))
 
 def show_history(history):
-    """Display command history"""
+    """Display enhanced command history using formatter"""
     
     commands = history.get_recent_commands(10)
     
@@ -219,25 +226,22 @@ def show_history(history):
         console.print("[yellow]No command history found.[/yellow]")
         return
     
-    table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("ID", style="dim", width=6)
-    table.add_column("Natural Language", style="cyan")
-    table.add_column("Command", style="white")
-    table.add_column("Status", style="green")
-    table.add_column("Date", style="dim")
+    # Create the object structure that formatter expects
+    obj = {'formatter': OutputFormatter()}
+    formatter = obj['formatter']
     
+    # Convert to expected format
+    history_data = []
     for cmd in commands:
-        status = "✓" if cmd['success'] else "✗"
-        status_style = "green" if cmd['success'] else "red"
-        table.add_row(
-            str(cmd['id']),
-            cmd['natural_language'][:50] + "..." if len(cmd['natural_language']) > 50 else cmd['natural_language'],
-            cmd['command'][:50] + "..." if len(cmd['command']) > 50 else cmd['command'],
-            f"[{status_style}]{status}[/{status_style}]",
-            cmd['timestamp']
-        )
+        history_data.append({
+            'id': cmd['id'],
+            'natural_language': cmd['natural_language'],
+            'command': cmd['command'],
+            'success': cmd['success'],
+            'timestamp': cmd.get('timestamp', '')
+        })
     
-    console.print(table)
+    formatter.format_history_table(history_data)
 
 def show_help():
     """Display help information"""
