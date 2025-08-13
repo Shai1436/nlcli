@@ -36,6 +36,12 @@ Based on current implementation, the next logical features are prioritized as:
 3. **Advanced Security & Compliance** - Audit logging and enterprise security
 4. **SSO Integration** - Enterprise authentication systems
 
+**V2.0 Future Features:**
+1. **Cross-OS Dotfile Management** - Unified profile system handling per-OS differences (PATH, aliases, PowerShell vs .zshrc)
+2. **Git/Stow Integration** - Version control integration for dotfile synchronization
+3. **Cloud/Local Sync** - One source of truth for configurations across machines and operating systems
+4. **Template System** - OS-specific configuration templates that adapt to current platform context
+
 Full roadmap available in [ROADMAP.md](ROADMAP.md)
 
 ## Development Workflow
