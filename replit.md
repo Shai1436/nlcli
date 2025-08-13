@@ -22,6 +22,7 @@ Preferred communication style: Simple, everyday language.
 - Implement oh-my-zsh inspired visual themes and rich output formatting (implemented: Complete OutputFormatter with robbyrussell, agnoster, and powerlevel10k themes, performance indicators, syntax highlighting, and enhanced UI)
 - Style terminal prompt with simple design for clean CLI aesthetics (implemented: Simple > prompt, enhanced welcome banner with prompt instructions)
 - Implement modern and sleek cursor styling with animations (reverted: Custom cursor system caused loading issues, reverted to reliable default cursor while maintaining blue chevron prompt styling)
+- Prompt for OpenAI API key only for first unknown commands (implemented: Smart API key prompting with 343 commands available without setup, user-friendly onboarding with clear instructions)
 
 ## Approved Roadmap & Next Features
 
@@ -84,6 +85,9 @@ The application follows a modular architecture with clear separation of concerns
   4. **Fuzzy Matching** (sub-millisecond): 34+ natural language patterns with confidence scoring
   5. **Local SQLite Cache** (sub-millisecond): Stores and retrieves previous translations
   6. **AI Translation** (2-3 seconds): GPT-4o-mini with timeout and concurrent execution
+- Smart API key management: 343 commands work without OpenAI API key, prompts only when needed
+- User-friendly onboarding with step-by-step API key setup instructions
+- Graceful fallback handling when API key unavailable
 - Integrates with OpenAI's GPT-4o-mini API for faster responses
 - Uses platform-specific prompts to generate appropriate OS commands
 - Returns structured responses with command, explanation, and confidence scores

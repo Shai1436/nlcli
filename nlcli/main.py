@@ -46,10 +46,18 @@ def cli(ctx, config_path, verbose):
     config = ConfigManager(config_path)
     ctx.obj['config'] = config
     ctx.obj['history'] = HistoryManager(config.get_db_path())
-    ctx.obj['ai_translator'] = AITranslator(
-        api_key=config.get_openai_key(),
-        enable_cache=config.get('performance', 'enable_cache', fallback='true').lower() == 'true'
-    )
+    # Initialize AI translator without requiring API key upfront
+    try:
+        ctx.obj['ai_translator'] = AITranslator(
+            api_key=config.get_openai_key(),
+            enable_cache=config.get('performance', 'enable_cache', fallback='true').lower() == 'true'
+        )
+    except Exception as e:
+        # If initialization fails, create a limited translator that will prompt for API key when needed
+        ctx.obj['ai_translator'] = AITranslator(
+            api_key=None,
+            enable_cache=config.get('performance', 'enable_cache', fallback='true').lower() == 'true'
+        )
     ctx.obj['safety_checker'] = SafetyChecker(config.get_safety_level())
     ctx.obj['executor'] = CommandExecutor()
     ctx.obj['formatter'] = OutputFormatter()

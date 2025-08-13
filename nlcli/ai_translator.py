@@ -10,10 +10,13 @@ import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from openai import OpenAI
 from typing import Dict, Optional
+from rich.console import Console
+from rich.prompt import Prompt
 from .utils import get_platform_info, setup_logging
 from .cache_manager import CacheManager
 
 logger = setup_logging()
+console = Console()
 
 class AITranslator:
     """Handles natural language to OS command translation using OpenAI with caching and optimization"""
@@ -22,10 +25,16 @@ class AITranslator:
         """Initialize AI translator with OpenAI API key and performance optimizations"""
         
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        if not self.api_key:
-            raise ValueError("OpenAI API key is required. Set OPENAI_API_KEY environment variable or provide in config.")
+        self.client = None
+        self._api_key_prompted = False
         
-        self.client = OpenAI(api_key=self.api_key)
+        # Only initialize OpenAI client if API key is available
+        if self.api_key:
+            try:
+                self.client = OpenAI(api_key=self.api_key)
+            except Exception as e:
+                logger.warning(f"Failed to initialize OpenAI client: {e}")
+                self.client = None
         self.platform_info = get_platform_info()
         
         # Performance optimizations
@@ -398,8 +407,64 @@ class AITranslator:
         
         return explanations.get(cmd, f'Executes the {cmd} command')
     
+    def _prompt_for_api_key(self) -> bool:
+        """Prompt user for OpenAI API key and save it"""
+        
+        if self._api_key_prompted:
+            return False
+            
+        self._api_key_prompted = True
+        
+        console.print("\n[yellow]🤖 AI Translation Required[/yellow]")
+        console.print("This command requires OpenAI API translation.")
+        console.print("You need an OpenAI API key to use AI-powered command translation.")
+        console.print("\n[bold]How to get an OpenAI API key:[/bold]")
+        console.print("1. Visit: https://platform.openai.com/api-keys")
+        console.print("2. Sign up or log in to your OpenAI account")
+        console.print("3. Create a new API key")
+        console.print("4. Copy the API key")
+        
+        api_key = Prompt.ask("\n[cyan]Enter your OpenAI API key[/cyan]", password=True)
+        
+        if not api_key or api_key.strip() == "":
+            console.print("[red]No API key provided. AI translation will be unavailable.[/red]")
+            return False
+        
+        # Test the API key
+        try:
+            test_client = OpenAI(api_key=api_key.strip())
+            # Make a simple test call
+            test_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": "test"}],
+                max_tokens=1
+            )
+            
+            # If successful, save the API key
+            self.api_key = api_key.strip()
+            self.client = test_client
+            
+            # Save to environment for this session
+            os.environ["OPENAI_API_KEY"] = self.api_key
+            
+            console.print("[green]✓ API key validated and saved for this session![/green]")
+            console.print("[dim]Note: To persist the API key, add it to your shell profile:[/dim]")
+            console.print(f"[dim]export OPENAI_API_KEY='your_key_here'[/dim]")
+            
+            return True
+            
+        except Exception as e:
+            console.print(f"[red]Invalid API key: {str(e)}[/red]")
+            console.print("[red]AI translation will be unavailable.[/red]")
+            return False
+    
     def _translate_with_ai(self, natural_language: str, timeout: float) -> Optional[Dict]:
         """Perform AI translation with timeout"""
+        
+        # Check if we have a valid client, if not try to prompt for API key
+        if not self.client:
+            if not self._prompt_for_api_key():
+                return None
         
         def api_call():
             # Create system prompt based on platform
