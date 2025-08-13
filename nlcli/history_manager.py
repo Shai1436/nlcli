@@ -129,6 +129,46 @@ class HistoryManager:
             logger.error(f"Error retrieving commands: {str(e)}")
             return []
     
+    def clear_history(self):
+        """Clear all command history"""
+        
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("DELETE FROM command_history")
+                conn.commit()
+                logger.info("Command history cleared")
+                
+        except sqlite3.Error as e:
+            logger.error(f"Error clearing history: {str(e)}")
+            raise
+    
+    def get_recent_natural_language_commands(self, limit: int = 50) -> List[str]:
+        """
+        Get recent natural language commands for input history
+        
+        Args:
+            limit: Maximum number of commands to retrieve
+            
+        Returns:
+            List of natural language commands
+        """
+        
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT DISTINCT natural_language
+                    FROM command_history 
+                    WHERE natural_language != '' 
+                    ORDER BY timestamp DESC 
+                    LIMIT ?
+                """, (limit,))
+                
+                return [row[0] for row in cursor.fetchall()]
+                
+        except sqlite3.Error as e:
+            logger.error(f"Error retrieving natural language commands: {str(e)}")
+            return []
+    
     def search_commands(self, query: str, limit: int = 10) -> List[Dict]:
         """
         Search commands by natural language or command text

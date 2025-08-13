@@ -14,6 +14,7 @@ Preferred communication style: Simple, everyday language.
 - Add commercial licensing for business use (implemented: Personal Developer/Commercial license structure targeting individual developers)
 - Add unit testing framework to ensure code quality (implemented: comprehensive test suite with instant pattern validation)
 - Build context awareness using iTerm and oh-my-zsh features (implemented: comprehensive context system with 60+ shortcuts)
+- Add command history with arrow key navigation (implemented: interactive input with readline support)
 
 ## Approved Roadmap & Next Features
 
@@ -22,8 +23,9 @@ Based on current implementation, the next logical features are prioritized as:
 **Immediate Priority (Next 2 weeks):**
 1. **Advanced Pattern Recognition** - Expand from 15 to 60+ instant command patterns (COMPLETED)
 2. **Command Context Awareness** - Remember current directory, previous commands for better suggestions (COMPLETED)
-3. **Enhanced Output Formatting** - Rich display with colors, tables, and better visual presentation
-4. **Interactive Command Selection** - When multiple commands possible, let user choose
+3. **Interactive Command History** - Arrow key navigation, search, management commands (COMPLETED)
+4. **Enhanced Output Formatting** - Rich display with colors, tables, and better visual presentation
+5. **Interactive Command Selection** - When multiple commands possible, let user choose
 
 **Short Term (2-4 weeks):**
 1. **Command Templates & Sharing** - Pre-approved patterns for teams
@@ -90,11 +92,13 @@ The application follows a modular architecture with clear separation of concerns
 - Secure subprocess execution with output capturing
 - Working directory and environment variable support
 
-**History Management** (`history_manager.py`)
-- SQLite-based storage for command history
+**History Management** (`history_manager.py`, `history_cli.py`)
+- SQLite-based storage for command history with comprehensive CLI management
 - Tracks natural language inputs, generated commands, and execution results
 - Indexed for efficient querying and retrieval
 - Session management for organizing command history
+- Rich CLI commands: show, search, clear, stats, repeat, export
+- Integration with interactive input for seamless history navigation
 
 **Configuration System** (`config_manager.py`)
 - INI-based configuration with sensible defaults
@@ -112,11 +116,18 @@ The application follows a modular architecture with clear separation of concerns
 
 **CLI Interface** (`main.py`)
 - Click-based command-line interface with Rich console output
-- Interactive mode for real-time command translation
-- Real-time performance indicators (⚡ instant, 📋 cached, 🤖 AI)
+- Interactive mode for real-time command translation with history navigation
+- Real-time performance indicators (⚡ instant, 🎯 context-aware, 📋 cached, 🤖 AI)
 - Performance monitoring command (`nlcli performance`)
 - Subcommand structure for extensibility
 - Context management for sharing components across commands
+
+**Interactive Input System** (`interactive_input.py`)
+- Readline-based command history with up/down arrow key navigation
+- Persistent history storage in `~/.nlcli/input_history`
+- Command completion and search functionality
+- Cross-platform fallback for systems without readline
+- Integration with database history for seamless experience
 
 ## Data Storage
 
