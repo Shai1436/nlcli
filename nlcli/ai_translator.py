@@ -229,13 +229,31 @@ class AITranslator:
                     'fuzzy_matched': True
                 }
             
-            # Step 1.5: Check context-aware suggestions
+            # Step 1.5: Check enhanced context-aware suggestions with pattern learning
+            contextual_suggestions = self.context_manager.get_contextual_suggestions(natural_language)
+            if contextual_suggestions:
+                # Use the highest confidence contextual suggestion
+                best_suggestion = contextual_suggestions[0]  # Already sorted by confidence
+                if best_suggestion['confidence'] > 0.85:
+                    logger.debug(f"Enhanced context suggestion for: {natural_language} (confidence: {best_suggestion['confidence']:.2f})")
+                    return {
+                        'command': best_suggestion['command'],
+                        'explanation': best_suggestion['explanation'],
+                        'confidence': best_suggestion['confidence'],
+                        'instant': True,
+                        'cached': False,
+                        'context_aware': True,
+                        'context_type': best_suggestion['context_type'],
+                        'source': best_suggestion.get('source', 'context_aware')
+                    }
+            
+            # Fallback to basic context suggestions if enhanced ones don't meet threshold
             context_suggestions = self.context_manager.get_context_suggestions(natural_language)
             if context_suggestions:
                 # Use the highest confidence context suggestion
                 best_suggestion = max(context_suggestions, key=lambda x: x['confidence'])
-                if best_suggestion['confidence'] > 0.85:
-                    logger.debug(f"Context suggestion for: {natural_language}")
+                if best_suggestion['confidence'] > 0.80:
+                    logger.debug(f"Basic context suggestion for: {natural_language}")
                     return {
                         'command': best_suggestion['command'],
                         'explanation': best_suggestion['explanation'],

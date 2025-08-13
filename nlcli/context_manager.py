@@ -516,16 +516,28 @@ class ContextManager:
         
         return suggestions
     
-    def update_command_history(self, command: str, success: bool):
-        """Update command history for context learning"""
+    def update_command_history(self, command: str, success: bool, natural_language: str = "", output: str = ""):
+        """Enhanced command history with pattern learning"""
         
-        self.command_history.append({
+        command_entry = {
             'command': command,
+            'natural_language': natural_language,
             'success': success,
             'timestamp': time.time(),
             'directory': self.current_directory,
-            'git_branch': self.git_context.get('branch')
-        })
+            'git_branch': self.git_context.get('branch'),
+            'project_type': self._detect_current_project_type(),
+            'output_length': len(output),
+            'files_referenced': self._extract_file_references(command, output)
+        }
+        
+        self.command_history.append(command_entry)
+        
+        # Enhanced pattern learning
+        self._learn_command_patterns(natural_language, command, success)
+        
+        # Enhanced context tracking
+        self._track_command_context(command, success, output)
         
         # Keep only last 100 commands
         if len(self.command_history) > 100:
@@ -539,5 +551,348 @@ class ContextManager:
             'git_context': self.git_context,
             'environment': self.environment_context,
             'recent_directories': self.directory_history[-5:],
-            'available_shortcuts': len(self.shortcuts)
+            'available_shortcuts': len(self.shortcuts),
+            'command_history_length': len(self.command_history),
+            'learned_patterns': len(getattr(self, 'command_patterns', {}))
         }
+
+    # Enhanced Context Awareness Methods
+    
+    def _detect_current_project_type(self) -> List[str]:
+        """Detect project type in current directory"""
+        
+        project_types = []
+        try:
+            current_path = Path('.')
+            
+            # Check for project files
+            if any(current_path.glob('*.py')):
+                project_types.append('python')
+            if (current_path / 'package.json').exists():
+                project_types.append('node')
+            if (current_path / 'Cargo.toml').exists():
+                project_types.append('rust')
+            if (current_path / '.git').exists():
+                project_types.append('git')
+            if (current_path / 'Dockerfile').exists():
+                project_types.append('docker')
+                
+        except Exception as e:
+            logger.debug(f"Project type detection failed: {e}")
+            
+        return project_types
+    
+    def _extract_file_references(self, command: str, output: str) -> List[str]:
+        """Extract file references from command and output"""
+        
+        files = []
+        try:
+            # Extract from command
+            import re
+            file_patterns = [
+                r'(?:^|\s)([^\s]+\.(?:py|js|ts|md|txt|json|yml|yaml|toml))(?:\s|$)',
+                r'(?:^|\s)"([^"]+)"(?:\s|$)',
+                r"(?:^|\s)'([^']+)'(?:\s|$)"
+            ]
+            
+            for pattern in file_patterns:
+                matches = re.findall(pattern, command)
+                files.extend(matches)
+            
+            # Extract common filenames from output (first few lines)
+            if output:
+                output_lines = output.split('\n')[:10]
+                for line in output_lines:
+                    for pattern in file_patterns:
+                        matches = re.findall(pattern, line)
+                        files.extend(matches)
+                        
+        except Exception as e:
+            logger.debug(f"File extraction failed: {e}")
+            
+        return list(set(files))[:5]  # Return unique files, max 5
+    
+    def _learn_command_patterns(self, natural_language: str, command: str, success: bool):
+        """Learn patterns from successful commands"""
+        
+        if not natural_language or not success:
+            return
+            
+        try:
+            # Initialize patterns storage
+            if not hasattr(self, 'command_patterns'):
+                self.command_patterns = {}
+            
+            # Normalize natural language input
+            nl_key = natural_language.lower().strip()
+            
+            # Track successful patterns
+            if nl_key not in self.command_patterns:
+                self.command_patterns[nl_key] = {
+                    'commands': [],
+                    'success_count': 0,
+                    'contexts': []
+                }
+            
+            pattern = self.command_patterns[nl_key]
+            
+            # Add command if not already present
+            if command not in pattern['commands']:
+                pattern['commands'].append(command)
+            
+            pattern['success_count'] += 1
+            
+            # Add context information
+            context = {
+                'directory': self.current_directory,
+                'project_type': self._detect_current_project_type(),
+                'timestamp': time.time()
+            }
+            pattern['contexts'].append(context)
+            
+            # Keep only recent contexts (last 10)
+            if len(pattern['contexts']) > 10:
+                pattern['contexts'] = pattern['contexts'][-10:]
+                
+        except Exception as e:
+            logger.debug(f"Pattern learning failed: {e}")
+    
+    def _track_command_context(self, command: str, success: bool, output: str):
+        """Track comprehensive command context"""
+        
+        try:
+            # Track directory changes
+            if command.startswith('cd ') and success:
+                self._handle_directory_change_enhanced(command, output)
+            
+            # Track file operations
+            if any(op in command for op in ['mkdir', 'touch', 'cp', 'mv', 'rm']):
+                self._track_file_operation_enhanced(command, success, output)
+            
+            # Track git operations
+            if command.startswith('git '):
+                self._update_git_context_enhanced(command, success, output)
+            
+            # Track package operations
+            if any(pkg in command for pkg in ['npm', 'pip', 'cargo']):
+                self._track_package_operation(command, success, output)
+                
+        except Exception as e:
+            logger.debug(f"Context tracking failed: {e}")
+    
+    def _handle_directory_change_enhanced(self, command: str, output: str):
+        """Enhanced directory change tracking"""
+        
+        try:
+            # Extract target directory from command
+            target = command.replace('cd ', '').strip().strip('"\'')
+            
+            if target == '-':
+                # Handle "cd -" (go back)
+                if self.directory_history:
+                    target = self.directory_history[-1]
+            elif target.startswith('..'):
+                # Handle relative paths
+                target = os.path.normpath(os.path.join(self.current_directory, target))
+            elif not os.path.isabs(target):
+                # Handle relative paths
+                target = os.path.normpath(os.path.join(self.current_directory, target))
+            
+            # Update directory tracking
+            if os.path.exists(target):
+                old_dir = self.current_directory
+                self.current_directory = os.path.abspath(target)
+                
+                # Add to history
+                if old_dir not in self.directory_history:
+                    self.directory_history.append(old_dir)
+                
+                # Re-detect environment in new directory
+                self._detect_environment()
+                
+        except Exception as e:
+            logger.debug(f"Enhanced directory change tracking failed: {e}")
+    
+    def _track_file_operation_enhanced(self, command: str, success: bool, output: str):
+        """Enhanced file operation tracking"""
+        
+        if not success:
+            return
+            
+        try:
+            # Initialize file operations tracking
+            if not hasattr(self, 'recent_file_operations'):
+                self.recent_file_operations = []
+            
+            operation = {
+                'command': command,
+                'timestamp': time.time(),
+                'directory': self.current_directory,
+                'files_affected': self._extract_file_references(command, output)
+            }
+            
+            self.recent_file_operations.append(operation)
+            
+            # Keep recent operations
+            if len(self.recent_file_operations) > 20:
+                self.recent_file_operations = self.recent_file_operations[-20:]
+                
+        except Exception as e:
+            logger.debug(f"Enhanced file operation tracking failed: {e}")
+    
+    def _update_git_context_enhanced(self, command: str, success: bool, output: str):
+        """Enhanced git context tracking"""
+        
+        if not success:
+            return
+            
+        try:
+            # Re-detect git context after git operations
+            self._detect_git_context()
+            
+            # Track specific git operations
+            if 'checkout' in command or 'switch' in command:
+                # Branch changed, update context
+                self._detect_git_context()
+            elif 'commit' in command:
+                # Commit made, changes should be clear
+                self.git_context['has_changes'] = False
+            elif 'add' in command:
+                # Files staged
+                self.git_context['has_staged_files'] = True
+                
+        except Exception as e:
+            logger.debug(f"Enhanced git context tracking failed: {e}")
+    
+    def _track_package_operation(self, command: str, success: bool, output: str):
+        """Track package management operations"""
+        
+        if not success:
+            return
+            
+        try:
+            # Initialize package tracking
+            if not hasattr(self, 'package_operations'):
+                self.package_operations = []
+            
+            operation = {
+                'command': command,
+                'timestamp': time.time(),
+                'directory': self.current_directory,
+                'package_manager': self._detect_package_manager(command),
+                'operation_type': self._classify_package_operation(command)
+            }
+            
+            self.package_operations.append(operation)
+            
+            # Keep recent operations
+            if len(self.package_operations) > 10:
+                self.package_operations = self.package_operations[-10:]
+                
+        except Exception as e:
+            logger.debug(f"Package operation tracking failed: {e}")
+    
+    def _detect_package_manager(self, command: str) -> str:
+        """Detect which package manager is being used"""
+        
+        if command.startswith('npm'):
+            return 'npm'
+        elif command.startswith('yarn'):
+            return 'yarn'
+        elif command.startswith('pip'):
+            return 'pip'
+        elif command.startswith('cargo'):
+            return 'cargo'
+        elif command.startswith('mvn'):
+            return 'maven'
+        elif command.startswith('gradle'):
+            return 'gradle'
+        else:
+            return 'unknown'
+    
+    def _classify_package_operation(self, command: str) -> str:
+        """Classify the type of package operation"""
+        
+        if 'install' in command:
+            return 'install'
+        elif 'uninstall' in command or 'remove' in command:
+            return 'uninstall'
+        elif 'update' in command or 'upgrade' in command:
+            return 'update'
+        elif 'run' in command or 'start' in command:
+            return 'run'
+        elif 'build' in command:
+            return 'build'
+        else:
+            return 'other'
+    
+    def get_contextual_suggestions(self, natural_language: str) -> List[Dict[str, Any]]:
+        """Get enhanced contextual suggestions based on learned patterns"""
+        
+        suggestions = []
+        
+        try:
+            # Check learned patterns first
+            if hasattr(self, 'command_patterns'):
+                nl_key = natural_language.lower().strip()
+                
+                # Exact pattern match
+                if nl_key in self.command_patterns:
+                    pattern = self.command_patterns[nl_key]
+                    for cmd in pattern['commands'][:3]:  # Top 3 commands
+                        suggestions.append({
+                            'command': cmd,
+                            'explanation': f'Learned from {pattern["success_count"]} successful uses',
+                            'confidence': min(0.95, 0.7 + (pattern["success_count"] * 0.05)),
+                            'context_type': 'learned_pattern',
+                            'source': 'pattern learning'
+                        })
+                
+                # Fuzzy pattern matching
+                for pattern_key, pattern_data in self.command_patterns.items():
+                    if self._fuzzy_match(nl_key, pattern_key) > 0.7:
+                        for cmd in pattern_data['commands'][:2]:
+                            suggestions.append({
+                                'command': cmd,
+                                'explanation': f'Similar to "{pattern_key}" ({pattern_data["success_count"]} uses)',
+                                'confidence': 0.75,
+                                'context_type': 'fuzzy_pattern',
+                                'source': 'fuzzy pattern matching'
+                            })
+            
+            # Add existing context suggestions
+            existing_suggestions = self.get_context_suggestions(natural_language)
+            suggestions.extend(existing_suggestions[:5])  # Top 5 existing suggestions
+            
+        except Exception as e:
+            logger.debug(f"Contextual suggestions failed: {e}")
+        
+        # Remove duplicates and sort by confidence
+        seen_commands = set()
+        unique_suggestions = []
+        
+        for suggestion in suggestions:
+            if suggestion['command'] not in seen_commands:
+                seen_commands.add(suggestion['command'])
+                unique_suggestions.append(suggestion)
+        
+        return sorted(unique_suggestions, key=lambda x: x['confidence'], reverse=True)[:10]
+    
+    def _fuzzy_match(self, text1: str, text2: str) -> float:
+        """Simple fuzzy matching between two strings"""
+        
+        try:
+            # Simple word overlap scoring
+            words1 = set(text1.lower().split())
+            words2 = set(text2.lower().split())
+            
+            if not words1 or not words2:
+                return 0.0
+            
+            overlap = len(words1.intersection(words2))
+            total = len(words1.union(words2))
+            
+            return overlap / total if total > 0 else 0.0
+            
+        except Exception:
+            return 0.0
