@@ -1,0 +1,113 @@
+# Overview
+
+Natural Language CLI Tool (nlcli) is a universal command-line interface that translates natural language into OS commands using OpenAI's GPT-4o. The tool is designed as a cross-platform solution that works on Linux, macOS, and Windows, providing users with an intuitive way to execute system commands using plain English. The application includes comprehensive safety measures, command history tracking, and is built with enterprise expansion capabilities in mind.
+
+# User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## Recent User Requests
+- Remove interactive confirmation before running commands (implemented: auto-execute read-only commands)
+- Make tool installable like any other CLI tool (implemented: pip installable with console scripts)
+- Design for enterprise SaaS expansion (architecture supports this)
+
+# System Architecture
+
+## Core Components
+
+The application follows a modular architecture with clear separation of concerns:
+
+**AI Translation Layer** (`ai_translator.py`)
+- Integrates with OpenAI's GPT-4o API for natural language processing
+- Uses platform-specific prompts to generate appropriate OS commands
+- Returns structured responses with command, explanation, and confidence scores
+- Handles API authentication and error management
+
+**Safety Validation** (`safety_checker.py`)
+- Implements multi-level safety checking (low, medium, high)
+- Maintains platform-specific dangerous command patterns
+- Prevents execution of destructive operations like `rm -rf /` or registry modifications
+- Configurable safety levels for different user requirements
+
+**Command Execution Engine** (`command_executor.py`)
+- Cross-platform command execution with proper shell detection
+- Timeout management and error handling
+- Secure subprocess execution with output capturing
+- Working directory and environment variable support
+
+**History Management** (`history_manager.py`)
+- SQLite-based storage for command history
+- Tracks natural language inputs, generated commands, and execution results
+- Indexed for efficient querying and retrieval
+- Session management for organizing command history
+
+**Configuration System** (`config_manager.py`)
+- INI-based configuration with sensible defaults
+- Manages AI settings (model, temperature, timeouts)
+- User preferences for safety levels and interface behavior
+- Platform-specific configuration paths
+
+**CLI Interface** (`main.py`)
+- Click-based command-line interface with Rich console output
+- Interactive mode for real-time command translation
+- Subcommand structure for extensibility
+- Context management for sharing components across commands
+
+## Data Storage
+
+**SQLite Database**
+- Local storage for command history
+- Schema includes natural language input, generated commands, execution success, and timestamps
+- Indexed for performance on timestamp and platform fields
+- Backup and maintenance capabilities
+
+**Configuration Files**
+- INI format configuration stored in user's home directory
+- Hierarchical settings with defaults and user overrides
+- Separate sections for AI, storage, and general preferences
+
+## Security Architecture
+
+**Multi-layered Safety System**
+- Pattern-based command validation before execution
+- Platform-aware dangerous command detection
+- User confirmation prompts for potentially risky operations
+- Configurable safety levels from permissive to restrictive
+
+**API Key Management**
+- Environment variable-based OpenAI API key storage
+- Secure handling without logging sensitive information
+- Graceful error handling for missing or invalid keys
+
+## Cross-Platform Design
+
+**Platform Abstraction**
+- Automatic detection of operating system and shell environment
+- Platform-specific command patterns and safety rules
+- Shell preference handling (bash, zsh, cmd, PowerShell)
+- Path and directory management across different filesystems
+
+# External Dependencies
+
+**OpenAI API**
+- Primary dependency for natural language processing
+- Uses GPT-4o model for command translation
+- Requires API key authentication
+- Configurable timeout and token limits
+
+**Python Packages**
+- `click`: Command-line interface framework
+- `rich`: Enhanced console output and formatting
+- `openai`: Official OpenAI API client
+- `configparser`: Configuration file management
+- `sqlite3`: Built-in database functionality (no external dependency)
+
+**System Dependencies**
+- Python 3.8+ runtime environment
+- Standard library modules for cross-platform operation
+- Operating system shell environments (bash, zsh, cmd, PowerShell)
+
+**Development and Distribution**
+- `setuptools`: Package distribution and installation
+- PyPI integration for package distribution
+- Install scripts for different platforms (bash, PowerShell)

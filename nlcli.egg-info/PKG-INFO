@@ -1,0 +1,240 @@
+Metadata-Version: 2.4
+Name: nlcli
+Version: 1.0.0
+Summary: Universal CLI that translates natural language to OS commands
+Home-page: https://github.com/nlcli/nlcli
+Author: NLCLI Team
+Author-email: NLCLI Team <team@nlcli.dev>
+License: MIT
+Project-URL: Homepage, https://github.com/nlcli/nlcli
+Project-URL: Bug Reports, https://github.com/nlcli/nlcli/issues
+Project-URL: Source, https://github.com/nlcli/nlcli
+Project-URL: Documentation, https://nlcli.readthedocs.io
+Keywords: cli,natural language,command line,ai,automation,shell
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: System Administrators
+Classifier: Topic :: System :: Shells
+Classifier: Topic :: Utilities
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: click>=8.0.0
+Requires-Dist: openai>=1.0.0
+Requires-Dist: rich>=13.0.0
+Requires-Dist: psutil>=5.0.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: flake8>=6.0.0; extra == "dev"
+Requires-Dist: mypy>=1.0.0; extra == "dev"
+Dynamic: author
+Dynamic: home-page
+Dynamic: requires-python
+
+# Natural Language CLI Tool (nlcli)
+
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![PyPI](https://img.shields.io/badge/pypi-nlcli-orange.svg)](https://pypi.org/project/nlcli/)
+
+A universal command-line interface that translates natural language into OS commands using AI. Built with enterprise expansion in mind.
+
+## 🚀 Features
+
+- **Natural Language Translation**: Convert plain English to OS commands using OpenAI's GPT-4o
+- **Cross-Platform**: Works on Linux, macOS, and Windows
+- **Command History**: Stores and retrieves previous commands with SQLite
+- **Safety Checks**: Built-in safety measures to prevent destructive operations
+- **Interactive Mode**: Real-time command translation and execution
+- **Rich Output**: Enhanced console output with syntax highlighting
+- **Configurable**: Flexible configuration system with multiple safety levels
+- **Extensible Architecture**: Designed for future enterprise SaaS features
+
+## 📦 Installation
+
+### Quick Install (Recommended)
+
+```bash
+# Linux/macOS
+curl -sSL https://raw.githubusercontent.com/nlcli/nlcli/main/install.sh | bash
+
+# Windows
+powershell -c "iwr https://raw.githubusercontent.com/nlcli/nlcli/main/install.bat | iex"
+```
+
+### Manual Installation
+
+```bash
+# Using pip
+pip install nlcli
+
+# From source
+git clone https://github.com/nlcli/nlcli.git
+cd nlcli
+pip install -e .
+```
+
+### Local Installation (Development)
+
+```bash
+# Clone and install in development mode
+git clone https://github.com/nlcli/nlcli.git
+cd nlcli
+pip install -e .
+
+# Or run directly
+python -m nlcli.main
+```
+
+## 🔑 Setup
+
+1. **Get OpenAI API Key**: Visit [OpenAI Platform](https://platform.openai.com) and create an API key
+2. **Set Environment Variable**: 
+   ```bash
+   export OPENAI_API_KEY="your-api-key-here"
+   ```
+3. **Test Installation**:
+   ```bash
+   nlcli --help
+   ```
+
+## 🚀 Usage
+
+### Interactive Mode
+```bash
+nlcli
+# or
+nl
+```
+
+### Single Command Translation
+```bash
+nlcli translate "list all files in current directory"
+nlcli translate "create a backup of my documents folder" --explain-only
+nlcli translate "show disk usage" --execute
+```
+
+### Command History
+```bash
+nlcli history
+nlcli history --limit 50
+```
+
+### Configuration
+```bash
+nlcli config                    # Show current settings
+```
+
+## 📝 Examples
+
+### File Operations
+- `"list all Python files in this directory"`
+- `"create a new folder called projects"`
+- `"copy all images to backup folder"`
+- `"find all files larger than 100MB"`
+
+### System Information
+- `"show disk usage"`
+- `"display running processes"`
+- `"check memory usage"`
+- `"show network connections"`
+
+### Development Tasks
+- `"initialize a git repository"`
+- `"install Python package requests"`
+- `"run unit tests"`
+- `"compress project folder"`
+
+## ⚙️ Configuration
+
+Configuration is stored in `~/.nlcli/config.ini`:
+
+```ini
+[general]
+safety_level = medium
+auto_confirm_read_only = true
+max_history_items = 1000
+
+[ai]
+model = gpt-4o
+temperature = 0.3
+max_tokens = 500
+
+[storage]
+db_name = nlcli_history.db
+backup_enabled = true
+```
+
+## 🛡️ Safety Features
+
+- **Multi-level Safety Checks**: Configurable safety levels (low/medium/high)
+- **Command Validation**: Prevents destructive operations
+- **Read-only Auto-execution**: Safe commands execute automatically
+- **Confirmation Prompts**: Dangerous commands require explicit confirmation
+- **Platform-aware**: Different safety rules for Windows/Linux/macOS
+
+## 🏗️ Architecture
+
+Built with enterprise expansion in mind:
+
+- **Modular Design**: Separate components for AI translation, safety, execution
+- **Plugin System**: Extensible for custom commands and integrations
+- **Database Storage**: SQLite for command history and user data
+- **Cross-platform**: Works on all major operating systems
+- **API Ready**: Core components can be exposed via REST API
+
+## 🔧 Development
+
+### Project Structure
+```
+nlcli/
+├── nlcli/
+│   ├── __init__.py
+│   ├── main.py              # CLI interface
+│   ├── ai_translator.py     # OpenAI integration
+│   ├── safety_checker.py    # Safety validation
+│   ├── command_executor.py  # Command execution
+│   ├── history_manager.py   # SQLite history
+│   ├── config_manager.py    # Configuration
+│   └── utils.py            # Utilities
+├── install.sh              # Linux/macOS installer
+├── install.bat            # Windows installer
+├── setup.py               # Package setup
+└── pyproject.toml         # Modern Python packaging
+```
+
+### Contributing
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## 📊 Enterprise Features (Roadmap)
+
+- **Team Management**: Multi-user support with role-based access
+- **Command Templates**: Pre-approved command patterns
+- **Audit Logging**: Complete command execution tracking
+- **API Gateway**: REST API for integrations
+- **Web Dashboard**: Browser-based management interface
+- **SSO Integration**: Enterprise authentication
+- **Custom Models**: Fine-tuned AI models for specific environments
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## 🤝 Support
+
+- **Issues**: [GitHub Issues](https://github.com/nlcli/nlcli/issues)
+- **Documentation**: [Read the Docs](https://nlcli.readthedocs.io)
+- **Discussions**: [GitHub Discussions](https://github.com/nlcli/nlcli/discussions)
