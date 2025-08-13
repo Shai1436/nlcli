@@ -3,6 +3,7 @@ pyproject.toml
 setup.py
 nlcli/__init__.py
 nlcli/ai_translator.py
+nlcli/cache_manager.py
 nlcli/command_executor.py
 nlcli/config_manager.py
 nlcli/history_manager.py

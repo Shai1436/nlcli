@@ -33,10 +33,16 @@ class ConfigManager:
                 'log_level': 'INFO'
             },
             'ai': {
-                'model': 'gpt-4o',
-                'temperature': '0.3',
-                'max_tokens': '500',
-                'timeout': '30'
+                'model': 'gpt-4o-mini',
+                'temperature': '0.1',
+                'max_tokens': '300',
+                'timeout': '5'
+            },
+            'performance': {
+                'enable_cache': 'true',
+                'enable_instant_patterns': 'true',
+                'api_timeout': '3.0',
+                'cache_cleanup_days': '30'
             },
             'storage': {
                 'db_name': 'nlcli_history.db',

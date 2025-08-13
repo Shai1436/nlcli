@@ -10,6 +10,7 @@ Preferred communication style: Simple, everyday language.
 - Remove interactive confirmation before running commands (implemented: auto-execute read-only commands)
 - Make tool installable like any other CLI tool (implemented: pip installable with console scripts)
 - Design for enterprise SaaS expansion (architecture supports this)
+- Address performance concerns about API latency (implemented: 3-tier performance optimization system)
 
 # System Architecture
 
@@ -18,9 +19,14 @@ Preferred communication style: Simple, everyday language.
 The application follows a modular architecture with clear separation of concerns:
 
 **AI Translation Layer** (`ai_translator.py`)
-- Integrates with OpenAI's GPT-4o API for natural language processing
+- 3-tier performance optimization system for maximum speed:
+  1. **Instant Pattern Matching** (sub-millisecond): 15+ common commands recognized immediately
+  2. **Local SQLite Cache** (sub-millisecond): Stores and retrieves previous translations
+  3. **AI Translation** (2-3 seconds): GPT-4o-mini with timeout and concurrent execution
+- Integrates with OpenAI's GPT-4o-mini API for faster responses
 - Uses platform-specific prompts to generate appropriate OS commands
 - Returns structured responses with command, explanation, and confidence scores
+- Performance monitoring with response time indicators
 - Handles API authentication and error management
 
 **Safety Validation** (`safety_checker.py`)
@@ -44,12 +50,22 @@ The application follows a modular architecture with clear separation of concerns
 **Configuration System** (`config_manager.py`)
 - INI-based configuration with sensible defaults
 - Manages AI settings (model, temperature, timeouts)
+- Performance optimization settings (cache, patterns, timeouts)
 - User preferences for safety levels and interface behavior
 - Platform-specific configuration paths
+
+**Cache Management** (`cache_manager.py`)
+- SQLite-based local cache for translation results
+- Platform-aware caching with input normalization
+- Usage statistics and popular command tracking
+- Automatic cleanup of old entries
+- Cache hit rate monitoring for performance optimization
 
 **CLI Interface** (`main.py`)
 - Click-based command-line interface with Rich console output
 - Interactive mode for real-time command translation
+- Real-time performance indicators (⚡ instant, 📋 cached, 🤖 AI)
+- Performance monitoring command (`nlcli performance`)
 - Subcommand structure for extensibility
 - Context management for sharing components across commands
 

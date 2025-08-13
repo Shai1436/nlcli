@@ -39,7 +39,10 @@ def cli(ctx, config_path, verbose):
     config = ConfigManager(config_path)
     ctx.obj['config'] = config
     ctx.obj['history'] = HistoryManager(config.get_db_path())
-    ctx.obj['ai_translator'] = AITranslator(config.get_openai_key())
+    ctx.obj['ai_translator'] = AITranslator(
+        api_key=config.get_openai_key(),
+        enable_cache=config.get('performance', 'enable_cache', fallback='true').lower() == 'true'
+    )
     ctx.obj['safety_checker'] = SafetyChecker(config.get_safety_level())
     ctx.obj['executor'] = CommandExecutor()
     
@@ -47,7 +50,7 @@ def cli(ctx, config_path, verbose):
     if ctx.invoked_subcommand is None:
         interactive_mode(ctx.obj)
 
-def interactive_mode(components):
+def interactive_mode(obj):
     """Interactive mode for natural language command translation"""
     
     console.print(Panel.fit(
@@ -57,10 +60,10 @@ def interactive_mode(components):
         title="Welcome"
     ))
     
-    history = components['history']
-    ai_translator = components['ai_translator']
-    safety_checker = components['safety_checker']
-    executor = components['executor']
+    history = obj['history']
+    ai_translator = obj['ai_translator']
+    safety_checker = obj['safety_checker']
+    executor = obj['executor']
     
     while True:
         try:
@@ -87,10 +90,23 @@ def interactive_mode(components):
                 continue
             
             # Translate natural language to command
+            import time
+            start_time = time.time()
             console.print("[yellow]Translating...[/yellow]")
             
             try:
-                translation_result = ai_translator.translate(user_input)
+                api_timeout = float(obj['config'].get('performance', 'api_timeout', fallback='3.0'))
+                translation_result = ai_translator.translate(user_input, timeout=api_timeout)
+                
+                # Show performance info
+                elapsed = time.time() - start_time
+                if translation_result:
+                    if translation_result.get('instant'):
+                        console.print(f"[dim green]⚡ Instant match ({elapsed:.3f}s)[/dim green]")
+                    elif translation_result.get('cached'):
+                        console.print(f"[dim green]📋 Cached result ({elapsed:.3f}s)[/dim green]")
+                    else:
+                        console.print(f"[dim yellow]🤖 AI translation ({elapsed:.3f}s)[/dim yellow]")
                 
                 if not translation_result:
                     console.print("[red]Could not translate the command. Please try rephrasing.[/red]")
@@ -297,6 +313,51 @@ def config(obj):
     table.add_row("OpenAI Key", "Set" if config_manager.get_openai_key() else "Not Set")
     
     console.print(table)
+
+@cli.command()
+@click.pass_obj
+def performance(obj):
+    """Show performance statistics and cache info"""
+    
+    ai_translator = obj['ai_translator']
+    
+    if not ai_translator.cache_manager:
+        console.print("[yellow]Cache is disabled[/yellow]")
+        return
+    
+    # Get cache statistics
+    stats = ai_translator.cache_manager.get_cache_stats()
+    popular = ai_translator.cache_manager.get_popular_commands(5)
+    
+    # Performance statistics table
+    perf_table = Table(show_header=True, header_style="bold magenta", title="Performance Statistics")
+    perf_table.add_column("Metric", style="cyan")
+    perf_table.add_column("Value", style="white")
+    
+    perf_table.add_row("Cached Translations", str(stats.get('total_entries', 0)))
+    perf_table.add_row("Total Cache Uses", str(stats.get('total_uses', 0)))
+    perf_table.add_row("Average Uses per Command", str(stats.get('average_uses', 0)))
+    perf_table.add_row("Cache Hit Potential", stats.get('cache_hit_potential', '0%'))
+    perf_table.add_row("Instant Patterns Available", str(len(ai_translator.instant_patterns)))
+    
+    console.print(perf_table)
+    
+    # Popular commands table
+    if popular:
+        console.print()
+        pop_table = Table(show_header=True, header_style="bold green", title="Most Used Commands")
+        pop_table.add_column("Natural Language", style="cyan")
+        pop_table.add_column("Command", style="white")
+        pop_table.add_column("Uses", style="yellow")
+        
+        for cmd in popular:
+            pop_table.add_row(
+                cmd['natural_language'][:40] + "..." if len(cmd['natural_language']) > 40 else cmd['natural_language'],
+                cmd['command'],
+                str(cmd['use_count'])
+            )
+        
+        console.print(pop_table)
 
 if __name__ == '__main__':
     cli()
