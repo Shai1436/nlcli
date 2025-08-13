@@ -18,7 +18,7 @@ from .safety_checker import SafetyChecker
 from .config_manager import ConfigManager
 from .command_executor import CommandExecutor
 from .output_formatter import OutputFormatter
-from .cursor_styles import setup_modern_cursor, restore_cursor, get_styled_input
+
 from .context_cli import context
 from .history_cli import history as history_cli
 from .filter_cli import filter as filter_cli
@@ -59,62 +59,59 @@ def cli(ctx, config_path, verbose):
         interactive_mode(ctx.obj)
 
 def interactive_mode(obj):
-    """Interactive mode for natural language command translation with modern cursor"""
+    """Interactive mode for natural language command translation"""
     
-    try:
-        # Show enhanced welcome banner first
-        formatter = obj['formatter']
-        formatter.format_welcome_banner()
-        
-        # Initialize modern cursor after banner to ensure proper loading
-        setup_modern_cursor()
+    # Show enhanced welcome banner
+    formatter = obj['formatter']
+    formatter.format_welcome_banner()
     
-        history = obj['history']
-        ai_translator = obj['ai_translator']
-        safety_checker = obj['safety_checker']
-        executor = obj['executor']
-        config = obj['config']
+    history = obj['history']
+    ai_translator = obj['ai_translator']
+    safety_checker = obj['safety_checker']
+    executor = obj['executor']
+    config = obj['config']
+
+    # Create input handler with history support
+    history_file = os.path.join(os.path.expanduser('~/.nlcli'), 'input_history')
     
-        # Create input handler with history support
-        history_file = os.path.join(os.path.expanduser('~/.nlcli'), 'input_history')
+    with create_input_handler(history_file) as input_handler:
+        # Load existing natural language history into input handler
+        recent_nl_commands = history.get_recent_natural_language_commands(50)
+        for nl_command in recent_nl_commands:
+            input_handler.add_to_history(nl_command)
         
-        with create_input_handler(history_file) as input_handler:
-            # Load existing natural language history into input handler
-            recent_nl_commands = history.get_recent_natural_language_commands(50)
-            for nl_command in recent_nl_commands:
-                input_handler.add_to_history(nl_command)
-        
-            while True:
-                try:
-                    # Get user input with modern styled prompt and sleek cursor
-                    user_input = get_styled_input("❯", "bright_blue")
-                
-                    if not user_input:
-                        continue
-                        
-                    if user_input.lower() in ['quit', 'exit', 'q']:
-                        console.print("[green]Goodbye![/green]")
-                        break
-                        
-                    if user_input.lower() == 'history':
-                        show_history(history)
-                        continue
-                        
-                    if user_input.lower() in ['help', 'h']:
-                        show_help()
-                        continue
-                        
-                    if user_input.lower() == 'clear':
-                        console.clear()
-                        continue
-                
-                    # Translate natural language to command
-                    start_time = time.time()
-                    console.print("[yellow]Translating...[/yellow]")
+        while True:
+            try:
+                # Get user input with simple blue chevron prompt
+                console.print("[bold bright_blue]❯[/bold bright_blue] ", end="")
+                user_input = input().strip()
+            
+                if not user_input:
+                    continue
                     
-                    try:
-                        api_timeout = float(obj['config'].get('performance', 'api_timeout', fallback='8.0'))
-                        translation_result = ai_translator.translate(user_input, timeout=api_timeout)
+                if user_input.lower() in ['quit', 'exit', 'q']:
+                    console.print("[green]Goodbye![/green]")
+                    break
+                    
+                if user_input.lower() == 'history':
+                    show_history(history)
+                    continue
+                    
+                if user_input.lower() in ['help', 'h']:
+                    show_help()
+                    continue
+                    
+                if user_input.lower() == 'clear':
+                    console.clear()
+                    continue
+            
+                # Translate natural language to command
+                start_time = time.time()
+                console.print("[yellow]Translating...[/yellow]")
+                
+                try:
+                    api_timeout = float(obj['config'].get('performance', 'api_timeout', fallback='8.0'))
+                    translation_result = ai_translator.translate(user_input, timeout=api_timeout)
                         
                         # Show performance info
                         elapsed = time.time() - start_time
@@ -196,9 +193,7 @@ def interactive_mode(obj):
                     console.print("\n[green]Goodbye![/green]")
                     break
     
-    finally:
-        # Always restore cursor when exiting interactive mode
-        restore_cursor()
+
 
 def display_translation(command, explanation, confidence):
     """Display the translated command with explanation"""
