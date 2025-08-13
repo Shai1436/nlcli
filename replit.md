@@ -18,7 +18,7 @@ Preferred communication style: Simple, everyday language.
 Based on current implementation, the next logical features are prioritized as:
 
 **Immediate Priority (Next 2 weeks):**
-1. **Advanced Pattern Recognition** - Expand from 15 to 50+ instant command patterns
+1. **Advanced Pattern Recognition** - Expand from 15 to 60+ instant command patterns (COMPLETED)
 2. **Command Context Awareness** - Remember current directory, previous commands for better suggestions  
 3. **Enhanced Output Formatting** - Rich display with colors, tables, and better visual presentation
 4. **Interactive Command Selection** - When multiple commands possible, let user choose
@@ -45,7 +45,7 @@ The application follows a modular architecture with clear separation of concerns
 
 **AI Translation Layer** (`ai_translator.py`)
 - 3-tier performance optimization system for maximum speed:
-  1. **Instant Pattern Matching** (sub-millisecond): 15+ common commands recognized immediately
+  1. **Instant Pattern Matching** (sub-millisecond): 60+ common commands recognized immediately
   2. **Local SQLite Cache** (sub-millisecond): Stores and retrieves previous translations
   3. **AI Translation** (2-3 seconds): GPT-4o-mini with timeout and concurrent execution
 - Integrates with OpenAI's GPT-4o-mini API for faster responses

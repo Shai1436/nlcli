@@ -33,23 +33,122 @@ class AITranslator:
         self.cache_manager = CacheManager() if enable_cache else None
         self.executor = ThreadPoolExecutor(max_workers=2)
         
-        # Common command patterns for instant recognition
+        # Common command patterns for instant recognition (50+ patterns)
         self.instant_patterns = {
-            'ls': ['list files', 'show files', 'list directory', 'dir'],
-            'pwd': ['current directory', 'where am i', 'current path', 'show path'],
-            'cd': ['change directory', 'go to', 'navigate to'],
-            'cat': ['show file', 'read file', 'display file'],
-            'mkdir': ['create directory', 'make folder', 'new folder'],
-            'rm': ['delete file', 'remove file'],
-            'cp': ['copy file', 'duplicate file'],
-            'mv': ['move file', 'rename file'],
+            # File and Directory Operations
+            'ls': ['list files', 'show files', 'list directory', 'dir', 'what files', 'show contents'],
+            'ls -la': ['list all files', 'show hidden files', 'detailed list', 'list with details', 'show file details'],
+            'ls -lh': ['list files with sizes', 'show file sizes', 'human readable list', 'list with size'],
+            'pwd': ['current directory', 'where am i', 'current path', 'show path', 'current location'],
+            'cd': ['change directory', 'go to', 'navigate to', 'move to directory'],
+            'cd ..': ['go back', 'parent directory', 'go up', 'previous directory'],
+            'cd ~': ['go home', 'home directory', 'user directory'],
+            'cat': ['show file', 'read file', 'display file', 'view file', 'print file'],
+            'head': ['show first lines', 'beginning of file', 'first 10 lines'],
+            'tail': ['show last lines', 'end of file', 'last 10 lines'],
+            'tail -f': ['follow file', 'watch file', 'monitor file', 'tail file'],
+            'less': ['page through file', 'view file page', 'scroll file'],
+            'more': ['view file', 'page file', 'read file pages'],
+            'mkdir': ['create directory', 'make folder', 'new folder', 'create folder'],
+            'mkdir -p': ['create nested directories', 'make directory tree', 'create path'],
+            'rmdir': ['remove directory', 'delete folder', 'remove folder'],
+            'rm': ['delete file', 'remove file', 'delete'],
+            'rm -rf': ['force delete', 'delete recursively', 'remove all'],
+            'cp': ['copy file', 'duplicate file', 'copy'],
+            'cp -r': ['copy directory', 'copy folder', 'recursive copy'],
+            'mv': ['move file', 'rename file', 'move'],
+            'touch': ['create file', 'new file', 'make file'],
+            'find .': ['find files', 'search files', 'locate files'],
+            'locate': ['find file location', 'search for file'],
+            'which': ['find command', 'locate command', 'where is command'],
+            'ln -s': ['create link', 'symbolic link', 'symlink'],
+            
+            # File Content and Text Processing
+            'grep': ['search in file', 'find text', 'search text'],
+            'sort': ['sort file', 'sort lines', 'arrange lines'],
+            'uniq': ['unique lines', 'remove duplicates', 'filter duplicates'],
+            'wc': ['count words', 'word count', 'line count'],
+            'wc -l': ['count lines', 'number of lines', 'line count'],
+            'diff': ['compare files', 'file difference', 'diff files'],
+            'cut': ['extract columns', 'cut fields', 'select columns'],
+            'awk': ['process text', 'extract fields', 'text processing'],
+            'sed': ['replace text', 'substitute text', 'edit text'],
+            
+            # System Information and Monitoring
             'ps': ['show processes', 'list processes', 'running processes'],
-            'top': ['system monitor', 'cpu usage', 'memory usage'],
+            'ps aux': ['all processes', 'detailed processes', 'process list'],
+            'top': ['system monitor', 'cpu usage', 'memory usage', 'resource monitor'],
+            'htop': ['interactive top', 'better top', 'system stats'],
             'df': ['disk usage', 'disk space', 'storage usage'],
+            'df -h': ['disk space human readable', 'storage info', 'disk info'],
+            'du': ['directory size', 'folder size', 'space used'],
+            'du -sh': ['folder size summary', 'directory size human'],
+            'free': ['memory usage', 'ram usage', 'memory info'],
+            'free -h': ['memory info human readable', 'ram info'],
+            'uname': ['system info', 'os info', 'kernel info'],
+            'uname -a': ['detailed system info', 'full system info'],
+            'uptime': ['system uptime', 'how long running', 'boot time'],
             'whoami': ['current user', 'username', 'who am i'],
-            'date': ['current time', 'show date', 'what time'],
-            'history': ['command history', 'previous commands'],
-            'clear': ['clear screen', 'clean terminal', 'clear terminal']
+            'id': ['user id', 'user info', 'group info'],
+            'w': ['who is logged in', 'logged users', 'user activity'],
+            'last': ['login history', 'last logins', 'user sessions'],
+            
+            # Network and Connectivity
+            'ping': ['test connection', 'check connectivity', 'network test'],
+            'wget': ['download file', 'fetch file', 'get file'],
+            'curl': ['web request', 'http request', 'fetch url'],
+            'netstat': ['network connections', 'open ports', 'network status'],
+            'ss': ['socket statistics', 'network sockets', 'connection info'],
+            'ifconfig': ['network interface', 'ip address', 'network config'],
+            'ip addr': ['show ip', 'network interfaces', 'ip info'],
+            
+            # Archives and Compression
+            'tar -xzf': ['extract tar', 'unpack tar', 'decompress tar'],
+            'tar -czf': ['create tar', 'compress tar', 'make archive'],
+            'zip': ['create zip', 'compress files', 'make zip'],
+            'unzip': ['extract zip', 'decompress zip', 'unpack zip'],
+            'gzip': ['compress file', 'gzip file'],
+            'gunzip': ['decompress file', 'unzip file'],
+            
+            # File Permissions and Ownership
+            'chmod': ['change permissions', 'file permissions', 'modify permissions'],
+            'chmod +x': ['make executable', 'add execute permission'],
+            'chown': ['change owner', 'file owner', 'change ownership'],
+            'chgrp': ['change group', 'file group'],
+            
+            # Environment and Variables
+            'env': ['environment variables', 'show variables', 'environment'],
+            'export': ['set variable', 'environment variable'],
+            'echo': ['print text', 'display text', 'show text'],
+            'date': ['current time', 'show date', 'what time', 'current date'],
+            'cal': ['calendar', 'show calendar', 'current month'],
+            'history': ['command history', 'previous commands', 'past commands'],
+            'alias': ['command aliases', 'shortcuts', 'command shortcuts'],
+            
+            # Terminal and Session
+            'clear': ['clear screen', 'clean terminal', 'clear terminal'],
+            'reset': ['reset terminal', 'fix terminal'],
+            'exit': ['quit', 'logout', 'close terminal'],
+            'logout': ['log out', 'end session'],
+            'screen': ['new session', 'terminal session'],
+            'tmux': ['terminal multiplexer', 'multiple terminals'],
+            
+            # Package Management (Linux)
+            'sudo apt update': ['update packages', 'refresh packages', 'update package list'],
+            'sudo apt upgrade': ['upgrade system', 'update all packages'],
+            'sudo apt install': ['install package', 'add software'],
+            'apt search': ['search packages', 'find software'],
+            'dpkg -l': ['list installed packages', 'installed software'],
+            
+            # Git Commands
+            'git status': ['git status', 'repo status', 'working tree status'],
+            'git log': ['git history', 'commit history', 'git commits'],
+            'git diff': ['git changes', 'file changes', 'working changes'],
+            'git add .': ['stage all changes', 'add all files'],
+            'git commit': ['commit changes', 'save changes'],
+            'git push': ['push to remote', 'upload changes'],
+            'git pull': ['pull changes', 'update from remote'],
+            'git clone': ['clone repository', 'copy repo']
         }
         
     def translate(self, natural_language: str, timeout: float = 5.0) -> Optional[Dict]:
@@ -118,21 +217,120 @@ class AITranslator:
         """Get explanation for common commands"""
         
         explanations = {
+            # File and Directory Operations
             'ls': 'Lists files and directories in the current directory',
+            'ls -la': 'Lists all files including hidden ones with detailed information',
+            'ls -lh': 'Lists files with human-readable file sizes',
             'pwd': 'Shows the current working directory path',
             'cd': 'Changes the current directory',
+            'cd ..': 'Changes to the parent directory',
+            'cd ~': 'Changes to the home directory',
             'cat': 'Displays the contents of a file',
+            'head': 'Shows the first 10 lines of a file',
+            'tail': 'Shows the last 10 lines of a file',
+            'tail -f': 'Continuously monitors and displays new lines added to a file',
+            'less': 'Views file content page by page with navigation',
+            'more': 'Views file content one screen at a time',
             'mkdir': 'Creates a new directory',
+            'mkdir -p': 'Creates directories including parent directories as needed',
+            'rmdir': 'Removes empty directories',
             'rm': 'Removes files or directories',
+            'rm -rf': 'Forcefully removes files and directories recursively',
             'cp': 'Copies files or directories',
+            'cp -r': 'Copies directories and their contents recursively',
             'mv': 'Moves or renames files or directories',
+            'touch': 'Creates a new empty file or updates file timestamp',
+            'find .': 'Searches for files and directories in current location',
+            'locate': 'Finds files by name using system database',
+            'which': 'Shows the location of a command',
+            'ln -s': 'Creates a symbolic link to a file or directory',
+            
+            # File Content and Text Processing
+            'grep': 'Searches for text patterns within files',
+            'sort': 'Sorts lines in a file alphabetically',
+            'uniq': 'Filters out duplicate lines from sorted input',
+            'wc': 'Counts words, lines, and characters in files',
+            'wc -l': 'Counts the number of lines in a file',
+            'diff': 'Compares two files and shows differences',
+            'cut': 'Extracts specific columns or fields from text',
+            'awk': 'Processes and manipulates text data',
+            'sed': 'Edits text using stream editing commands',
+            
+            # System Information and Monitoring
             'ps': 'Shows currently running processes',
+            'ps aux': 'Shows detailed information about all running processes',
             'top': 'Displays real-time system processes and resource usage',
+            'htop': 'Interactive process viewer with enhanced features',
             'df': 'Shows disk space usage for mounted filesystems',
+            'df -h': 'Shows disk space usage in human-readable format',
+            'du': 'Shows directory space usage',
+            'du -sh': 'Shows total directory size in human-readable format',
+            'free': 'Displays memory usage information',
+            'free -h': 'Shows memory usage in human-readable format',
+            'uname': 'Shows system information',
+            'uname -a': 'Shows detailed system information including kernel version',
+            'uptime': 'Shows how long the system has been running',
             'whoami': 'Shows the current username',
+            'id': 'Shows user and group IDs',
+            'w': 'Shows who is logged in and what they are doing',
+            'last': 'Shows recent login history',
+            
+            # Network and Connectivity
+            'ping': 'Tests network connectivity to a host',
+            'wget': 'Downloads files from the internet',
+            'curl': 'Transfers data from or to servers',
+            'netstat': 'Shows network connections and statistics',
+            'ss': 'Shows socket statistics and connections',
+            'ifconfig': 'Displays and configures network interfaces',
+            'ip addr': 'Shows IP addresses and network interface information',
+            
+            # Archives and Compression
+            'tar -xzf': 'Extracts compressed tar archive files',
+            'tar -czf': 'Creates compressed tar archive files',
+            'zip': 'Creates compressed zip archive files',
+            'unzip': 'Extracts files from zip archives',
+            'gzip': 'Compresses files using gzip compression',
+            'gunzip': 'Decompresses gzip compressed files',
+            
+            # File Permissions and Ownership
+            'chmod': 'Changes file permissions',
+            'chmod +x': 'Makes a file executable',
+            'chown': 'Changes file ownership',
+            'chgrp': 'Changes file group ownership',
+            
+            # Environment and Variables
+            'env': 'Shows environment variables',
+            'export': 'Sets environment variables',
+            'echo': 'Displays text or variable values',
             'date': 'Displays the current date and time',
+            'cal': 'Shows a calendar',
             'history': 'Shows command history',
-            'clear': 'Clears the terminal screen'
+            'alias': 'Shows or creates command aliases',
+            
+            # Terminal and Session
+            'clear': 'Clears the terminal screen',
+            'reset': 'Resets the terminal to default state',
+            'exit': 'Exits the current shell or terminal',
+            'logout': 'Logs out of the current session',
+            'screen': 'Starts a new terminal session',
+            'tmux': 'Starts terminal multiplexer for multiple sessions',
+            
+            # Package Management (Linux)
+            'sudo apt update': 'Updates the package list from repositories',
+            'sudo apt upgrade': 'Upgrades all installed packages to latest versions',
+            'sudo apt install': 'Installs new software packages',
+            'apt search': 'Searches for available packages',
+            'dpkg -l': 'Lists all installed packages',
+            
+            # Git Commands
+            'git status': 'Shows the status of files in the git repository',
+            'git log': 'Shows the commit history',
+            'git diff': 'Shows changes between commits or working directory',
+            'git add .': 'Stages all changes for the next commit',
+            'git commit': 'Creates a new commit with staged changes',
+            'git push': 'Uploads commits to remote repository',
+            'git pull': 'Downloads and merges changes from remote repository',
+            'git clone': 'Creates a local copy of a remote repository'
         }
         
         return explanations.get(cmd, f'Executes the {cmd} command')
