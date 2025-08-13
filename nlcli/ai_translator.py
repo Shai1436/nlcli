@@ -33,6 +33,11 @@ class AITranslator:
         self.cache_manager = CacheManager() if enable_cache else None
         self.executor = ThreadPoolExecutor(max_workers=2)
         
+        # Context awareness
+        from .context_manager import ContextManager
+        config_dir = os.path.expanduser('~/.nlcli')
+        self.context_manager = ContextManager(config_dir)
+        
         # Common command patterns for instant recognition (50+ patterns)
         self.instant_patterns = {
             # File and Directory Operations
@@ -169,6 +174,23 @@ class AITranslator:
             if instant_result:
                 logger.debug(f"Instant pattern match for: {natural_language}")
                 return instant_result
+            
+            # Step 1.5: Check context-aware suggestions
+            context_suggestions = self.context_manager.get_context_suggestions(natural_language)
+            if context_suggestions:
+                # Use the highest confidence context suggestion
+                best_suggestion = max(context_suggestions, key=lambda x: x['confidence'])
+                if best_suggestion['confidence'] > 0.85:
+                    logger.debug(f"Context suggestion for: {natural_language}")
+                    return {
+                        'command': best_suggestion['command'],
+                        'explanation': best_suggestion['explanation'],
+                        'confidence': best_suggestion['confidence'],
+                        'instant': True,
+                        'cached': False,
+                        'context_aware': True,
+                        'context_type': best_suggestion['context_type']
+                    }
             
             # Step 2: Check cache (sub-millisecond response)
             if self.cache_manager:

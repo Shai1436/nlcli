@@ -16,6 +16,7 @@ from .history_manager import HistoryManager
 from .safety_checker import SafetyChecker
 from .config_manager import ConfigManager
 from .command_executor import CommandExecutor
+from .context_cli import context
 from .utils import setup_logging, get_platform_info
 
 console = Console()
@@ -101,7 +102,10 @@ def interactive_mode(obj):
                 # Show performance info
                 elapsed = time.time() - start_time
                 if translation_result:
-                    if translation_result.get('instant'):
+                    if translation_result.get('context_aware'):
+                        context_type = translation_result.get('context_type', 'unknown')
+                        console.print(f"[dim cyan]🎯 Context-aware ({context_type}) ({elapsed:.3f}s)[/dim cyan]")
+                    elif translation_result.get('instant'):
                         console.print(f"[dim green]⚡ Instant match ({elapsed:.3f}s)[/dim green]")
                     elif translation_result.get('cached'):
                         console.print(f"[dim green]📋 Cached result ({elapsed:.3f}s)[/dim green]")
@@ -140,6 +144,9 @@ def interactive_mode(obj):
                 
                 # Store in history
                 history.add_command(user_input, command, explanation, result['success'])
+                
+                # Update context with command execution
+                ai_translator.context_manager.update_command_history(command, result['success'])
                 
                 # Display result
                 display_execution_result(result)
@@ -358,6 +365,9 @@ def performance(obj):
             )
         
         console.print(pop_table)
+
+# Add context commands to CLI
+cli.add_command(context)
 
 if __name__ == '__main__':
     cli()
