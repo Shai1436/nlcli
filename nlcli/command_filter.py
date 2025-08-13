@@ -43,12 +43,23 @@ class CommandFilter:
             # System info
             'ps': {'command': 'ps', 'explanation': 'Show running processes', 'confidence': 1.0},
             'top': {'command': 'top', 'explanation': 'Display running processes', 'confidence': 1.0},
+            'htop': {'command': 'htop', 'explanation': 'Interactive process viewer', 'confidence': 1.0},
             'df': {'command': 'df', 'explanation': 'Display disk space usage', 'confidence': 1.0},
             'du': {'command': 'du', 'explanation': 'Display directory space usage', 'confidence': 1.0},
             'free': {'command': 'free', 'explanation': 'Display memory usage', 'confidence': 1.0},
             'uptime': {'command': 'uptime', 'explanation': 'Show system uptime', 'confidence': 1.0},
             'whoami': {'command': 'whoami', 'explanation': 'Display current user', 'confidence': 1.0},
+            'id': {'command': 'id', 'explanation': 'Display user and group IDs', 'confidence': 1.0},
+            'w': {'command': 'w', 'explanation': 'Show logged in users', 'confidence': 1.0},
+            'who': {'command': 'who', 'explanation': 'Show logged in users', 'confidence': 1.0},
+            'users': {'command': 'users', 'explanation': 'Show current users', 'confidence': 1.0},
             'date': {'command': 'date', 'explanation': 'Display current date and time', 'confidence': 1.0},
+            'cal': {'command': 'cal', 'explanation': 'Display calendar', 'confidence': 1.0},
+            'uname': {'command': 'uname', 'explanation': 'System information', 'confidence': 1.0},
+            'hostname': {'command': 'hostname', 'explanation': 'Display system hostname', 'confidence': 1.0},
+            'history': {'command': 'history', 'explanation': 'Show command history', 'confidence': 1.0},
+            'env': {'command': 'env', 'explanation': 'Display environment variables', 'confidence': 1.0},
+            'printenv': {'command': 'printenv', 'explanation': 'Display environment variables', 'confidence': 1.0},
             
             # Network
             'ping': {'command': 'ping', 'explanation': 'Test network connectivity', 'confidence': 1.0},
@@ -131,19 +142,32 @@ class CommandFilter:
             'ls -lh': {'command': 'ls -lh', 'explanation': 'List files with human-readable sizes', 'confidence': 1.0},
             'ls -lt': {'command': 'ls -lt', 'explanation': 'List files sorted by modification time', 'confidence': 1.0},
             
+            # User and system info variations
+            'whoami': {'command': 'whoami', 'explanation': 'Display current user', 'confidence': 1.0},
+            'id -un': {'command': 'id -un', 'explanation': 'Display current username', 'confidence': 1.0},
+            'id -gn': {'command': 'id -gn', 'explanation': 'Display current group name', 'confidence': 1.0},
+            'uname -a': {'command': 'uname -a', 'explanation': 'Display complete system information', 'confidence': 1.0},
+            'uname -s': {'command': 'uname -s', 'explanation': 'Display kernel name', 'confidence': 1.0},
+            'uname -r': {'command': 'uname -r', 'explanation': 'Display kernel release', 'confidence': 1.0},
+            'uname -m': {'command': 'uname -m', 'explanation': 'Display machine architecture', 'confidence': 1.0},
+            
             # ps variations
             'ps aux': {'command': 'ps aux', 'explanation': 'Show all running processes', 'confidence': 1.0},
             'ps -ef': {'command': 'ps -ef', 'explanation': 'Show all processes with full format', 'confidence': 1.0},
+            'ps -u': {'command': 'ps -u', 'explanation': 'Show processes for current user', 'confidence': 1.0},
             
             # df variations
             'df -h': {'command': 'df -h', 'explanation': 'Show disk usage in human-readable format', 'confidence': 1.0},
+            'df -i': {'command': 'df -i', 'explanation': 'Show inode usage', 'confidence': 1.0},
             
             # du variations
             'du -h': {'command': 'du -h', 'explanation': 'Show directory usage in human-readable format', 'confidence': 1.0},
             'du -sh': {'command': 'du -sh', 'explanation': 'Show total directory size in human-readable format', 'confidence': 1.0},
+            'du -sh *': {'command': 'du -sh *', 'explanation': 'Show size of all items in current directory', 'confidence': 1.0},
             
             # free variations
             'free -h': {'command': 'free -h', 'explanation': 'Show memory usage in human-readable format', 'confidence': 1.0},
+            'free -m': {'command': 'free -m', 'explanation': 'Show memory usage in megabytes', 'confidence': 1.0},
             
             # Common git commands
             'git status': {'command': 'git status', 'explanation': 'Show git repository status', 'confidence': 1.0},

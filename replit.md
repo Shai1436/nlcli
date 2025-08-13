@@ -25,6 +25,7 @@ Preferred communication style: Simple, everyday language.
 - Prompt for OpenAI API key only for first unknown commands (implemented: Smart API key prompting with 343 commands available without setup, user-friendly onboarding with clear instructions)
 - Interactive command selection for ambiguous requests (implemented: 13 ambiguous patterns with multiple options, smart parameter extraction, user preference learning, seamless integration with existing command pipeline)
 - Enhanced context awareness with pattern learning (implemented: Intelligent command pattern learning from successful executions, enhanced directory tracking, project type detection, package operation awareness, file reference extraction, contextual suggestions based on learned patterns)
+- Improve OS command recognition for better handling of system commands like whoami (implemented: Enhanced command recognition with 145+ direct commands, 203 typo mappings, 115 fuzzy patterns, comprehensive user identification and system info patterns)
 
 ## Approved Roadmap & Next Features
 
