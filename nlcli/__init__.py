@@ -7,6 +7,7 @@ __version__ = "1.0.0"
 __author__ = "NLCLI Team"
 __description__ = "Universal CLI that translates natural language to OS commands"
 
-from .main import cli
+# Don't import main module at package level to avoid circular import warnings
+# Console scripts will import nlcli.main:cli directly
 
-__all__ = ['cli']
+__all__ = []
