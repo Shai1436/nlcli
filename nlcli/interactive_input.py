@@ -60,10 +60,10 @@ class InteractiveInputHandler:
     
     def get_input(self, prompt: str = "→ ") -> str:
         """
-        Get input from user with history support
+        Get input from user with history support and rich styling
         
         Args:
-            prompt: Prompt string to display
+            prompt: Prompt string to display (can include Rich markup)
             
         Returns:
             User input string
@@ -72,7 +72,16 @@ class InteractiveInputHandler:
         try:
             if HAS_READLINE:
                 # Use readline for enhanced input with history
-                user_input = input(prompt).strip()
+                # For rich prompts, render them first, then use plain text for input
+                if "[" in prompt and "]" in prompt:
+                    # Rich formatted prompt - render it and use plain equivalent for input
+                    from rich.console import Console
+                    console = Console()
+                    console.print(prompt, end="")
+                    user_input = input().strip()
+                else:
+                    # Plain prompt
+                    user_input = input(prompt).strip()
             else:
                 # Fallback to basic input
                 user_input = input(prompt).strip()

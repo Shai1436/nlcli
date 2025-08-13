@@ -81,8 +81,8 @@ def interactive_mode(obj):
         
         while True:
             try:
-                # Get user input with history support
-                user_input = input_handler.get_input("→ ").strip()
+                # Get user input with styled prompt (blue chevron style like AskCLI)
+                user_input = input_handler.get_input("[bold blue]❯[/bold blue] ").strip()
             
                 if not user_input:
                     continue
