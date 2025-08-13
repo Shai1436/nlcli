@@ -22,7 +22,7 @@ from .output_formatter import OutputFormatter
 from .context_cli import context
 from .history_cli import history as history_cli
 from .filter_cli import filter as filter_cli
-from .interactive_input import create_input_handler, get_input_capabilities
+from .interactive_input import InteractiveInputHandler
 from .utils import setup_logging, get_platform_info
 
 console = Console()
@@ -79,19 +79,19 @@ def interactive_mode(obj):
     executor = obj['executor']
     config = obj['config']
 
-    # Create input handler with history support
-    history_file = os.path.join(os.path.expanduser('~/.nlcli'), 'input_history')
+    # Initialize enhanced persistent input handler
+    config_dir = os.path.expanduser('~/.nlcli')
+    os.makedirs(config_dir, exist_ok=True)
+    history_file = os.path.join(config_dir, 'input_history')
     
-    with create_input_handler(history_file) as input_handler:
-        # Load existing natural language history into input handler
-        recent_nl_commands = history.get_recent_natural_language_commands(50)
-        for nl_command in recent_nl_commands:
-            input_handler.add_to_history(nl_command)
-        
+    # Create input handler with both readline history file and database history manager
+    input_handler = InteractiveInputHandler(history_file=history_file, history_manager=history)
+    
+    try:
         while True:
             try:
-                # Get user input with simple prompt
-                user_input = input("> ").strip()
+                # Get user input with persistent history support
+                user_input = input_handler.get_input("> ").strip()
             
                 if not user_input:
                     continue
@@ -204,6 +204,10 @@ def interactive_mode(obj):
             except EOFError:
                 console.print("\n[green]Goodbye![/green]")
                 break
+    
+    finally:
+        # Save history on exit to ensure persistence
+        input_handler.save_history()
     
 
 

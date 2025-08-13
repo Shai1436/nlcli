@@ -7,7 +7,7 @@ import click
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-from .interactive_input import create_input_handler
+from .interactive_input import InteractiveInputHandler
 
 console = Console()
 
@@ -129,7 +129,7 @@ def clear(ctx, confirm):
     
     try:
         # Clear database history
-        history_manager.clear_history()
+        history_manager.clear_command_history()
         
         # Clear input history file
         history_file = os.path.join(os.path.expanduser('~/.nlcli'), 'input_history')

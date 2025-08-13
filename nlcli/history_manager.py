@@ -64,7 +64,7 @@ class HistoryManager:
             raise
     
     def add_command(self, natural_language: str, command: str, 
-                   explanation: str, success: bool, session_id: Optional[str] = None) -> int:
+                   explanation: str, success: bool, session_id: Optional[str] = None) -> Optional[int]:
         """
         Add a command to history
         
@@ -129,7 +129,7 @@ class HistoryManager:
             logger.error(f"Error retrieving commands: {str(e)}")
             return []
     
-    def clear_history(self):
+    def clear_command_history(self):
         """Clear all command history"""
         
         try:
