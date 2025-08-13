@@ -222,8 +222,9 @@ def get_system_stats() -> Dict:
         
         # Uptime
         import datetime
+        import time
         boot_time = psutil.boot_time()
-        uptime_seconds = psutil.time.time() - boot_time
+        uptime_seconds = time.time() - boot_time
         uptime_string = str(datetime.timedelta(seconds=int(uptime_seconds)))
         stats['uptime'] = uptime_string
         
