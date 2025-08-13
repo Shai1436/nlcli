@@ -249,55 +249,23 @@ class OutputFormatter:
             self.console.print(panel)
     
     def format_welcome_banner(self) -> None:
-        """Display enhanced welcome banner with oh-my-zsh styling"""
+        """Display clean and simple welcome banner"""
         
-        # ASCII art title
-        title_art = """
-╔═══════════════════════════════════════╗
-║           Natural Language CLI        ║
-║              Enhanced Edition         ║
-╚═══════════════════════════════════════╝
-        """
+        # Simple title
+        title = Text("Natural Language CLI", style=f"bold {self.current_theme['primary']}")
+        subtitle = Text("Type commands in plain English", style=self.current_theme['muted'])
         
-        title_panel = Panel(
-            Text(title_art, style=f"bold {self.current_theme['primary']}"),
-            border_style=self.current_theme['accent'],
-            box=box.DOUBLE
-        )
+        # Quick tips
+        tips = Text()
+        tips.append("Tips: ", style=f"bold {self.current_theme['info']}")
+        tips.append("Use arrow keys for history, type 'quit' to exit", style=self.current_theme['muted'])
         
-        # Feature highlights
-        features = [
-            "⚡ Sub-5ms direct command execution",
-            "🎯 Intelligent pattern recognition", 
-            "📋 Smart caching system",
-            "🤖 AI-powered translation",
-            "🎨 Rich visual formatting"
-        ]
-        
-        feature_text = Text()
-        for feature in features:
-            feature_text.append(f"  {feature}\n", style=self.current_theme['success'])
-        
-        # Usage tips
-        tips_text = Text()
-        tips_text.append("💡 Tips:\n", style=f"bold {self.current_theme['info']}")
-        tips_text.append("  • Use ↑/↓ arrow keys for command history\n", style=self.current_theme['muted'])
-        tips_text.append("  • Type 'history' to view past commands\n", style=self.current_theme['muted'])
-        tips_text.append("  • Type 'quit' or 'exit' to close\n", style=self.current_theme['muted'])
-        tips_text.append("  • Look for the ", style=self.current_theme['muted'])
-        tips_text.append(">", style="bold white")
-        tips_text.append(" prompt for input\n", style=self.current_theme['muted'])
-        
-        # Combine in layout
-        info_panel = Panel(
-            feature_text + tips_text,
-            title="Features & Usage",
-            border_style=self.current_theme['secondary'],
-            box=box.ROUNDED
-        )
-        
-        self.console.print(title_panel)
-        self.console.print(info_panel)
+        # Print cleanly spaced
+        self.console.print()
+        self.console.print(title)
+        self.console.print(subtitle)
+        self.console.print(tips)
+        self.console.print()
     
     def format_error(self, error_msg: str, context: str = "") -> None:
         """Format error messages with clear visual styling"""
