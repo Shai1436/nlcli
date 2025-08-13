@@ -284,8 +284,8 @@ class OutputFormatter:
         tips_text.append("  • Use ↑/↓ arrow keys for command history\n", style=self.current_theme['muted'])
         tips_text.append("  • Type 'history' to view past commands\n", style=self.current_theme['muted'])
         tips_text.append("  • Type 'quit' or 'exit' to close\n", style=self.current_theme['muted'])
-        tips_text.append("  • Look for the blue ", style=self.current_theme['muted'])
-        tips_text.append("❯", style="bold blue")
+        tips_text.append("  • Look for the ", style=self.current_theme['muted'])
+        tips_text.append(">", style="bold white")
         tips_text.append(" prompt for input\n", style=self.current_theme['muted'])
         
         # Combine in layout

@@ -82,9 +82,8 @@ def interactive_mode(obj):
         
         while True:
             try:
-                # Get user input with simple blue chevron prompt
-                console.print("[bold bright_blue]❯[/bold bright_blue] ", end="")
-                user_input = input().strip()
+                # Get user input with simple prompt
+                user_input = input("> ").strip()
             
                 if not user_input:
                     continue

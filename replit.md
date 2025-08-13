@@ -19,7 +19,7 @@ Preferred communication style: Simple, everyday language.
 - Fix failing tests and increase coverage (implemented: 38% overall coverage, fixed 12+ test failures, API consistency improvements)
 - Support intelligent command variations with parameters (implemented: Enhanced command filter with regex patterns and parameter detection for commands like "show processes on port 8080")
 - Implement oh-my-zsh inspired visual themes and rich output formatting (implemented: Complete OutputFormatter with robbyrussell, agnoster, and powerlevel10k themes, performance indicators, syntax highlighting, and enhanced UI)
-- Style terminal prompt with blue chevron design matching modern CLI aesthetics (implemented: Blue ❯ prompt with Rich styling, AskCLI-inspired branding, enhanced welcome banner with prompt instructions)
+- Style terminal prompt with simple design for clean CLI aesthetics (implemented: Simple > prompt, enhanced welcome banner with prompt instructions)
 - Implement modern and sleek cursor styling with animations (reverted: Custom cursor system caused loading issues, reverted to reliable default cursor while maintaining blue chevron prompt styling)
 
 ## Approved Roadmap & Next Features
