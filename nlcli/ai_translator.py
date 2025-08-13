@@ -151,7 +151,7 @@ class AITranslator:
             'git clone': ['clone repository', 'copy repo']
         }
         
-    def translate(self, natural_language: str, timeout: float = 5.0) -> Optional[Dict]:
+    def translate(self, natural_language: str, timeout: float = 8.0) -> Optional[Dict]:
         """
         Translate natural language to OS command with performance optimizations
         

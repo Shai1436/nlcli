@@ -95,7 +95,7 @@ def interactive_mode(obj):
             console.print("[yellow]Translating...[/yellow]")
             
             try:
-                api_timeout = float(obj['config'].get('performance', 'api_timeout', fallback='3.0'))
+                api_timeout = float(obj['config'].get('performance', 'api_timeout', fallback='8.0'))
                 translation_result = ai_translator.translate(user_input, timeout=api_timeout)
                 
                 # Show performance info

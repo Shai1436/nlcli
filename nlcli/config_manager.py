@@ -36,12 +36,12 @@ class ConfigManager:
                 'model': 'gpt-4o-mini',
                 'temperature': '0.1',
                 'max_tokens': '300',
-                'timeout': '5'
+                'timeout': '10'
             },
             'performance': {
                 'enable_cache': 'true',
                 'enable_instant_patterns': 'true',
-                'api_timeout': '3.0',
+                'api_timeout': '8.0',
                 'cache_cleanup_days': '30'
             },
             'storage': {
