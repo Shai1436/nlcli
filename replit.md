@@ -15,6 +15,7 @@ Preferred communication style: Simple, everyday language.
 - Add unit testing framework to ensure code quality (implemented: comprehensive test suite with instant pattern validation)
 - Build context awareness using iTerm and oh-my-zsh features (implemented: comprehensive context system with 60+ shortcuts)
 - Add command history with arrow key navigation (implemented: interactive input with readline support)
+- Build command filter for direct execution without AI translation (implemented: 70+ direct commands with sub-5ms performance)
 
 ## Approved Roadmap & Next Features
 
@@ -70,15 +71,25 @@ Full roadmap available in [ROADMAP.md](ROADMAP.md)
 The application follows a modular architecture with clear separation of concerns:
 
 **AI Translation Layer** (`ai_translator.py`)
-- 3-tier performance optimization system for maximum speed:
-  1. **Instant Pattern Matching** (sub-millisecond): 60+ common commands recognized immediately
-  2. **Local SQLite Cache** (sub-millisecond): Stores and retrieves previous translations
-  3. **AI Translation** (2-3 seconds): GPT-4o-mini with timeout and concurrent execution
+- 4-tier performance optimization system for maximum speed:
+  1. **Direct Command Filter** (sub-5ms): 70+ exact commands bypass AI completely
+  2. **Instant Pattern Matching** (sub-millisecond): 60+ common commands recognized immediately
+  3. **Local SQLite Cache** (sub-millisecond): Stores and retrieves previous translations
+  4. **AI Translation** (2-3 seconds): GPT-4o-mini with timeout and concurrent execution
 - Integrates with OpenAI's GPT-4o-mini API for faster responses
 - Uses platform-specific prompts to generate appropriate OS commands
 - Returns structured responses with command, explanation, and confidence scores
 - Performance monitoring with response time indicators
 - Handles API authentication and error management
+
+**Command Filter System** (`command_filter.py`, `filter_cli.py`)
+- Direct execution of 70+ known commands without AI translation
+- Platform-aware command recognition (Linux/macOS/Windows)
+- Sub-5ms response times with 100% confidence scores
+- Support for exact matches, predefined arguments, and custom arguments
+- Comprehensive CLI management: stats, list, suggest, add, remove, test, benchmark
+- Custom command support for user-defined mappings
+- Performance monitoring and statistics tracking
 
 **Safety Validation** (`safety_checker.py`)
 - Implements multi-level safety checking (low, medium, high)

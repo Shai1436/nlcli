@@ -19,6 +19,7 @@ from .config_manager import ConfigManager
 from .command_executor import CommandExecutor
 from .context_cli import context
 from .history_cli import history as history_cli
+from .filter_cli import filter as filter_cli
 from .interactive_input import create_input_handler, get_input_capabilities
 from .utils import setup_logging, get_platform_info
 
@@ -122,7 +123,9 @@ def interactive_mode(obj):
                     # Show performance info
                     elapsed = time.time() - start_time
                     if translation_result:
-                        if translation_result.get('context_aware'):
+                        if translation_result.get('direct'):
+                            console.print(f"[dim blue]🚀 Direct execution ({elapsed:.3f}s)[/dim blue]")
+                        elif translation_result.get('context_aware'):
                             context_type = translation_result.get('context_type', 'unknown')
                             console.print(f"[dim cyan]🎯 Context-aware ({context_type}) ({elapsed:.3f}s)[/dim cyan]")
                         elif translation_result.get('instant'):
@@ -389,6 +392,7 @@ def performance(obj):
 # Add additional command groups to CLI
 cli.add_command(context)
 cli.add_command(history_cli)
+cli.add_command(filter_cli)
 
 if __name__ == '__main__':
     cli()

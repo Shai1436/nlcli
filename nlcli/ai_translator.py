@@ -38,6 +38,10 @@ class AITranslator:
         config_dir = os.path.expanduser('~/.nlcli')
         self.context_manager = ContextManager(config_dir)
         
+        # Command filter for direct execution
+        from .command_filter import CommandFilter
+        self.command_filter = CommandFilter()
+        
         # Common command patterns for instant recognition (50+ patterns)
         self.instant_patterns = {
             # File and Directory Operations
@@ -169,7 +173,18 @@ class AITranslator:
         """
         
         try:
-            # Step 1: Check for instant pattern matches (sub-millisecond response)
+            # Step 1: Check for direct command execution (fastest)
+            if self.command_filter.is_direct_command(natural_language):
+                direct_result = self.command_filter.get_direct_command_result(natural_language)
+                if direct_result:
+                    logger.debug(f"Direct command match for: {natural_language}")
+                    return {
+                        **direct_result,
+                        'cached': False,
+                        'instant': True
+                    }
+            
+            # Step 2: Check for instant pattern matches (sub-millisecond response)
             instant_result = self._check_instant_patterns(natural_language)
             if instant_result:
                 logger.debug(f"Instant pattern match for: {natural_language}")

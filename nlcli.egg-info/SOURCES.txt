@@ -7,9 +7,11 @@ nlcli/account_manager.py
 nlcli/ai_translator.py
 nlcli/cache_manager.py
 nlcli/command_executor.py
+nlcli/command_filter.py
 nlcli/config_manager.py
 nlcli/context_cli.py
 nlcli/context_manager.py
+nlcli/filter_cli.py
 nlcli/history_cli.py
 nlcli/history_manager.py
 nlcli/interactive_input.py
@@ -26,6 +28,7 @@ nlcli.egg-info/top_level.txt
 tests/test_ai_translator.py
 tests/test_cache_manager.py
 tests/test_command_executor.py
+tests/test_command_filter.py
 tests/test_context_manager.py
 tests/test_instant_patterns_only.py
 tests/test_interactive_input.py
