@@ -435,6 +435,14 @@ class CommandFilter:
                 'printenv': {'command': 'Get-ChildItem Env:', 'explanation': 'Print environment variables (PowerShell)', 'confidence': 0.90, 'alt': 'set'},
                 'export': {'command': 'Set-Variable -Scope Global', 'explanation': 'Set environment variable (PowerShell)', 'confidence': 0.80, 'alt': 'set'},
                 'alias': {'command': 'Get-Alias', 'explanation': 'Show command aliases (PowerShell)', 'confidence': 0.90, 'alt': 'doskey /macros'},
+                'echo $VAR': {'command': 'echo $env:VAR', 'explanation': 'Display environment variable (PowerShell)', 'confidence': 0.90, 'alt': 'echo %VAR%'},
+                
+                # Additional text processing
+                'fmt': {'command': 'ForEach-Object {$_ -replace \"(.{80})\", \"$1`n\"}', 'explanation': 'Format text to specific width (PowerShell)', 'confidence': 0.75},
+                'fold': {'command': 'ForEach-Object {$_ -replace \"(.{80})\", \"$1`n\"}', 'explanation': 'Wrap text lines (PowerShell)', 'confidence': 0.75},
+                
+                # Additional file operations
+                'ls -C': {'command': 'Get-ChildItem | Format-Wide', 'explanation': 'List files in columns (PowerShell)', 'confidence': 0.90, 'alt': 'dir /w'},
             },
             
             # Windows commands -> Unix/Linux/macOS equivalents
@@ -549,14 +557,27 @@ class CommandFilter:
                 'set-variable': {'command': 'export', 'explanation': 'Set environment variable (Unix)', 'confidence': 0.80},
                 'get-alias': {'command': 'alias', 'explanation': 'Show command aliases (Unix)', 'confidence': 0.90},
                 
-                # Additional Unix commands that might be typed on Windows
-                'ifconfig': {'command': 'ipconfig', 'explanation': 'Network interface configuration (Windows)', 'confidence': 0.90},
-                'fsck': {'command': 'chkdsk', 'explanation': 'Check filesystem (Windows)', 'confidence': 0.85},
-                'fdisk': {'command': 'diskpart', 'explanation': 'Disk partitioning (Windows)', 'confidence': 0.80},
-                'tune2fs': {'command': 'fsutil', 'explanation': 'Filesystem utilities (Windows)', 'confidence': 0.75},
-                'diff': {'command': 'fc', 'explanation': 'Compare files (Windows)', 'confidence': 0.85},
-                'ln': {'command': 'mklink', 'explanation': 'Create links (Windows)', 'confidence': 0.80},
-                'ln -s': {'command': 'mklink /d', 'explanation': 'Create symbolic link (Windows)', 'confidence': 0.80},
+                # Complete Windows CMD -> Unix mappings for 100% coverage
+                'echo %VAR%': {'command': 'echo $VAR', 'explanation': 'Display environment variable (Unix)', 'confidence': 0.90},
+                'path': {'command': 'echo $PATH', 'explanation': 'Show PATH environment variable (Unix)', 'confidence': 0.90},
+                'findstr /n': {'command': 'grep -n', 'explanation': 'Search with line numbers (Unix)', 'confidence': 0.85},
+                'find': {'command': 'find', 'explanation': 'Find files (Unix)', 'confidence': 0.90},
+                'time': {'command': 'date +%T', 'explanation': 'Show current time (Unix)', 'confidence': 0.90},
+                
+                # Complete PowerShell -> Unix mappings
+                '$env:VAR': {'command': 'echo $VAR', 'explanation': 'Display environment variable (Unix)', 'confidence': 0.90},
+                'add-type -assemblyname system.io.compression': {'command': 'zip', 'explanation': 'Compression library (Unix)', 'confidence': 0.75},
+                'get-wmiobject win32_operatingsystem': {'command': 'uname -a', 'explanation': 'System information (Unix)', 'confidence': 0.85},
+                'select-string -allmatches': {'command': 'grep -o', 'explanation': 'Find all matches (Unix)', 'confidence': 0.85},
+                
+                # Additional Unix -> Windows mappings for completeness
+                'echo \\$VAR': {'command': 'echo %VAR%', 'explanation': 'Display environment variable (Windows)', 'confidence': 0.90},
+                'free -h': {'command': 'wmic OS get TotalVisibleMemorySize,FreePhysicalMemory /format:list', 'explanation': 'Show memory usage (Windows)', 'confidence': 0.80},
+                'ps -ef': {'command': 'tasklist /v', 'explanation': 'Show all processes with details (Windows)', 'confidence': 0.90},
+                'fmt': {'command': 'powershell -c \"Get-Content file.txt | ForEach-Object {$_ -replace \\\"(.{72})\\\", \\\"$1`r`n\\\"}\"', 'explanation': 'Format text paragraphs (Windows)', 'confidence': 0.75},
+                'fold': {'command': 'powershell -c \"Get-Content file.txt | ForEach-Object {if($_.Length -gt 80){$_.Substring(0,80)+\\\"`r`n\\\"+$_.Substring(80)}else{$_}}\"', 'explanation': 'Wrap long lines (Windows)', 'confidence': 0.75},
+                'cut': {'command': 'for /f \"tokens=1 delims=\\t\" %i in (file.txt) do echo %i', 'explanation': 'Extract fields from text (Windows)', 'confidence': 0.75},
+                'tr': {'command': 'powershell -c \"Get-Content file.txt | ForEach-Object {$_ -replace \\\"[a-z]\\\", \\\"[A-Z]\\\"}\"', 'explanation': 'Translate/delete characters (Windows)', 'confidence': 0.75},
             }
         }
     
