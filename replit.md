@@ -40,7 +40,13 @@ Preferred communication style: Simple, everyday language.
 The application follows a modular, cross-platform architecture with clear separation of concerns, designed for performance, security, and extensibility.
 
 ## Core Components
-- **AI Translation Layer**: Integrates OpenAI's GPT-4o-mini with a 6-tier performance optimization system (typo correction, direct command filter, enhanced pattern engine, advanced fuzzy matching, local cache, AI translation) for speed and efficiency. It includes smart API key management, platform-specific prompting, and multi-algorithm fuzzy matching with learning capabilities.
+- **AI Translation Layer**: Integrates OpenAI's GPT-4o with a 6-tier performance optimization system providing sub-millisecond to low-latency command recognition:
+  - Tier 1: Enhanced Typo Correction (<0.1ms) - 486+ command mappings
+  - Tier 2: Direct Command Filter (<1ms) - 265+ instant commands 
+  - Tier 3: Enhanced Pattern Engine (<5ms) - 16 semantic patterns, 4 workflows
+  - Tier 4: Advanced Fuzzy Engine (<15ms) - 4-algorithm system with multi-language support
+  - Tier 5: Local Cache System (<10ms) - SQLite-based translation cache
+  - Tier 6: AI Translation (200-2000ms) - Full GPT-4o natural language processing
 - **Command Filter System**: Directly executes 265+ known commands without AI translation, offering sub-1ms response times. It supports platform-aware and cross-platform command recognition, including bidirectional Windows↔Unix/Linux/macOS translation and PowerShell cmdlet support with comprehensive typo/variation coverage.
 - **Interactive Command Selection**: Handles ambiguous natural language requests by presenting multiple command options, extracting parameters, and learning user preferences for seamless integration.
 - **Enhanced Typo Correction System**: Provides sub-millisecond typo detection with 486+ total command mappings (265 Tier 1 + 221 Tier 2), comprehensive typo/variation coverage, and conversational command recognition.
