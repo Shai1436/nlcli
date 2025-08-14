@@ -368,6 +368,73 @@ class CommandFilter:
                 'find': {'command': 'Get-ChildItem -Recurse -Name', 'explanation': 'Find files (PowerShell)', 'confidence': 0.85, 'alt': 'dir /s'},
                 'locate': {'command': 'Get-ChildItem -Recurse -Name', 'explanation': 'Locate files (PowerShell)', 'confidence': 0.85},
                 'man': {'command': 'Get-Help', 'explanation': 'Show command help (PowerShell)', 'confidence': 0.90, 'alt': 'help'},
+                
+                # Additional file operations
+                'ls -lh': {'command': 'Get-ChildItem | Format-Table Name, Mode, Length, LastWriteTime', 'explanation': 'List files with human-readable sizes (PowerShell)', 'confidence': 0.90, 'alt': 'dir'},
+                'ls -R': {'command': 'Get-ChildItem -Recurse', 'explanation': 'List files recursively (PowerShell)', 'confidence': 0.90, 'alt': 'dir /s'},
+                'whereis': {'command': 'Get-Command', 'explanation': 'Find command location (PowerShell)', 'confidence': 0.85, 'alt': 'where'},
+                
+                # Advanced file content operations
+                'tail -f': {'command': 'Get-Content -Wait', 'explanation': 'Follow file changes (PowerShell)', 'confidence': 0.90},
+                'less': {'command': 'Get-Content | Out-Host -Paging', 'explanation': 'Page through file (PowerShell)', 'confidence': 0.85, 'alt': 'more'},
+                'more': {'command': 'Get-Content | Out-Host -Paging', 'explanation': 'Page through file (PowerShell)', 'confidence': 0.90, 'alt': 'more'},
+                'awk': {'command': 'ForEach-Object', 'explanation': 'Process text fields (PowerShell)', 'confidence': 0.75},
+                'sed': {'command': 'ForEach-Object', 'explanation': 'Stream editor (PowerShell)', 'confidence': 0.75},
+                
+                # Extended file management
+                'rm -rf': {'command': 'Remove-Item -Recurse -Force', 'explanation': 'Force delete recursively (PowerShell)', 'confidence': 0.80, 'alt': 'rd /s /q'},
+                'chown': {'command': 'Set-Acl', 'explanation': 'Change file ownership (PowerShell)', 'confidence': 0.75, 'alt': 'takeown'},
+                
+                # Process management enhancements
+                'htop': {'command': 'Get-Process | Sort-Object CPU -Descending | Format-Table', 'explanation': 'Interactive process viewer (PowerShell)', 'confidence': 0.85, 'alt': 'taskmgr'},
+                'killall': {'command': 'Get-Process | Where-Object {$_.Name -eq \"processname\"} | Stop-Process', 'explanation': 'Kill all processes by name (PowerShell)', 'confidence': 0.80, 'alt': 'taskkill /im'},
+                'jobs': {'command': 'Get-Job', 'explanation': 'Show background jobs (PowerShell)', 'confidence': 0.90},
+                'bg': {'command': 'Start-Job', 'explanation': 'Background process (PowerShell)', 'confidence': 0.80},
+                'fg': {'command': 'Receive-Job', 'explanation': 'Foreground job (PowerShell)', 'confidence': 0.80},
+                'nohup': {'command': 'Start-Process -WindowStyle Hidden', 'explanation': 'Run command immune to hangups (PowerShell)', 'confidence': 0.75},
+                
+                # System information expansion
+                'uname': {'command': 'Get-ComputerInfo | Select WindowsProductName, WindowsVersion', 'explanation': 'System information (PowerShell)', 'confidence': 0.85, 'alt': 'ver'},
+                'uname -a': {'command': 'Get-ComputerInfo', 'explanation': 'All system information (PowerShell)', 'confidence': 0.85, 'alt': 'systeminfo'},
+                'id': {'command': 'whoami /all', 'explanation': 'User and group IDs (Windows)', 'confidence': 0.85, 'alt': 'whoami /all'},
+                'who': {'command': 'Get-CimInstance Win32_LoggedOnUser', 'explanation': 'Show logged in users (PowerShell)', 'confidence': 0.80, 'alt': 'query user'},
+                'w': {'command': 'Get-CimInstance Win32_LoggedOnUser', 'explanation': 'Show user activity (PowerShell)', 'confidence': 0.80, 'alt': 'query user'},
+                'cal': {'command': 'Get-Date | Format-Table DayOfWeek, Day, Month, Year', 'explanation': 'Calendar (PowerShell)', 'confidence': 0.75},
+                
+                # Network commands expansion
+                'netstat': {'command': 'Get-NetTCPConnection', 'explanation': 'Network connections (PowerShell)', 'confidence': 0.90, 'alt': 'netstat'},
+                'ss': {'command': 'Get-NetTCPConnection', 'explanation': 'Socket statistics (PowerShell)', 'confidence': 0.85, 'alt': 'netstat'},
+                'nslookup': {'command': 'Resolve-DnsName', 'explanation': 'DNS lookup (PowerShell)', 'confidence': 0.90, 'alt': 'nslookup'},
+                'dig': {'command': 'Resolve-DnsName', 'explanation': 'DNS lookup tool (PowerShell)', 'confidence': 0.85, 'alt': 'nslookup'},
+                'traceroute': {'command': 'Test-NetConnection -TraceRoute', 'explanation': 'Trace network route (PowerShell)', 'confidence': 0.85, 'alt': 'tracert'},
+                
+                # Disk and memory expansion
+                'du': {'command': 'Get-ChildItem -Recurse | Measure-Object -Property Length -Sum', 'explanation': 'Directory disk usage (PowerShell)', 'confidence': 0.85},
+                'du -sh': {'command': '(Get-ChildItem -Recurse | Measure-Object -Property Length -Sum).Sum', 'explanation': 'Directory size summary (PowerShell)', 'confidence': 0.85},
+                'mount': {'command': 'Get-Volume', 'explanation': 'Show mounted filesystems (PowerShell)', 'confidence': 0.80, 'alt': 'mountvol'},
+                'fdisk -l': {'command': 'Get-Disk', 'explanation': 'List disk partitions (PowerShell)', 'confidence': 0.80, 'alt': 'diskpart'},
+                
+                # Text processing
+                'sort': {'command': 'Sort-Object', 'explanation': 'Sort text lines (PowerShell)', 'confidence': 0.90, 'alt': 'sort'},
+                'uniq': {'command': 'Get-Unique', 'explanation': 'Remove duplicate lines (PowerShell)', 'confidence': 0.90},
+                'wc': {'command': 'Measure-Object -Line -Word -Character', 'explanation': 'Count lines, words, characters (PowerShell)', 'confidence': 0.85},
+                'wc -l': {'command': 'Measure-Object -Line', 'explanation': 'Count lines (PowerShell)', 'confidence': 0.90},
+                'cut': {'command': 'ForEach-Object {($_ -split \"delimiter\")[index]}', 'explanation': 'Extract fields (PowerShell)', 'confidence': 0.75},
+                'tr': {'command': 'ForEach-Object {$_ -replace \"pattern\", \"replacement\"}', 'explanation': 'Translate characters (PowerShell)', 'confidence': 0.75},
+                
+                # Archive and compression
+                'tar': {'command': 'Compress-Archive', 'explanation': 'Archive files (PowerShell)', 'confidence': 0.80},
+                'tar -czf': {'command': 'Compress-Archive', 'explanation': 'Create compressed archive (PowerShell)', 'confidence': 0.80},
+                'tar -xzf': {'command': 'Expand-Archive', 'explanation': 'Extract compressed archive (PowerShell)', 'confidence': 0.80},
+                'zip': {'command': 'Compress-Archive', 'explanation': 'Create zip archive (PowerShell)', 'confidence': 0.85},
+                'unzip': {'command': 'Expand-Archive', 'explanation': 'Extract zip archive (PowerShell)', 'confidence': 0.85},
+                'gzip': {'command': 'Compress-Archive', 'explanation': 'Compress files (PowerShell)', 'confidence': 0.80},
+                'gunzip': {'command': 'Expand-Archive', 'explanation': 'Decompress files (PowerShell)', 'confidence': 0.80},
+                
+                # Environment and variables
+                'printenv': {'command': 'Get-ChildItem Env:', 'explanation': 'Print environment variables (PowerShell)', 'confidence': 0.90, 'alt': 'set'},
+                'export': {'command': 'Set-Variable -Scope Global', 'explanation': 'Set environment variable (PowerShell)', 'confidence': 0.80, 'alt': 'set'},
+                'alias': {'command': 'Get-Alias', 'explanation': 'Show command aliases (PowerShell)', 'confidence': 0.90, 'alt': 'doskey /macros'},
             },
             
             # Windows commands -> Unix/Linux/macOS equivalents
@@ -422,6 +489,74 @@ class CommandFilter:
                 'test-netconnection': {'command': 'ping', 'explanation': 'Test network connectivity (Unix)', 'confidence': 0.90},
                 'invoke-webrequest': {'command': 'curl', 'explanation': 'Make web requests (Unix)', 'confidence': 0.85},
                 'get-help': {'command': 'man', 'explanation': 'Show command manual (Unix)', 'confidence': 0.90},
+                
+                # Windows CMD specific commands -> Unix equivalents
+                'dir /a': {'command': 'ls -a', 'explanation': 'List all files including hidden (Unix)', 'confidence': 0.95},
+                'dir /s': {'command': 'ls -R', 'explanation': 'List files recursively (Unix)', 'confidence': 0.95},
+                'dir /w': {'command': 'ls -C', 'explanation': 'List files in columns (Unix)', 'confidence': 0.90},
+                'forfiles': {'command': 'find', 'explanation': 'Find and execute on files (Unix)', 'confidence': 0.85},
+                'fc': {'command': 'diff', 'explanation': 'Compare files (Unix)', 'confidence': 0.85},
+                'icacls': {'command': 'chmod', 'explanation': 'Change file permissions (Unix)', 'confidence': 0.80},
+                'takeown': {'command': 'chown', 'explanation': 'Change file ownership (Unix)', 'confidence': 0.80},
+                'ver': {'command': 'uname -a', 'explanation': 'Show system version (Unix)', 'confidence': 0.85},
+                'systeminfo': {'command': 'uname -a', 'explanation': 'System information (Unix)', 'confidence': 0.85},
+                'query user': {'command': 'who', 'explanation': 'Show logged users (Unix)', 'confidence': 0.85},
+                'tracert': {'command': 'traceroute', 'explanation': 'Trace network route (Unix)', 'confidence': 0.90},
+                'ipconfig': {'command': 'ifconfig', 'explanation': 'Network interface configuration (Unix)', 'confidence': 0.90},
+                'arp': {'command': 'arp', 'explanation': 'ARP table (Unix)', 'confidence': 1.0},
+                'chkdsk': {'command': 'fsck', 'explanation': 'Check filesystem (Unix)', 'confidence': 0.85},
+                'diskpart': {'command': 'fdisk', 'explanation': 'Disk partitioning (Unix)', 'confidence': 0.80},
+                'fsutil': {'command': 'tune2fs', 'explanation': 'Filesystem utilities (Unix)', 'confidence': 0.75},
+                'compact': {'command': 'gzip', 'explanation': 'Compress files (Unix)', 'confidence': 0.80},
+                'expand': {'command': 'gunzip', 'explanation': 'Expand compressed files (Unix)', 'confidence': 0.80},
+                'doskey /history': {'command': 'history', 'explanation': 'Command history (Unix)', 'confidence': 0.90},
+                'doskey /macros': {'command': 'alias', 'explanation': 'Show aliases (Unix)', 'confidence': 0.85},
+                'mountvol': {'command': 'mount', 'explanation': 'Mount volumes (Unix)', 'confidence': 0.80},
+                'wmic process': {'command': 'ps aux', 'explanation': 'Process information (Unix)', 'confidence': 0.85},
+                
+                # Extended PowerShell cmdlets -> Unix equivalents
+                'get-childitem -recurse': {'command': 'ls -R', 'explanation': 'List files recursively (Unix)', 'confidence': 0.95},
+                'get-childitem -force': {'command': 'ls -a', 'explanation': 'List all files including hidden (Unix)', 'confidence': 0.95},
+                'get-content -head': {'command': 'head', 'explanation': 'Show first lines of file (Unix)', 'confidence': 0.90},
+                'get-content -tail': {'command': 'tail', 'explanation': 'Show last lines of file (Unix)', 'confidence': 0.90},
+                'get-content -wait': {'command': 'tail -f', 'explanation': 'Follow file changes (Unix)', 'confidence': 0.90},
+                'select-string': {'command': 'grep', 'explanation': 'Search text patterns (Unix)', 'confidence': 0.85},
+                'compare-object': {'command': 'diff', 'explanation': 'Compare objects/files (Unix)', 'confidence': 0.85},
+                'copy-item -recurse': {'command': 'cp -r', 'explanation': 'Copy recursively (Unix)', 'confidence': 0.90},
+                'remove-item -recurse': {'command': 'rm -r', 'explanation': 'Remove recursively (Unix)', 'confidence': 0.85},
+                'remove-item -force': {'command': 'rm -f', 'explanation': 'Force remove (Unix)', 'confidence': 0.85},
+                'new-item -itemtype directory': {'command': 'mkdir', 'explanation': 'Create directory (Unix)', 'confidence': 0.90},
+                'new-item -itemtype file': {'command': 'touch', 'explanation': 'Create empty file (Unix)', 'confidence': 0.90},
+                'get-process | sort cpu': {'command': 'top', 'explanation': 'Process monitor (Unix)', 'confidence': 0.85},
+                'start-process': {'command': 'nohup', 'explanation': 'Start background process (Unix)', 'confidence': 0.80},
+                'get-job': {'command': 'jobs', 'explanation': 'Show background jobs (Unix)', 'confidence': 0.90},
+                'start-job': {'command': 'bg', 'explanation': 'Start background job (Unix)', 'confidence': 0.80},
+                'receive-job': {'command': 'fg', 'explanation': 'Foreground job (Unix)', 'confidence': 0.80},
+                'get-computerinfo': {'command': 'uname -a', 'explanation': 'System information (Unix)', 'confidence': 0.85},
+                'get-host': {'command': 'hostname', 'explanation': 'Show hostname (Unix)', 'confidence': 0.90},
+                'get-nettcpconnection': {'command': 'netstat', 'explanation': 'Network connections (Unix)', 'confidence': 0.90},
+                'resolve-dnsname': {'command': 'nslookup', 'explanation': 'DNS resolution (Unix)', 'confidence': 0.90},
+                'test-netconnection -traceroute': {'command': 'traceroute', 'explanation': 'Trace network route (Unix)', 'confidence': 0.85},
+                'get-volume': {'command': 'df', 'explanation': 'Show disk usage (Unix)', 'confidence': 0.85},
+                'get-disk': {'command': 'fdisk -l', 'explanation': 'List disk information (Unix)', 'confidence': 0.80},
+                'sort-object': {'command': 'sort', 'explanation': 'Sort lines (Unix)', 'confidence': 0.90},
+                'get-unique': {'command': 'uniq', 'explanation': 'Remove duplicates (Unix)', 'confidence': 0.90},
+                'measure-object': {'command': 'wc', 'explanation': 'Count lines/words/chars (Unix)', 'confidence': 0.85},
+                'measure-object -line': {'command': 'wc -l', 'explanation': 'Count lines (Unix)', 'confidence': 0.90},
+                'compress-archive': {'command': 'tar -czf', 'explanation': 'Create archive (Unix)', 'confidence': 0.80},
+                'expand-archive': {'command': 'tar -xzf', 'explanation': 'Extract archive (Unix)', 'confidence': 0.80},
+                'get-childitm env:': {'command': 'env', 'explanation': 'Show environment variables (Unix)', 'confidence': 0.90},
+                'set-variable': {'command': 'export', 'explanation': 'Set environment variable (Unix)', 'confidence': 0.80},
+                'get-alias': {'command': 'alias', 'explanation': 'Show command aliases (Unix)', 'confidence': 0.90},
+                
+                # Additional Unix commands that might be typed on Windows
+                'ifconfig': {'command': 'ipconfig', 'explanation': 'Network interface configuration (Windows)', 'confidence': 0.90},
+                'fsck': {'command': 'chkdsk', 'explanation': 'Check filesystem (Windows)', 'confidence': 0.85},
+                'fdisk': {'command': 'diskpart', 'explanation': 'Disk partitioning (Windows)', 'confidence': 0.80},
+                'tune2fs': {'command': 'fsutil', 'explanation': 'Filesystem utilities (Windows)', 'confidence': 0.75},
+                'diff': {'command': 'fc', 'explanation': 'Compare files (Windows)', 'confidence': 0.85},
+                'ln': {'command': 'mklink', 'explanation': 'Create links (Windows)', 'confidence': 0.80},
+                'ln -s': {'command': 'mklink /d', 'explanation': 'Create symbolic link (Windows)', 'confidence': 0.80},
             }
         }
     
