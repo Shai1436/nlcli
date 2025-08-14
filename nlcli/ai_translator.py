@@ -63,6 +63,10 @@ class AITranslator:
         from .pattern_engine import AdvancedPatternEngine
         self.pattern_engine = AdvancedPatternEngine()
         
+        # Advanced Fuzzy Engine for Tier 4 multi-algorithm matching
+        from .fuzzy_engine import AdvancedFuzzyEngine
+        self.fuzzy_engine = AdvancedFuzzyEngine()
+        
         # Common command patterns for instant recognition (50+ patterns)
         self.instant_patterns = {
             # File and Directory Operations
@@ -231,11 +235,28 @@ class AITranslator:
                 logger.debug(f"Instant pattern match for: {natural_language}")
                 return instant_result
             
-            # Step 2.5: Try fuzzy matching for typos and variations
-            fuzzy_result = self.typo_corrector.fuzzy_match(natural_language, threshold=0.7)
+            # Step 2.5: Advanced Fuzzy Engine - Tier 4 Multi-Algorithm Matching (15ms target)
+            fuzzy_result = self.fuzzy_engine.fuzzy_match(natural_language, threshold=0.7)
             if fuzzy_result:
-                command, confidence = fuzzy_result
-                logger.debug(f"Fuzzy match found: '{natural_language}' -> '{command}' (confidence: {confidence:.2f})")
+                command, confidence, metadata = fuzzy_result
+                logger.debug(f"Advanced fuzzy match found: '{natural_language}' -> '{command}' (confidence: {confidence:.2f}, algorithm: {metadata.get('algorithm', 'Unknown')})")
+                return {
+                    'command': command,
+                    'explanation': self._get_command_explanation(command),
+                    'confidence': confidence,
+                    'cached': False,
+                    'instant': True,
+                    'tier': 4,
+                    'advanced_fuzzy': True,
+                    'algorithm': metadata.get('algorithm', 'Unknown'),
+                    'method': metadata.get('method', 'unknown')
+                }
+            
+            # Step 2.6: Fallback to basic fuzzy matching for typos and variations
+            basic_fuzzy_result = self.typo_corrector.fuzzy_match(natural_language, threshold=0.7)
+            if basic_fuzzy_result:
+                command, confidence = basic_fuzzy_result
+                logger.debug(f"Basic fuzzy match found: '{natural_language}' -> '{command}' (confidence: {confidence:.2f})")
                 return {
                     'command': command,
                     'explanation': self._get_command_explanation(command),

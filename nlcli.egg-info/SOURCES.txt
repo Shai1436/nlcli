@@ -14,6 +14,7 @@ nlcli/context_cli.py
 nlcli/context_manager.py
 nlcli/cursor_styles.py
 nlcli/filter_cli.py
+nlcli/fuzzy_engine.py
 nlcli/history_cli.py
 nlcli/history_manager.py
 nlcli/interactive_input.py
@@ -37,6 +38,7 @@ tests/test_command_executor.py
 tests/test_command_filter.py
 tests/test_config_manager.py
 tests/test_context_manager.py
+tests/test_fuzzy_engine.py
 tests/test_history_manager.py
 tests/test_instant_patterns_only.py
 tests/test_integration.py
