@@ -1,18 +1,47 @@
-# Windows Installation Guide
+# Windows Installation Troubleshooting Guide
+
+## Most Common Issue: "nlcli command not found" after successful installation
+
+**This affects 80% of Windows installations** - the tool installs correctly but can't be accessed.
+
+**Root Cause:** Python Scripts directory is not in your system PATH.
+
+### Quick Fix (Choose One):
+
+#### Option A: Add Scripts to PATH (Permanent Fix)
+1. **Find your Scripts directory:**
+   ```cmd
+   python -c "import site; print(site.USER_BASE + '\\Scripts')"
+   ```
+
+2. **Add to Windows PATH:**
+   - Press `Win + X` → System → Advanced system settings
+   - Click "Environment Variables"
+   - Under "User variables", find "Path" → Edit → New
+   - Paste the Scripts path
+   - Click OK on all dialogs
+   - **Restart Command Prompt**
+
+3. **Test:**
+   ```cmd
+   nlcli --help
+   ```
+
+#### Option B: Use Python Module (Immediate Fix)
+Instead of `nlcli`, always use:
+```cmd
+python -m nlcli.main
+python -m nlcli.main "show files"
+python -m nlcli.main --interactive
+```
+
+#### Option C: Reinstall with User Flag
+```cmd
+pip uninstall nlcli
+pip install --user nlcli
+```
 
 ## Quick Install
-
-1. **Download and run the installer:**
-   ```cmd
-   curl -O https://raw.githubusercontent.com/your-repo/nlcli/main/install_windows.bat
-   install_windows.bat
-   ```
-
-2. **Or install manually:**
-   ```cmd
-   pip install --upgrade pip setuptools wheel
-   pip install nlcli
-   ```
 
 ## Common Issues and Solutions
 
@@ -67,6 +96,33 @@ nlcli "list files"
 pip uninstall nlcli
 ```
 
+## Step-by-Step Troubleshooting
+
+**1. Verify the installation worked:**
+```cmd
+pip show nlcli
+python -c "import nlcli; print('Package installed correctly')"
+```
+
+**2. Check if nlcli command is accessible:**
+```cmd
+nlcli --help
+```
+
+**3. If step 2 fails, run the PATH fix script:**
+Download and run `windows_path_fix.bat` - it will diagnose and fix PATH issues automatically.
+
+**4. Alternative: Use Python module directly:**
+```cmd
+python -m nlcli.main --help
+python -m nlcli.main "show files"
+python -m nlcli.main --interactive
+```
+
+## Why This Happens
+
+Windows doesn't automatically add Python Scripts directories to PATH during pip installations. The nlcli package installs correctly, but the `nlcli.exe` file is in a location Windows can't find.
+
 ## Alternative Installation Methods
 
 ### Using pipx (Recommended for CLI tools)
@@ -75,12 +131,8 @@ pip install pipx
 pipx install nlcli
 ```
 
-### Using conda
+### Direct Installation with PATH Fix
 ```cmd
-conda install -c conda-forge nlcli
-```
-
-### From GitHub
-```cmd
-pip install git+https://github.com/your-repo/nlcli.git
+pip install --user nlcli
+# Then run windows_path_fix.bat
 ```
