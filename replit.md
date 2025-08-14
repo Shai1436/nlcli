@@ -81,11 +81,11 @@ Full roadmap available in [ROADMAP.md](ROADMAP.md)
 The application follows a modular architecture with clear separation of concerns:
 
 **AI Translation Layer** (`ai_translator.py`)
-- 5-tier performance optimization system for maximum speed:
-  1. **Typo Correction** (sub-millisecond): 175+ common typo patterns corrected automatically
-  2. **Direct Command Filter** (sub-5ms): 134+ exact commands bypass AI completely
-  3. **Instant Pattern Matching** (sub-millisecond): 60+ common commands recognized immediately
-  4. **Fuzzy Matching** (sub-millisecond): 34+ natural language patterns with confidence scoring
+- 6-tier performance optimization system for maximum speed:
+  1. **Enhanced Typo Correction** (sub-millisecond): 476+ mappings including natural language mistakes, grammar errors, and conversational commands
+  2. **Direct Command Filter** (sub-5ms): 145+ exact commands bypass AI completely
+  3. **Instant Pattern Matching** (sub-millisecond): 115+ common commands recognized immediately
+  4. **Fuzzy Matching** (sub-millisecond): 115+ natural language patterns with confidence scoring
   5. **Local SQLite Cache** (sub-millisecond): Stores and retrieves previous translations
   6. **AI Translation** (2-3 seconds): GPT-4o-mini with timeout and concurrent execution
 - Smart API key management: 343 commands work without OpenAI API key, prompts only when needed
@@ -115,9 +115,12 @@ The application follows a modular architecture with clear separation of concerns
 - Rich visual presentation with tables and clear descriptions
 - Seamless integration with existing 6-tier performance pipeline
 
-**Typo Correction System** (`typo_corrector.py`)
-- 175+ common typo mappings with automatic correction
-- 34+ fuzzy matching patterns for natural language recognition
+**Enhanced Typo Correction System** (`typo_corrector.py`)
+- 476+ comprehensive typo mappings with automatic correction
+- Natural language support: "show me files" → "ls", "where am i" → "pwd"
+- Grammar mistake correction: "directoy" → "pwd", "proces" → "ps"
+- Conversational commands: "go home" → "cd ~", "task manager" → "top"
+- 115+ fuzzy matching patterns for complex natural language recognition
 - Confidence scoring for fuzzy matches (0.6-1.0 range)
 - Support for compound command typo correction
 - Suggestion system for unknown commands with similarity scoring
