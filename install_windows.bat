@@ -49,7 +49,8 @@ if errorlevel 1 (
     echo   7. Restart Command Prompt
     echo.
     echo Option 2 - Use Python module ^(Works immediately^):
-    echo   Instead of 'nlcli', use: python -m nlcli.main
+    echo   Interactive mode: python -m nlcli.main
+    echo   Single commands: python -m nlcli.main translate "your command"
     echo.
     echo Testing Python module access...
     python -m nlcli.main --version
@@ -66,7 +67,8 @@ echo.
 echo Installation complete!
 echo.
 echo Quick test commands:
-echo   nlcli --help           ^(if PATH is configured^)
-echo   python -m nlcli.main   ^(always works^)
+echo   nlcli                               ^(if PATH is configured^)
+echo   python -m nlcli.main                ^(interactive mode^)
+echo   python -m nlcli.main translate "show files"  ^(single command^)
 echo.
 pause

@@ -30,9 +30,15 @@
 #### Option B: Use Python Module (Immediate Fix)
 Instead of `nlcli`, always use:
 ```cmd
+# For interactive mode:
 python -m nlcli.main
-python -m nlcli.main "show files"
-python -m nlcli.main --interactive
+
+# For single commands:
+python -m nlcli.main translate "show files"
+python -m nlcli.main translate "list processes"
+
+# For help:
+python -m nlcli.main --help
 ```
 
 #### Option C: Reinstall with User Flag
@@ -114,9 +120,15 @@ Download and run `windows_path_fix.bat` - it will diagnose and fix PATH issues a
 
 **4. Alternative: Use Python module directly:**
 ```cmd
+# Interactive mode (recommended):
+python -m nlcli.main
+
+# Single command translation:
+python -m nlcli.main translate "show files"
+python -m nlcli.main translate "list processes"
+
+# Help:
 python -m nlcli.main --help
-python -m nlcli.main "show files"
-python -m nlcli.main --interactive
 ```
 
 ## Why This Happens

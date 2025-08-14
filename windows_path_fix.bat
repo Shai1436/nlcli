@@ -134,9 +134,9 @@ if "%choice%"=="1" (
         echo SUCCESS: Use 'python -m nlcli.main' instead of 'nlcli'
         echo.
         echo Examples:
-        echo   python -m nlcli.main --help
-        echo   python -m nlcli.main "show files"
-        echo   python -m nlcli.main --interactive
+        echo   python -m nlcli.main                    ^(interactive mode^)
+        echo   python -m nlcli.main translate "show files"
+        echo   python -m nlcli.main translate "list processes"
     )
 ) else (
     echo Invalid choice. Please run the script again.
