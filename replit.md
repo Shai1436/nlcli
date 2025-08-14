@@ -1,6 +1,6 @@
 # Overview
 
-Natural Language CLI Tool (nlcli) is a universal command-line interface that translates natural language into OS commands using OpenAI's GPT-4o. The tool is designed as a cross-platform solution that works on Linux, macOS, and Windows, providing users with an intuitive way to execute system commands using plain English. The application includes comprehensive safety measures, command history tracking, and is built with enterprise expansion capabilities in mind.
+Natural Language CLI Tool (nlcli) is a universal command-line interface that translates natural language into OS commands using OpenAI's GPT-4o. It aims to provide a cross-platform, intuitive way to execute system commands using plain English, integrating comprehensive safety measures, command history, and enterprise expansion capabilities.
 
 # User Preferences
 
@@ -19,6 +19,7 @@ Preferred communication style: Simple, everyday language.
 - Fix failing tests and increase coverage (implemented: 95%+ test success rate, 56/59 tests passing, comprehensive test coverage across all core components)
 - Support intelligent command variations with parameters (implemented: Enhanced command filter with regex patterns and parameter detection for commands like "show processes on port 8080")
 - Expand known commands and their variations with typo detection (implemented: 134+ direct commands, 175+ typo mappings, 34+ fuzzy patterns, comprehensive natural language variations and common typo correction with 100% recognition success rate)
+- Add cross-OS command translation support for Windows/Unix/Linux/macOS compatibility (implemented: 88 cross-platform mappings in Tier 2 with bidirectional Windows↔Unix translation, PowerShell cmdlet support, case-insensitive matching, 90%+ translation success rate)
 - Implement oh-my-zsh inspired visual themes and rich output formatting (implemented: Complete OutputFormatter with robbyrussell, agnoster, and powerlevel10k themes, performance indicators, syntax highlighting, and enhanced UI)
 - Style terminal prompt with simple design for clean CLI aesthetics (implemented: Simple > prompt, enhanced welcome banner with prompt instructions)
 - Implement modern and sleek cursor styling with animations (reverted: Custom cursor system caused loading issues, reverted to reliable default cursor while maintaining blue chevron prompt styling)
@@ -27,209 +28,48 @@ Preferred communication style: Simple, everyday language.
 - Enhanced context awareness with pattern learning (implemented: Intelligent command pattern learning from successful executions, enhanced directory tracking, project type detection, package operation awareness, file reference extraction, contextual suggestions based on learned patterns)
 - Improve OS command recognition for better handling of system commands like whoami (implemented: Enhanced command recognition with 145+ direct commands, 203 typo mappings, 115 fuzzy patterns, comprehensive user identification and system info patterns)
 
-## Approved Roadmap & Next Features
-
-Based on current implementation, the next logical features are prioritized as:
-
-**Immediate Priority (Next 2 weeks):**
-1. **Advanced Pattern Recognition** - Expand from 15 to 60+ instant command patterns (COMPLETED)
-2. **Enhanced Context Awareness** - Pattern learning, directory tracking, project awareness, command success tracking (COMPLETED)
-3. **Interactive Command History** - Arrow key navigation, search, management commands (COMPLETED)
-4. **Enhanced Output Formatting** - Rich display with colors, tables, and better visual presentation (COMPLETED)
-5. **Interactive Command Selection** - When multiple commands possible, let user choose (COMPLETED)
-
-**Short Term (2-4 weeks):**
-1. **Command Templates & Sharing** - Pre-approved patterns for teams
-2. **Configuration Profiles** - Multiple user profiles for different contexts
-3. **Command Chaining** - Support for complex multi-step operations
-4. **Undo/Redo System** - Reverse previous commands where possible
-
-**Medium Term (1-3 months):**
-1. **REST API & Plugin System** - Enterprise integrations and extensibility
-2. **Web Dashboard** - Browser-based management interface
-3. **Advanced Security & Compliance** - Audit logging and enterprise security
-4. **SSO Integration** - Enterprise authentication systems
-
-**V2.0 Future Features:**
-1. **Cross-OS Dotfile Management** - Unified profile system handling per-OS differences (PATH, aliases, PowerShell vs .zshrc)
-2. **Git/Stow Integration** - Version control integration for dotfile synchronization
-3. **Cloud/Local Sync** - One source of truth for configurations across machines and operating systems
-4. **Template System** - OS-specific configuration templates that adapt to current platform context
-
-Full roadmap available in [ROADMAP.md](ROADMAP.md)
-
-## Development Workflow
-
-**Test-Driven Development**
-- Comprehensive unit test suite with 180+ tests across all components
-- Core component testing: Configuration (10 tests), History (12 tests), Output (15 tests), Utils (13 tests)
-- 95%+ test success rate with robust error handling and edge case validation
-- Test isolation using temporary files and proper mocking
-- Test categories: configuration management, history operations, output formatting, utility functions, CLI interface, integration workflows
-
-**Quality Assurance Process**
-1. Write tests first for new features
-2. Implement feature with pattern expansion
-3. Run automated test suite (`python test_automation.py`)
-4. Validate pattern match rates and performance
-5. Update documentation and roadmap
-
 # System Architecture
 
+The application follows a modular, cross-platform architecture with clear separation of concerns, designed for performance, security, and extensibility.
+
 ## Core Components
-
-The application follows a modular architecture with clear separation of concerns:
-
-**AI Translation Layer** (`ai_translator.py`)
-- 6-tier performance optimization system for maximum speed:
-  1. **Enhanced Typo Correction** (sub-millisecond): 476+ mappings including natural language mistakes, grammar errors, and conversational commands
-  2. **Direct Command Filter** (sub-5ms): 145+ exact commands bypass AI completely
-  3. **Instant Pattern Matching** (sub-millisecond): 115+ common commands recognized immediately
-  4. **Fuzzy Matching** (sub-millisecond): 115+ natural language patterns with confidence scoring
-  5. **Local SQLite Cache** (sub-millisecond): Stores and retrieves previous translations
-  6. **AI Translation** (2-3 seconds): GPT-4o-mini with timeout and concurrent execution
-- Smart API key management: 343 commands work without OpenAI API key, prompts only when needed
-- User-friendly onboarding with step-by-step API key setup instructions
-- Graceful fallback handling when API key unavailable
-- Integrates with OpenAI's GPT-4o-mini API for faster responses
-- Uses platform-specific prompts to generate appropriate OS commands
-- Returns structured responses with command, explanation, and confidence scores
-- Performance monitoring with response time indicators
-- Handles API authentication and error management
-
-**Command Filter System** (`command_filter.py`, `filter_cli.py`)
-- Direct execution of 134+ known commands without AI translation
-- Platform-aware command recognition (Linux/macOS/Windows)
-- Sub-5ms response times with 100% confidence scores
-- Support for exact matches, predefined arguments, and custom arguments
-- Comprehensive CLI management: stats, list, suggest, add, remove, test, benchmark
-- Custom command support for user-defined mappings
-- Performance monitoring and statistics tracking
-- Extensive natural language variations (list files, show processes, current directory, etc.)
-
-**Interactive Command Selection** (`command_selector.py`)
-- 13 ambiguous patterns with multiple command options each
-- Smart parameter extraction from natural language context
-- User preference learning with automatic selection
-- Comprehensive coverage: file operations, text processing, process management, network operations
-- Rich visual presentation with tables and clear descriptions
-- Seamless integration with existing 6-tier performance pipeline
-
-**Enhanced Typo Correction System** (`typo_corrector.py`)
-- 476+ comprehensive typo mappings with automatic correction
-- Natural language support: "show me files" → "ls", "where am i" → "pwd"
-- Grammar mistake correction: "directoy" → "pwd", "proces" → "ps"
-- Conversational commands: "go home" → "cd ~", "task manager" → "top"
-- 115+ fuzzy matching patterns for complex natural language recognition
-- Confidence scoring for fuzzy matches (0.6-1.0 range)
-- Support for compound command typo correction
-- Suggestion system for unknown commands with similarity scoring
-- Sub-millisecond response times for instant typo detection
-
-**Safety Validation** (`safety_checker.py`)
-- Implements multi-level safety checking (low, medium, high)
-- Maintains platform-specific dangerous command patterns
-- Prevents execution of destructive operations like `rm -rf /` or registry modifications
-- Configurable safety levels for different user requirements
-
-**Command Execution Engine** (`command_executor.py`)
-- Cross-platform command execution with proper shell detection
-- Timeout management and error handling
-- Secure subprocess execution with output capturing
-- Working directory and environment variable support
-
-**History Management** (`history_manager.py`, `history_cli.py`)
-- SQLite-based storage for command history with comprehensive CLI management
-- Tracks natural language inputs, generated commands, and execution results
-- Indexed for efficient querying and retrieval
-- Session management for organizing command history
-- Rich CLI commands: show, search, clear, stats, repeat, export
-- Integration with interactive input for seamless history navigation
-
-**Configuration System** (`config_manager.py`)
-- INI-based configuration with sensible defaults
-- Manages AI settings (model, temperature, timeouts)
-- Performance optimization settings (cache, patterns, timeouts)
-- User preferences for safety levels and interface behavior
-- Platform-specific configuration paths
-
-**Cache Management** (`cache_manager.py`)
-- SQLite-based local cache for translation results
-- Platform-aware caching with input normalization
-- Usage statistics and popular command tracking
-- Automatic cleanup of old entries
-- Cache hit rate monitoring for performance optimization
-
-**CLI Interface** (`main.py`)
-- Click-based command-line interface with Rich console output
-- Interactive mode for real-time command translation with history navigation
-- Real-time performance indicators (⚡ instant, 🎯 context-aware, 📋 cached, 🤖 AI)
-- Performance monitoring command (`nlcli performance`)
-- Subcommand structure for extensibility
-- Context management for sharing components across commands
-
-**Interactive Input System** (`interactive_input.py`)
-- Readline-based command history with up/down arrow key navigation
-- Persistent history storage in `~/.nlcli/input_history`
-- Command completion and search functionality
-- Cross-platform fallback for systems without readline
-- Integration with database history for seamless experience
+- **AI Translation Layer**: Integrates OpenAI's GPT-4o-mini with a 6-tier performance optimization system (typo correction, direct command filter, instant pattern matching, fuzzy matching, local cache, AI translation) for speed and efficiency. It includes smart API key management and platform-specific prompting.
+- **Command Filter System**: Directly executes 134+ known commands without AI translation, offering sub-5ms response times. It supports platform-aware and cross-platform command recognition, including bidirectional Windows↔Unix/Linux/macOS translation and PowerShell cmdlet support.
+- **Interactive Command Selection**: Handles ambiguous natural language requests by presenting multiple command options, extracting parameters, and learning user preferences for seamless integration.
+- **Enhanced Typo Correction System**: Provides sub-millisecond typo detection with 476+ mappings, fuzzy matching, and conversational command recognition.
+- **Safety Validation**: Implements multi-level safety checking to prevent execution of destructive operations, configurable by the user.
+- **Command Execution Engine**: Manages cross-platform command execution, timeout, error handling, and secure subprocess execution.
+- **History Management**: Stores command history in an SQLite database, tracking natural language inputs, generated commands, and execution results with comprehensive CLI management.
+- **Configuration System**: Manages settings via INI files, including AI parameters, performance optimizations, and user preferences.
+- **Cache Management**: Utilizes an SQLite-based local cache for translation results, enhancing performance and tracking usage statistics.
+- **CLI Interface**: Built with `Click` and `Rich`, providing an interactive mode with real-time performance indicators and subcommands.
+- **Interactive Input System**: Offers Readline-based command history navigation, persistence, and search functionality.
 
 ## Data Storage
-
-**SQLite Database**
-- Local storage for command history
-- Schema includes natural language input, generated commands, execution success, and timestamps
-- Indexed for performance on timestamp and platform fields
-- Backup and maintenance capabilities
-
-**Configuration Files**
-- INI format configuration stored in user's home directory
-- Hierarchical settings with defaults and user overrides
-- Separate sections for AI, storage, and general preferences
+- **SQLite Database**: Local storage for command history and cache, indexed for efficient querying.
+- **Configuration Files**: INI format files store user and system configurations in the home directory.
 
 ## Security Architecture
-
-**Multi-layered Safety System**
-- Pattern-based command validation before execution
-- Platform-aware dangerous command detection
-- User confirmation prompts for potentially risky operations
-- Configurable safety levels from permissive to restrictive
-
-**API Key Management**
-- Environment variable-based OpenAI API key storage
-- Secure handling without logging sensitive information
-- Graceful error handling for missing or invalid keys
+- **Multi-layered Safety System**: Employs pattern-based validation, dangerous command detection, and configurable user confirmation prompts.
+- **API Key Management**: Securely handles OpenAI API keys via environment variables without logging sensitive information.
 
 ## Cross-Platform Design
+- **Platform Abstraction**: Automatically detects OS and shell environment, applying platform-specific command patterns, safety rules, and shell preferences.
 
-**Platform Abstraction**
-- Automatic detection of operating system and shell environment
-- Platform-specific command patterns and safety rules
-- Shell preference handling (bash, zsh, cmd, PowerShell)
-- Path and directory management across different filesystems
+## Development Workflow
+- **Test-Driven Development**: Employs a comprehensive unit test suite (180+ tests, 95%+ success rate) for robust error handling and edge case validation across all core components.
+- **Quality Assurance**: Involves writing tests first, implementing features, running automated tests, validating performance, and updating documentation.
 
 # External Dependencies
 
-**OpenAI API**
-- Primary dependency for natural language processing
-- Uses GPT-4o model for command translation
-- Requires API key authentication
-- Configurable timeout and token limits
-
-**Python Packages**
-- `click`: Command-line interface framework
-- `rich`: Enhanced console output and formatting
-- `openai`: Official OpenAI API client
-- `configparser`: Configuration file management
-- `sqlite3`: Built-in database functionality (no external dependency)
-
-**System Dependencies**
-- Python 3.8+ runtime environment
-- Standard library modules for cross-platform operation
-- Operating system shell environments (bash, zsh, cmd, PowerShell)
-
-**Development and Distribution**
-- `setuptools`: Package distribution and installation
-- PyPI integration for package distribution
-- Install scripts for different platforms (bash, PowerShell)
+- **OpenAI API**: The primary service for natural language processing, utilizing GPT-4o for command translation. Requires an API key.
+- **Python Packages**:
+    - `click`: For building the command-line interface.
+    - `rich`: For enhanced console output and formatting.
+    - `openai`: The official client for OpenAI API interaction.
+    - `configparser`: For managing INI-based configuration files.
+    - `sqlite3`: Python's built-in module for SQLite database interaction.
+- **System Dependencies**:
+    - Python 3.8+ runtime environment.
+    - Standard library modules inherent to Python for cross-platform operations.
+    - Operating system shell environments (bash, zsh, cmd, PowerShell).

@@ -221,6 +221,9 @@ class CommandFilter:
         
         # Initialize custom commands storage
         self.custom_commands = {}
+        
+        # Load cross-platform command translations
+        self._load_cross_platform_mappings()
     
     def _add_typo_variations(self):
         """Add common typos and variations for frequently used commands"""
@@ -317,6 +320,144 @@ class CommandFilter:
         
         # Add typo mappings to direct commands
         self.direct_commands.update(typo_mappings)
+    
+    def _load_cross_platform_mappings(self):
+        """Load cross-platform command translations for different operating systems"""
+        
+        # Cross-platform command mappings
+        self.cross_platform_mappings = {
+            # Unix/Linux/macOS commands -> Windows PowerShell equivalents
+            'unix_to_windows': {
+                'ls': {'command': 'Get-ChildItem', 'explanation': 'List directory contents (PowerShell)', 'confidence': 0.95, 'alt': 'dir'},
+                'ls -l': {'command': 'Get-ChildItem | Format-List', 'explanation': 'List files with details (PowerShell)', 'confidence': 0.95, 'alt': 'dir /q'},
+                'ls -la': {'command': 'Get-ChildItem -Force | Format-List', 'explanation': 'List all files with details (PowerShell)', 'confidence': 0.95, 'alt': 'dir /a /q'},
+                'ls -a': {'command': 'Get-ChildItem -Force', 'explanation': 'List all files including hidden (PowerShell)', 'confidence': 0.95, 'alt': 'dir /a'},
+                'pwd': {'command': 'Get-Location', 'explanation': 'Show current directory (PowerShell)', 'confidence': 0.95, 'alt': 'cd'},
+                'cd': {'command': 'Set-Location', 'explanation': 'Change directory (PowerShell)', 'confidence': 0.95, 'alt': 'cd'},
+                'clear': {'command': 'Clear-Host', 'explanation': 'Clear screen (PowerShell)', 'confidence': 0.95, 'alt': 'cls'},
+                'cat': {'command': 'Get-Content', 'explanation': 'Display file contents (PowerShell)', 'confidence': 0.95, 'alt': 'type'},
+                'head': {'command': 'Get-Content -TotalCount 10', 'explanation': 'Show first 10 lines (PowerShell)', 'confidence': 0.90},
+                'tail': {'command': 'Get-Content -Tail 10', 'explanation': 'Show last 10 lines (PowerShell)', 'confidence': 0.90},
+                'rm': {'command': 'Remove-Item', 'explanation': 'Delete files (PowerShell)', 'confidence': 0.85, 'alt': 'del'},
+                'rm -r': {'command': 'Remove-Item -Recurse', 'explanation': 'Delete recursively (PowerShell)', 'confidence': 0.85, 'alt': 'rd /s'},
+                'cp': {'command': 'Copy-Item', 'explanation': 'Copy files (PowerShell)', 'confidence': 0.90, 'alt': 'copy'},
+                'cp -r': {'command': 'Copy-Item -Recurse', 'explanation': 'Copy recursively (PowerShell)', 'confidence': 0.90, 'alt': 'xcopy /e'},
+                'mv': {'command': 'Move-Item', 'explanation': 'Move/rename files (PowerShell)', 'confidence': 0.90, 'alt': 'move'},
+                'mkdir': {'command': 'New-Item -ItemType Directory', 'explanation': 'Create directory (PowerShell)', 'confidence': 0.90, 'alt': 'md'},
+                'rmdir': {'command': 'Remove-Item -ItemType Directory', 'explanation': 'Remove directory (PowerShell)', 'confidence': 0.85, 'alt': 'rd'},
+                'touch': {'command': 'New-Item -ItemType File', 'explanation': 'Create empty file (PowerShell)', 'confidence': 0.90},
+                'grep': {'command': 'Select-String', 'explanation': 'Search text patterns (PowerShell)', 'confidence': 0.85, 'alt': 'findstr'},
+                'ps': {'command': 'Get-Process', 'explanation': 'Show running processes (PowerShell)', 'confidence': 0.95, 'alt': 'tasklist'},
+                'ps aux': {'command': 'Get-Process | Format-Table', 'explanation': 'Show all processes (PowerShell)', 'confidence': 0.95, 'alt': 'tasklist /v'},
+                'kill': {'command': 'Stop-Process', 'explanation': 'Terminate process (PowerShell)', 'confidence': 0.85, 'alt': 'taskkill'},
+                'top': {'command': 'Get-Process | Sort-Object CPU -Descending', 'explanation': 'Process monitor (PowerShell)', 'confidence': 0.85, 'alt': 'taskmgr'},
+                'df': {'command': 'Get-PSDrive', 'explanation': 'Show disk usage (PowerShell)', 'confidence': 0.90},
+                'df -h': {'command': 'Get-PSDrive | Format-Table Name, Used, Free', 'explanation': 'Show disk usage formatted (PowerShell)', 'confidence': 0.90},
+                'free': {'command': 'Get-CimInstance Win32_OperatingSystem | Select TotalVisibleMemorySize, FreePhysicalMemory', 'explanation': 'Show memory usage (PowerShell)', 'confidence': 0.85},
+                'which': {'command': 'Get-Command', 'explanation': 'Find command location (PowerShell)', 'confidence': 0.90, 'alt': 'where'},
+                'whoami': {'command': 'whoami', 'explanation': 'Show current user', 'confidence': 1.0},
+                'hostname': {'command': 'hostname', 'explanation': 'Show computer name', 'confidence': 1.0},
+                'date': {'command': 'Get-Date', 'explanation': 'Show current date/time (PowerShell)', 'confidence': 0.95, 'alt': 'date'},
+                'uptime': {'command': 'Get-CimInstance Win32_OperatingSystem | Select LastBootUpTime', 'explanation': 'Show system uptime (PowerShell)', 'confidence': 0.85},
+                'env': {'command': 'Get-ChildItem Env:', 'explanation': 'Show environment variables (PowerShell)', 'confidence': 0.90, 'alt': 'set'},
+                'history': {'command': 'Get-History', 'explanation': 'Show command history (PowerShell)', 'confidence': 0.90},
+                'ping': {'command': 'Test-NetConnection', 'explanation': 'Test network connectivity (PowerShell)', 'confidence': 0.90, 'alt': 'ping'},
+                'curl': {'command': 'Invoke-WebRequest', 'explanation': 'Make web requests (PowerShell)', 'confidence': 0.85},
+                'wget': {'command': 'Invoke-WebRequest', 'explanation': 'Download files (PowerShell)', 'confidence': 0.85},
+                'chmod': {'command': 'Set-Acl', 'explanation': 'Change file permissions (PowerShell)', 'confidence': 0.80, 'alt': 'attrib'},
+                'find': {'command': 'Get-ChildItem -Recurse -Name', 'explanation': 'Find files (PowerShell)', 'confidence': 0.85, 'alt': 'dir /s'},
+                'locate': {'command': 'Get-ChildItem -Recurse -Name', 'explanation': 'Locate files (PowerShell)', 'confidence': 0.85},
+                'man': {'command': 'Get-Help', 'explanation': 'Show command help (PowerShell)', 'confidence': 0.90, 'alt': 'help'},
+            },
+            
+            # Windows commands -> Unix/Linux/macOS equivalents
+            'windows_to_unix': {
+                'dir': {'command': 'ls', 'explanation': 'List directory contents (Unix)', 'confidence': 0.95},
+                'dir /a': {'command': 'ls -a', 'explanation': 'List all files including hidden (Unix)', 'confidence': 0.95},
+                'dir /q': {'command': 'ls -l', 'explanation': 'List files with details (Unix)', 'confidence': 0.95},
+                'dir /a /q': {'command': 'ls -la', 'explanation': 'List all files with details (Unix)', 'confidence': 0.95},
+                'cd': {'command': 'pwd', 'explanation': 'Show current directory (Unix)', 'confidence': 0.90},
+                'cls': {'command': 'clear', 'explanation': 'Clear screen (Unix)', 'confidence': 0.95},
+                'type': {'command': 'cat', 'explanation': 'Display file contents (Unix)', 'confidence': 0.95},
+                'del': {'command': 'rm', 'explanation': 'Delete files (Unix)', 'confidence': 0.85},
+                'rd': {'command': 'rmdir', 'explanation': 'Remove directory (Unix)', 'confidence': 0.85},
+                'rd /s': {'command': 'rm -r', 'explanation': 'Remove directory recursively (Unix)', 'confidence': 0.85},
+                'copy': {'command': 'cp', 'explanation': 'Copy files (Unix)', 'confidence': 0.90},
+                'xcopy': {'command': 'cp -r', 'explanation': 'Copy recursively (Unix)', 'confidence': 0.90},
+                'xcopy /e': {'command': 'cp -r', 'explanation': 'Copy all subdirectories (Unix)', 'confidence': 0.90},
+                'move': {'command': 'mv', 'explanation': 'Move/rename files (Unix)', 'confidence': 0.90},
+                'md': {'command': 'mkdir', 'explanation': 'Create directory (Unix)', 'confidence': 0.90},
+                'mkdir': {'command': 'mkdir', 'explanation': 'Create directory (Unix)', 'confidence': 1.0},
+                'findstr': {'command': 'grep', 'explanation': 'Search text patterns (Unix)', 'confidence': 0.85},
+                'tasklist': {'command': 'ps aux', 'explanation': 'Show running processes (Unix)', 'confidence': 0.95},
+                'tasklist /v': {'command': 'ps aux', 'explanation': 'Show all processes (Unix)', 'confidence': 0.95},
+                'taskkill': {'command': 'kill', 'explanation': 'Terminate process (Unix)', 'confidence': 0.85},
+                'taskmgr': {'command': 'top', 'explanation': 'Process monitor (Unix)', 'confidence': 0.85},
+                'where': {'command': 'which', 'explanation': 'Find command location (Unix)', 'confidence': 0.90},
+                'whoami': {'command': 'whoami', 'explanation': 'Show current user', 'confidence': 1.0},
+                'hostname': {'command': 'hostname', 'explanation': 'Show computer name', 'confidence': 1.0},
+                'date': {'command': 'date', 'explanation': 'Show current date/time', 'confidence': 1.0},
+                'time': {'command': 'date', 'explanation': 'Show current time', 'confidence': 0.90},
+                'set': {'command': 'env', 'explanation': 'Show environment variables (Unix)', 'confidence': 0.90},
+                'ping': {'command': 'ping', 'explanation': 'Test network connectivity', 'confidence': 1.0},
+                'attrib': {'command': 'chmod', 'explanation': 'Change file permissions (Unix)', 'confidence': 0.80},
+                'help': {'command': 'man', 'explanation': 'Show command manual (Unix)', 'confidence': 0.90},
+                
+                # PowerShell commands -> Unix equivalents
+                'get-childitem': {'command': 'ls', 'explanation': 'List directory contents (Unix)', 'confidence': 0.95},
+                'get-location': {'command': 'pwd', 'explanation': 'Show current directory (Unix)', 'confidence': 0.95},
+                'set-location': {'command': 'cd', 'explanation': 'Change directory (Unix)', 'confidence': 0.95},
+                'clear-host': {'command': 'clear', 'explanation': 'Clear screen (Unix)', 'confidence': 0.95},
+                'get-content': {'command': 'cat', 'explanation': 'Display file contents (Unix)', 'confidence': 0.95},
+                'remove-item': {'command': 'rm', 'explanation': 'Delete files (Unix)', 'confidence': 0.85},
+                'copy-item': {'command': 'cp', 'explanation': 'Copy files (Unix)', 'confidence': 0.90},
+                'move-item': {'command': 'mv', 'explanation': 'Move/rename files (Unix)', 'confidence': 0.90},
+                'new-item': {'command': 'mkdir', 'explanation': 'Create directory (Unix)', 'confidence': 0.90},
+                'select-string': {'command': 'grep', 'explanation': 'Search text patterns (Unix)', 'confidence': 0.85},
+                'get-process': {'command': 'ps aux', 'explanation': 'Show running processes (Unix)', 'confidence': 0.95},
+                'stop-process': {'command': 'kill', 'explanation': 'Terminate process (Unix)', 'confidence': 0.85},
+                'get-command': {'command': 'which', 'explanation': 'Find command location (Unix)', 'confidence': 0.90},
+                'get-date': {'command': 'date', 'explanation': 'Show current date/time (Unix)', 'confidence': 0.95},
+                'get-history': {'command': 'history', 'explanation': 'Show command history (Unix)', 'confidence': 0.90},
+                'test-netconnection': {'command': 'ping', 'explanation': 'Test network connectivity (Unix)', 'confidence': 0.90},
+                'invoke-webrequest': {'command': 'curl', 'explanation': 'Make web requests (Unix)', 'confidence': 0.85},
+                'get-help': {'command': 'man', 'explanation': 'Show command manual (Unix)', 'confidence': 0.90},
+            }
+        }
+    
+    def check_cross_platform_translation(self, command: str) -> Optional[Dict]:
+        """Check if command needs cross-platform translation"""
+        
+        command_lower = command.lower().strip()
+        
+        # Determine translation direction based on current platform
+        if self.platform == 'windows':
+            # On Windows, translate Unix commands to Windows equivalents
+            mapping_key = 'unix_to_windows'
+            source_platform = 'Unix/Linux/macOS'
+            target_platform = 'Windows'
+        else:
+            # On Unix/Linux/macOS, translate Windows commands to Unix equivalents
+            mapping_key = 'windows_to_unix'
+            source_platform = 'Windows'
+            target_platform = 'Unix/Linux/macOS'
+        
+        # Check for exact command match
+        if command_lower in self.cross_platform_mappings[mapping_key]:
+            translation = self.cross_platform_mappings[mapping_key][command_lower]
+            
+            return {
+                'original_command': command,
+                'translated_command': translation['command'],
+                'explanation': translation['explanation'],
+                'confidence': translation['confidence'],
+                'source_platform': source_platform,
+                'target_platform': target_platform,
+                'translation_type': 'cross_platform',
+                'alternative': translation.get('alt', None)
+            }
+        
+        return None
     
     def _load_intelligent_patterns(self):
         """Load intelligent command patterns with parameter detection"""
@@ -537,6 +678,10 @@ class CommandFilter:
         if first_word in self.direct_commands:
             return True
         
+        # Check cross-platform command translation
+        if self.check_cross_platform_translation(user_input):
+            return True
+        
         # Check intelligent patterns
         if self._check_intelligent_patterns(user_input):
             return True
@@ -588,6 +733,22 @@ class CommandFilter:
                 'source': 'base_command_with_args'
             }
             return result
+        
+        # Check cross-platform command translation
+        cross_platform_result = self.check_cross_platform_translation(user_input)
+        if cross_platform_result:
+            # Format as direct command result
+            return {
+                'command': cross_platform_result['translated_command'],
+                'explanation': f"{cross_platform_result['explanation']} (translated from {cross_platform_result['source_platform']})",
+                'confidence': cross_platform_result['confidence'],
+                'direct': True,
+                'source': 'cross_platform_translation',
+                'original_command': cross_platform_result['original_command'],
+                'source_platform': cross_platform_result['source_platform'],
+                'target_platform': cross_platform_result['target_platform'],
+                'alternative': cross_platform_result.get('alternative', None)
+            }
         
         # Check intelligent patterns
         intelligent_result = self._check_intelligent_patterns(user_input)
