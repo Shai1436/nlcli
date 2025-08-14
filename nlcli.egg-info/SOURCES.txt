@@ -20,6 +20,7 @@ nlcli/interactive_input.py
 nlcli/main.py
 nlcli/output_formatter.py
 nlcli/output_formatter_old.py
+nlcli/pattern_engine.py
 nlcli/safety_checker.py
 nlcli/typo_corrector.py
 nlcli/utils.py
@@ -44,5 +45,6 @@ tests/test_main.py
 tests/test_main_cli.py
 tests/test_new_coverage.py
 tests/test_output_formatter.py
+tests/test_pattern_engine.py
 tests/test_safety_checker.py
 tests/test_utils.py

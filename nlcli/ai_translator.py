@@ -59,6 +59,10 @@ class AITranslator:
         from .command_selector import CommandSelector
         self.command_selector = CommandSelector()
         
+        # Enhanced Pattern Engine for Tier 3 semantic recognition
+        from .pattern_engine import AdvancedPatternEngine
+        self.pattern_engine = AdvancedPatternEngine()
+        
         # Common command patterns for instant recognition (50+ patterns)
         self.instant_patterns = {
             # File and Directory Operations
@@ -209,7 +213,19 @@ class AITranslator:
                         'typo_corrected': corrected_input != natural_language
                     }
             
-            # Step 2: Check for instant pattern matches (sub-millisecond response)
+            # Step 2: Enhanced Pattern Engine - Tier 3 Semantic Recognition (5ms target)
+            pattern_result = self.pattern_engine.process_natural_language(natural_language)
+            if pattern_result:
+                logger.debug(f"Enhanced pattern match ({pattern_result['pattern_type']}): {natural_language}")
+                return {
+                    **pattern_result,
+                    'cached': False,
+                    'instant': True,
+                    'tier': 3,
+                    'enhanced_pattern': True
+                }
+            
+            # Step 2.1: Check for instant pattern matches (sub-millisecond response)
             instant_result = self._check_instant_patterns(natural_language)
             if instant_result:
                 logger.debug(f"Instant pattern match for: {natural_language}")
