@@ -108,7 +108,7 @@ class ConfigManager:
         except Exception as e:
             logger.error(f"Error saving configuration: {str(e)}")
     
-    def get(self, section: str, key: str, fallback: Optional[str] = None) -> str:
+    def get_setting(self, section: str, key: str, fallback: Optional[str] = None) -> str:
         """
         Get configuration value
         
@@ -122,11 +122,15 @@ class ConfigManager:
         """
         
         try:
-            return self.config.get(section, key, fallback=fallback)
+            return self.config.get(section, key)
         except (configparser.NoSectionError, configparser.NoOptionError):
             return fallback or self.defaults.get(section, {}).get(key, '')
     
-    def set(self, section: str, key: str, value: str):
+    def get(self, section: str, key: str, fallback: Optional[str] = None) -> str:
+        """Alias for get_setting for backward compatibility"""
+        return self.get_setting(section, key, fallback)
+    
+    def set_setting(self, section: str, key: str, value: str):
         """
         Set configuration value
         
@@ -142,9 +146,20 @@ class ConfigManager:
             
             self.config.set(section, key, str(value))
             self._save_config()
-            
         except Exception as e:
-            logger.error(f"Error setting configuration {section}.{key}: {str(e)}")
+            logger.error(f"Error setting configuration: {e}")
+    
+    def set(self, section: str, key: str, value: str):
+        """Alias for set_setting for backward compatibility"""
+        self.set_setting(section, key, value)
+    
+    def get_all_settings(self) -> Dict[str, Dict[str, str]]:
+        """Get all configuration settings as a dictionary"""
+        
+        result = {}
+        for section in self.config.sections():
+            result[section] = dict(self.config.items(section))
+        return result
     
     def get_bool(self, section: str, key: str, fallback: bool = False) -> bool:
         """Get boolean configuration value"""
