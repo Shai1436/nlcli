@@ -6,6 +6,9 @@ Provides intent-based recognition, learning-based adaptation, and multi-language
 import re
 import json
 import logging
+import threading
+import concurrent.futures
+import time
 from typing import Dict, List, Optional, Tuple, Any, Set
 from collections import defaultdict, Counter
 import difflib
@@ -14,7 +17,7 @@ import unicodedata
 logger = logging.getLogger(__name__)
 
 class AdvancedFuzzyEngine:
-    """Advanced fuzzy matching with multi-algorithm scoring and learning capabilities"""
+    """Advanced fuzzy matching with parallelized multi-algorithm scoring and early termination"""
     
     def __init__(self):
         self.algorithms = [
@@ -28,6 +31,11 @@ class AdvancedFuzzyEngine:
         self.user_patterns = {}
         self.intent_categories = self._load_intent_categories()
         self.language_mappings = self._load_language_mappings()
+        
+        # Performance optimization settings
+        self.early_termination_threshold = 0.95  # Stop if we get >95% confidence
+        self.max_parallel_threads = 4
+        self.algorithm_timeout = 0.005  # 5ms timeout per algorithm
         
     def _load_intent_categories(self) -> Dict[str, Dict]:
         """Load intent-based categorization patterns"""
@@ -194,7 +202,7 @@ class AdvancedFuzzyEngine:
     
     def fuzzy_match(self, text: str, threshold: float = 0.7) -> Optional[Tuple[str, float, Dict]]:
         """
-        Multi-algorithm fuzzy matching with intent analysis
+        Parallelized multi-algorithm fuzzy matching with smart early termination
         
         Args:
             text: Input text to match
@@ -207,20 +215,16 @@ class AdvancedFuzzyEngine:
         # Normalize input text
         normalized_text = self._normalize_text(text)
         
-        # Try each algorithm and collect results
-        results = []
+        # Check learned patterns first for instant matches
+        learned_match = self._check_learned_patterns(normalized_text, threshold)
+        if learned_match and learned_match[1] >= self.early_termination_threshold:
+            return learned_match
         
-        for algorithm in self.algorithms:
-            try:
-                result = algorithm.match(normalized_text, threshold)
-                if result:
-                    results.append(result)
-            except Exception as e:
-                logger.debug(f"Algorithm {algorithm.__class__.__name__} failed: {e}")
-                continue
+        # Run algorithms in parallel with early termination
+        results = self._parallel_algorithm_execution(normalized_text, threshold)
         
         if not results:
-            return None
+            return learned_match  # Fallback to learned pattern if available
         
         # Combine results with weighted scoring
         best_result = self._combine_results(results, text)
@@ -229,6 +233,97 @@ class AdvancedFuzzyEngine:
             # Learn from successful match
             self._learn_pattern(text, best_result[0], best_result[1])
             return best_result
+        
+        return None
+    
+    def _parallel_algorithm_execution(self, normalized_text: str, threshold: float) -> List[Tuple]:
+        """Execute algorithms in parallel with early termination"""
+        results = []
+        best_confidence = 0.0
+        results_lock = threading.Lock()
+        early_termination_event = threading.Event()
+        
+        def run_algorithm(algorithm):
+            """Run single algorithm with timeout and early termination check"""
+            if early_termination_event.is_set():
+                return None
+                
+            try:
+                # Set a timeout for each algorithm
+                start_time = time.perf_counter()
+                result = algorithm.match(normalized_text, threshold)
+                execution_time = time.perf_counter() - start_time
+                
+                # Check timeout
+                if execution_time > self.algorithm_timeout:
+                    logger.debug(f"Algorithm {algorithm.__class__.__name__} exceeded timeout: {execution_time:.3f}s")
+                    return None
+                    
+                if result:
+                    confidence = result[1]
+                    with results_lock:
+                        results.append(result)
+                        nonlocal best_confidence
+                        if confidence > best_confidence:
+                            best_confidence = confidence
+                            
+                        # Early termination if we get high confidence
+                        if confidence >= self.early_termination_threshold:
+                            early_termination_event.set()
+                            logger.debug(f"Early termination triggered by {algorithm.__class__.__name__} with confidence {confidence}")
+                            
+                return result
+                
+            except Exception as e:
+                logger.debug(f"Algorithm {algorithm.__class__.__name__} failed: {e}")
+                return None
+        
+        # Execute algorithms in parallel
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_parallel_threads) as executor:
+            # Submit all algorithms
+            future_to_algorithm = {
+                executor.submit(run_algorithm, algo): algo 
+                for algo in self.algorithms
+            }
+            
+            # Wait for completion with early termination support
+            for future in concurrent.futures.as_completed(future_to_algorithm, timeout=0.015):  # 15ms total timeout
+                try:
+                    result = future.result(timeout=0.005)  # 5ms per algorithm
+                    # If early termination triggered, cancel remaining futures
+                    if early_termination_event.is_set():
+                        for remaining_future in future_to_algorithm:
+                            if not remaining_future.done():
+                                remaining_future.cancel()
+                        break
+                except concurrent.futures.TimeoutError:
+                    algorithm = future_to_algorithm[future]
+                    logger.debug(f"Algorithm {algorithm.__class__.__name__} timed out")
+                    future.cancel()
+                except Exception as e:
+                    algorithm = future_to_algorithm[future]
+                    logger.debug(f"Algorithm {algorithm.__class__.__name__} error: {e}")
+        
+        return results
+    
+    def _check_learned_patterns(self, text: str, threshold: float) -> Optional[Tuple[str, float, Dict]]:
+        """Check learned patterns for instant matches"""
+        pattern_key = self._get_pattern_key(text)
+        
+        if pattern_key in self.user_patterns:
+            patterns = self.user_patterns[pattern_key]
+            # Sort by confidence and usage count
+            patterns.sort(key=lambda x: (x['confidence'], x['count']), reverse=True)
+            
+            best_pattern = patterns[0]
+            if best_pattern['confidence'] >= threshold:
+                metadata = {
+                    'algorithm': 'LearningMatcher',
+                    'method': 'learned_pattern',
+                    'usage_count': best_pattern['count'],
+                    'pattern_key': pattern_key
+                }
+                return (best_pattern['command'], best_pattern['confidence'], metadata)
         
         return None
     
@@ -257,34 +352,63 @@ class AdvancedFuzzyEngine:
         return text.strip()
     
     def _combine_results(self, results: List[Tuple], original_text: str) -> Optional[Tuple[str, float, Dict]]:
-        """Combine results from multiple algorithms with weighted scoring"""
+        """Combine results from multiple algorithms with optimized weighted scoring"""
         if not results:
             return None
         
-        # Weight algorithms by reliability
+        # Enhanced algorithm weights based on performance characteristics
         algorithm_weights = {
-            'LevenshteinMatcher': 0.3,
-            'SemanticMatcher': 0.4,
-            'PhoneticMatcher': 0.15,
-            'IntentMatcher': 0.15
+            'LevenshteinMatcher': 0.25,      # Fast, good for typos
+            'SemanticMatcher': 0.35,         # Best for natural language
+            'PhoneticMatcher': 0.15,         # Good for pronunciation errors
+            'IntentMatcher': 0.20,           # Good for complex queries
+            'LearningMatcher': 0.05          # Bonus for learned patterns
         }
         
-        # Calculate weighted scores
-        weighted_results = []
+        # Group results by command and aggregate scores
+        command_scores = defaultdict(list)
+        
         for result in results:
             command, confidence, metadata = result
             algorithm_name = metadata.get('algorithm', 'Unknown')
             weight = algorithm_weights.get(algorithm_name, 0.25)
             weighted_score = confidence * weight
             
-            weighted_results.append((command, weighted_score, confidence, metadata))
+            command_scores[command].append({
+                'confidence': confidence,
+                'weighted_score': weighted_score,
+                'metadata': metadata,
+                'algorithm': algorithm_name
+            })
         
-        # Sort by weighted score
-        weighted_results.sort(key=lambda x: x[1], reverse=True)
+        # Find best command with aggregated scoring
+        best_command = None
+        best_final_confidence = 0.0
+        best_metadata = {}
         
-        # Return best result with original confidence
-        best = weighted_results[0]
-        return (best[0], best[2], best[3])
+        for command, scores in command_scores.items():
+            # Calculate aggregated confidence (weighted average + bonus for multiple algorithms)
+            total_weighted = sum(s['weighted_score'] for s in scores)
+            algorithm_count_bonus = min(len(scores) * 0.05, 0.15)  # Up to 15% bonus for multiple algorithms
+            final_confidence = total_weighted + algorithm_count_bonus
+            
+            if final_confidence > best_final_confidence:
+                best_final_confidence = final_confidence
+                best_command = command
+                
+                # Use metadata from highest confidence algorithm
+                best_score = max(scores, key=lambda x: x['confidence'])
+                best_metadata = best_score['metadata'].copy()
+                best_metadata['combined_algorithms'] = [s['algorithm'] for s in scores]
+                best_metadata['algorithm_count'] = len(scores)
+                best_metadata['aggregated_confidence'] = final_confidence
+        
+        if best_command:
+            # Cap confidence at 1.0
+            final_confidence = min(best_final_confidence, 1.0)
+            return (best_command, final_confidence, best_metadata)
+        
+        return None
     
     def _learn_pattern(self, input_text: str, successful_command: str, confidence: float):
         """Learn from successful fuzzy matches"""
