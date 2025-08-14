@@ -443,6 +443,24 @@ class CommandFilter:
                 
                 # Additional file operations
                 'ls -C': {'command': 'Get-ChildItem | Format-Wide', 'explanation': 'List files in columns (PowerShell)', 'confidence': 0.90, 'alt': 'dir /w'},
+                
+                # Complete file operations coverage
+                'dir': {'command': 'Get-ChildItem', 'explanation': 'List directory contents (PowerShell)', 'confidence': 0.95, 'alt': 'dir'},
+                'locate': {'command': 'Get-ChildItem -Recurse -Name', 'explanation': 'Locate files (PowerShell)', 'confidence': 0.85},
+                'whereis': {'command': 'Get-Command', 'explanation': 'Find command location (PowerShell)', 'confidence': 0.85, 'alt': 'where'},
+                
+                # Complete networking coverage
+                'wget': {'command': 'Invoke-WebRequest', 'explanation': 'Download files (PowerShell)', 'confidence': 0.85},
+                'ss': {'command': 'Get-NetTCPConnection', 'explanation': 'Socket statistics (PowerShell)', 'confidence': 0.85, 'alt': 'netstat'},
+                'dig': {'command': 'Resolve-DnsName', 'explanation': 'DNS lookup tool (PowerShell)', 'confidence': 0.85, 'alt': 'nslookup'},
+                
+                # Complete disk & memory coverage
+                'free': {'command': 'Get-CimInstance Win32_OperatingSystem | Select TotalVisibleMemorySize, FreePhysicalMemory', 'explanation': 'Show memory usage (PowerShell)', 'confidence': 0.85},
+                
+                # Complete environment variables coverage
+                'echo \\$VAR': {'command': 'echo $env:VAR', 'explanation': 'Display environment variable (PowerShell)', 'confidence': 0.90, 'alt': 'echo %VAR%'},
+                'export VAR': {'command': '$env:VAR = \"value\"', 'explanation': 'Set environment variable (PowerShell)', 'confidence': 0.85, 'alt': 'set VAR=value'},
+                'echo $VAR': {'command': 'echo $env:VAR', 'explanation': 'Display environment variable (PowerShell)', 'confidence': 0.90, 'alt': 'echo %VAR%'},
             },
             
             # Windows commands -> Unix/Linux/macOS equivalents
@@ -570,7 +588,7 @@ class CommandFilter:
                 'get-wmiobject win32_operatingsystem': {'command': 'uname -a', 'explanation': 'System information (Unix)', 'confidence': 0.85},
                 'select-string -allmatches': {'command': 'grep -o', 'explanation': 'Find all matches (Unix)', 'confidence': 0.85},
                 
-                # Additional Unix -> Windows mappings for completeness
+                # Complete Unix -> Windows mappings for remaining gaps
                 'echo \\$VAR': {'command': 'echo %VAR%', 'explanation': 'Display environment variable (Windows)', 'confidence': 0.90},
                 'free -h': {'command': 'wmic OS get TotalVisibleMemorySize,FreePhysicalMemory /format:list', 'explanation': 'Show memory usage (Windows)', 'confidence': 0.80},
                 'ps -ef': {'command': 'tasklist /v', 'explanation': 'Show all processes with details (Windows)', 'confidence': 0.90},
@@ -578,6 +596,27 @@ class CommandFilter:
                 'fold': {'command': 'powershell -c \"Get-Content file.txt | ForEach-Object {if($_.Length -gt 80){$_.Substring(0,80)+\\\"`r`n\\\"+$_.Substring(80)}else{$_}}\"', 'explanation': 'Wrap long lines (Windows)', 'confidence': 0.75},
                 'cut': {'command': 'for /f \"tokens=1 delims=\\t\" %i in (file.txt) do echo %i', 'explanation': 'Extract fields from text (Windows)', 'confidence': 0.75},
                 'tr': {'command': 'powershell -c \"Get-Content file.txt | ForEach-Object {$_ -replace \\\"[a-z]\\\", \\\"[A-Z]\\\"}\"', 'explanation': 'Translate/delete characters (Windows)', 'confidence': 0.75},
+                
+                # Complete networking Unix -> Windows
+                'wget': {'command': 'powershell -c \"Invoke-WebRequest\"', 'explanation': 'Download files (Windows)', 'confidence': 0.85},
+                'ss': {'command': 'netstat -an', 'explanation': 'Socket statistics (Windows)', 'confidence': 0.85},
+                'dig': {'command': 'nslookup', 'explanation': 'DNS lookup (Windows)', 'confidence': 0.85},
+                
+                # Complete disk & memory Unix -> Windows
+                'free': {'command': 'wmic OS get TotalVisibleMemorySize,FreePhysicalMemory', 'explanation': 'Show memory usage (Windows)', 'confidence': 0.80},
+                'mount': {'command': 'mountvol', 'explanation': 'Mount filesystems (Windows)', 'confidence': 0.80},
+                'fdisk -l': {'command': 'diskpart list disk', 'explanation': 'List disk partitions (Windows)', 'confidence': 0.80},
+                
+                # Complete environment variables Unix -> Windows
+                'export': {'command': 'set', 'explanation': 'Set environment variable (Windows)', 'confidence': 0.85},
+                'printenv': {'command': 'set', 'explanation': 'Show environment variables (Windows)', 'confidence': 0.90},
+                
+                # Complete file operations Unix -> Windows
+                'locate': {'command': 'dir /s', 'explanation': 'Locate files (Windows)', 'confidence': 0.85},
+                'whereis': {'command': 'where', 'explanation': 'Find command location (Windows)', 'confidence': 0.85},
+                
+                # Complete Windows CMD -> Unix file operations
+                'find-item': {'command': 'find', 'explanation': 'Find files (Unix)', 'confidence': 0.85},
             }
         }
     
