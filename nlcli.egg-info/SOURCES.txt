@@ -14,6 +14,7 @@ nlcli/config_manager.py
 nlcli/context_cli.py
 nlcli/context_manager.py
 nlcli/cursor_styles.py
+nlcli/enhanced_input.py
 nlcli/environment_context.py
 nlcli/file_cache.py
 nlcli/filter_cli.py
@@ -27,6 +28,7 @@ nlcli/output_formatter.py
 nlcli/output_formatter_old.py
 nlcli/pattern_engine.py
 nlcli/safety_checker.py
+nlcli/typeahead.py
 nlcli/typo_corrector.py
 nlcli/utils.py
 nlcli.egg-info/PKG-INFO

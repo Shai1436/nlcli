@@ -23,6 +23,8 @@ from .context_cli import context
 from .history_cli import history as history_cli
 from .filter_cli import filter as filter_cli
 from .interactive_input import InteractiveInputHandler
+from .typeahead import TypeaheadController
+from .enhanced_input import EnhancedInputHandler, SimpleTypeaheadInput
 from .utils import setup_logging, get_platform_info
 
 console = Console()
@@ -84,8 +86,18 @@ def interactive_mode(obj):
     os.makedirs(config_dir, exist_ok=True)
     history_file = os.path.join(config_dir, 'input_history')
     
-    # Create input handler with both readline history file and database history manager
-    input_handler = InteractiveInputHandler(history_file=history_file, history_manager=history)
+    # Initialize typeahead controller
+    typeahead_controller = TypeaheadController(history)
+    
+    # Create enhanced input handler with typeahead support
+    try:
+        input_handler = EnhancedInputHandler(
+            history_manager=history,
+            typeahead_controller=typeahead_controller
+        )
+    except Exception:
+        # Fallback to simple typeahead input
+        input_handler = SimpleTypeaheadInput(typeahead_controller)
     
     try:
         while True:

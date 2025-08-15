@@ -9,6 +9,7 @@ from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .history_manager import HistoryManager
+    from .typeahead import TypeaheadController
 
 # Try to import readline for command history
 try:
@@ -21,19 +22,23 @@ except ImportError:
 class InteractiveInputHandler:
     """Handles interactive input with persistent command history support"""
     
-    def __init__(self, history_file: Optional[str] = None, history_manager: Optional['HistoryManager'] = None):
+    def __init__(self, history_file: Optional[str] = None, history_manager: Optional['HistoryManager'] = None, 
+                 typeahead_controller: Optional['TypeaheadController'] = None):
         """
-        Initialize interactive input handler with persistent history
+        Initialize interactive input handler with persistent history and typeahead
         
         Args:
             history_file: Path to persistent readline history file
             history_manager: Database history manager for cross-session persistence
+            typeahead_controller: Typeahead controller for autocomplete functionality
         """
         
         self.history_file = history_file
         self.history_manager = history_manager
+        self.typeahead_controller = typeahead_controller
         self.session_history = []
         self.current_input = ""
+        self.typeahead_enabled = typeahead_controller is not None
         
         if HAS_READLINE:
             self._setup_readline()
@@ -68,6 +73,15 @@ class InteractiveInputHandler:
         readline.parse_and_bind("set show-all-if-ambiguous on")
         readline.parse_and_bind("set completion-ignore-case on")
         readline.parse_and_bind("set colored-stats on")
+        
+        # Set up typeahead key bindings if enabled
+        if self.typeahead_enabled:
+            # Right arrow key to accept typeahead completion
+            readline.parse_and_bind('"\\e[C": nlcli-accept-completion')
+            
+            # Setup custom completion function for typeahead
+            if hasattr(readline, 'set_completion_display_matches_hook'):
+                readline.set_completion_display_matches_hook(self._typeahead_completion_display)
     
     def _load_database_history(self):
         """Load command history from database into readline history"""
@@ -106,6 +120,12 @@ class InteractiveInputHandler:
             pass
             
         return False
+    
+    def _typeahead_completion_display(self, substitution, matches, longest_match_length):
+        """Custom completion display for typeahead"""
+        # This is called by readline to display completion matches
+        # We can customize this to show typeahead suggestions
+        pass
     
     def get_input(self, prompt: str = "> ") -> str:
         """
