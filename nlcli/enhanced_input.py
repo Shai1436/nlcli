@@ -38,7 +38,7 @@ class EnhancedInputHandler:
         self.typeahead_controller = typeahead_controller
         
         # ANSI escape codes for styling
-        self.muted_color = '\033[90m'      # Dark gray
+        self.muted_color = '\033[37m'      # Muted white
         self.reset_color = '\033[0m'       # Reset
         self.cursor_save = '\033[s'        # Save cursor position
         self.cursor_restore = '\033[u'     # Restore cursor position
@@ -321,7 +321,7 @@ class SimpleTypeaheadInput:
             suggestions = self.typeahead_controller.engine.get_suggestions(user_input, max_results=3)
             
             if suggestions:
-                print(f"\033[90mSuggestions:\033[0m")
+                print(f"\033[37mSuggestions:\033[0m")
                 for i, (suggestion, score) in enumerate(suggestions[:3]):
                     confidence = "●" if score > 0.8 else "○"
                     print(f"  {confidence} {suggestion}")

@@ -264,7 +264,7 @@ class TypeaheadDisplay:
     """Handles visual display of typeahead suggestions with proper styling"""
     
     def __init__(self):
-        self.muted_style = '\033[90m'  # Dark gray for completion text
+        self.muted_style = '\033[37m'  # Muted white for completion text
         self.reset_style = '\033[0m'   # Reset to normal
         self.cursor_save = '\033[s'    # Save cursor position
         self.cursor_restore = '\033[u' # Restore cursor position
