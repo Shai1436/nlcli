@@ -72,7 +72,7 @@ class CommandExecutor:
                     timeout=timeout,
                     cwd=cwd,
                     shell=True,
-                    creationflags=subprocess.CREATE_NO_WINDOW
+                    creationflags=0x08000000  # CREATE_NO_WINDOW
                 )
             else:
                 # Unix-like execution
@@ -324,7 +324,7 @@ class CommandExecutor:
                     text=True
                 )
                 return result.returncode == 0
-        except:
+        except (subprocess.SubprocessError, OSError, FileNotFoundError):
             return False
     
     def _get_command_path(self, command: str) -> str:
@@ -349,7 +349,7 @@ class CommandExecutor:
                 )
                 if result.returncode == 0:
                     return result.stdout.strip()
-        except:
+        except (subprocess.SubprocessError, OSError, FileNotFoundError):
             pass
         
         return ''

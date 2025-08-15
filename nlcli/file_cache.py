@@ -125,7 +125,7 @@ class FileCacheManager:
                     try:
                         with open(self.cache_file, 'r', encoding='utf-8') as f:
                             existing_data = json.load(f)
-                    except:
+                    except (json.JSONDecodeError, FileNotFoundError, IOError):
                         existing_data = {}
                 
                 # Merge memory cache with existing data
@@ -153,7 +153,7 @@ class FileCacheManager:
                 with open(self.stats_file, 'r', encoding='utf-8') as f:
                     saved_stats = json.load(f)
                     self._stats.update(saved_stats)
-            except:
+            except (json.JSONDecodeError, FileNotFoundError, IOError):
                 pass
     
     def _save_stats(self):

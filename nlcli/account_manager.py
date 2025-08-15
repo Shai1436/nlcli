@@ -124,7 +124,7 @@ class AccountManager:
             # Create account metadata
             metadata = {
                 'name': account_name,
-                'created': str(Path.ctime(account_dir)),
+                'created': str(account_dir.stat().st_ctime),
                 'last_used': None,
                 'version': '1.0.0',
                 'settings': config or {}
@@ -227,7 +227,7 @@ class AccountManager:
                 with open(metadata_file, 'r') as f:
                     metadata = json.load(f)
                 
-                metadata['last_used'] = str(Path.ctime(Path.cwd()))
+                metadata['last_used'] = str(Path.cwd().stat().st_ctime)
                 
                 with open(metadata_file, 'w') as f:
                     json.dump(metadata, f, indent=2)
