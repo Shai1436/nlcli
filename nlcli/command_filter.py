@@ -832,6 +832,61 @@ class CommandFilter:
                 'confidence': 0.9
             },
             
+            # Find files by age/time - this handles "find all file older than X days"
+            {
+                'patterns': [
+                    r'find\s+(?:all\s+)?files?\s+older\s+than\s+(\d+)\s+days?',
+                    r'find\s+(?:all\s+)?files?\s+(?:that\s+are\s+)?older\s+than\s+(\d+)\s+days?',
+                    r'search\s+(?:for\s+)?(?:all\s+)?files?\s+older\s+than\s+(\d+)\s+days?',
+                    r'list\s+(?:all\s+)?files?\s+older\s+than\s+(\d+)\s+days?',
+                    r'show\s+(?:all\s+)?files?\s+older\s+than\s+(\d+)\s+days?',
+                    r'find\s+(?:all\s+)?files?\s+(?:created|modified)\s+(?:more\s+than\s+)?(\d+)\s+days?\s+ago',
+                    r'find\s+(?:all\s+)?files?\s+from\s+(?:more\s+than\s+)?(\d+)\s+days?\s+ago'
+                ],
+                'command_generator': self._generate_find_old_files_command,
+                'explanation': 'Find files older than specified days',
+                'confidence': 0.95
+            },
+            
+            # Find files by age - newer than
+            {
+                'patterns': [
+                    r'find\s+(?:all\s+)?files?\s+newer\s+than\s+(\d+)\s+days?',
+                    r'find\s+(?:all\s+)?files?\s+(?:created|modified)\s+(?:in\s+the\s+)?(?:last|past)\s+(\d+)\s+days?',
+                    r'find\s+(?:all\s+)?files?\s+from\s+(?:the\s+)?(?:last|past)\s+(\d+)\s+days?',
+                    r'find\s+recent\s+files?\s+(?:from\s+)?(?:last\s+)?(\d+)\s+days?'
+                ],
+                'command_generator': self._generate_find_new_files_command,
+                'explanation': 'Find files newer than specified days',
+                'confidence': 0.95
+            },
+            
+            # Find files by size
+            {
+                'patterns': [
+                    r'find\s+(?:all\s+)?(?:large\s+)?files?\s+(?:larger|bigger)\s+than\s+(\d+)([kmg]?b?)',
+                    r'find\s+(?:all\s+)?files?\s+(?:over|above)\s+(\d+)([kmg]?b?)',
+                    r'find\s+(?:all\s+)?(?:small\s+)?files?\s+(?:smaller|less)\s+than\s+(\d+)([kmg]?b?)',
+                    r'find\s+(?:all\s+)?files?\s+(?:under|below)\s+(\d+)([kmg]?b?)'
+                ],
+                'command_generator': self._generate_find_files_by_size_command,
+                'explanation': 'Find files by size',
+                'confidence': 0.95
+            },
+            
+            # Find files by name pattern
+            {
+                'patterns': [
+                    r'find\s+(?:all\s+)?files?\s+(?:named|called)\s+["\']?([^"\']+)["\']?',
+                    r'find\s+(?:all\s+)?files?\s+(?:with\s+name\s+)?(?:containing|matching)\s+["\']?([^"\']+)["\']?',
+                    r'search\s+for\s+files?\s+(?:named|called)\s+["\']?([^"\']+)["\']?',
+                    r'locate\s+files?\s+(?:named|called)\s+["\']?([^"\']+)["\']?'
+                ],
+                'command_generator': self._generate_find_files_by_name_command,
+                'explanation': 'Find files by name pattern',
+                'confidence': 0.9
+            },
+            
             # Disk usage for specific directory
             {
                 'patterns': [
@@ -957,6 +1012,65 @@ class CommandFilter:
             return f'dir /s *.{extension}'
         else:
             return f'find . -name "*.{extension}"'
+    
+    def _generate_find_old_files_command(self, match_groups: List[str]) -> str:
+        """Generate command to find files older than specified days"""
+        days = match_groups[0] if match_groups else "7"
+        
+        if self.platform == 'windows':
+            # Windows: use forfiles command
+            return f'forfiles /m *.* /c "cmd /c if @isdir==FALSE echo @path" /d -{days}'
+        else:
+            # Unix/Linux/macOS: use find with -mtime
+            return f'find . -type f -mtime +{days}'
+    
+    def _generate_find_new_files_command(self, match_groups: List[str]) -> str:
+        """Generate command to find files newer than specified days"""
+        days = match_groups[0] if match_groups else "7"
+        
+        if self.platform == 'windows':
+            # Windows: use forfiles command (positive number for newer)
+            return f'forfiles /m *.* /c "cmd /c if @isdir==FALSE echo @path" /d +{days}'
+        else:
+            # Unix/Linux/macOS: use find with -mtime (negative for newer)
+            return f'find . -type f -mtime -{days}'
+    
+    def _generate_find_files_by_size_command(self, match_groups: List[str]) -> str:
+        """Generate command to find files by size"""
+        size = match_groups[0] if match_groups else "100"
+        unit = match_groups[1].lower() if len(match_groups) > 1 and match_groups[1] else "m"
+        
+        # Normalize unit
+        if unit in ['kb', 'k']:
+            unit = 'k'
+        elif unit in ['mb', 'm']:
+            unit = 'M' 
+        elif unit in ['gb', 'g']:
+            unit = 'G'
+        else:
+            unit = 'M'  # default to MB
+        
+        if self.platform == 'windows':
+            # Windows: convert to bytes for findstr
+            multiplier = {'k': 1024, 'M': 1024*1024, 'G': 1024*1024*1024}
+            size_bytes = int(size) * multiplier.get(unit, 1024*1024)
+            return f'forfiles /m *.* /c "cmd /c if @fsize GTR {size_bytes} echo @path @fsize"'
+        else:
+            # Unix/Linux/macOS: use find with -size
+            return f'find . -type f -size +{size}{unit}'
+    
+    def _generate_find_files_by_name_command(self, match_groups: List[str]) -> str:
+        """Generate command to find files by name pattern"""
+        name_pattern = match_groups[0] if match_groups else "*"
+        
+        # If pattern doesn't contain wildcards, add them
+        if '*' not in name_pattern and '?' not in name_pattern:
+            name_pattern = f'*{name_pattern}*'
+        
+        if self.platform == 'windows':
+            return f'dir /s "{name_pattern}"'
+        else:
+            return f'find . -type f -name "{name_pattern}"'
     
     def _generate_disk_usage_command(self, match_groups: List[str]) -> str:
         """Generate command to check disk usage"""
