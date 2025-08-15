@@ -39,6 +39,7 @@ nlcli.egg-info/top_level.txt
 tests/test_ai_translator.py
 tests/test_cache_manager.py
 tests/test_command_executor.py
+tests/test_command_executor_extended.py
 tests/test_command_filter.py
 tests/test_config_manager.py
 tests/test_context_manager.py
@@ -54,4 +55,5 @@ tests/test_new_coverage.py
 tests/test_output_formatter.py
 tests/test_pattern_engine.py
 tests/test_safety_checker.py
+tests/test_safety_checker_extended.py
 tests/test_utils.py
