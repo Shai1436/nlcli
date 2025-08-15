@@ -26,6 +26,7 @@ Preferred communication style: Simple, everyday language.
 - Prompt for OpenAI API key only for first unknown commands (implemented: Smart API key prompting with 343 commands available without setup, user-friendly onboarding with clear instructions)
 - Interactive command selection for ambiguous requests (implemented: 13 ambiguous patterns with multiple options, smart parameter extraction, user preference learning, seamless integration with existing command pipeline)
 - Enhanced context awareness with pattern learning (implemented: Intelligent command pattern learning from successful executions, enhanced directory tracking, project type detection, package operation awareness, file reference extraction, contextual suggestions based on learned patterns)
+- Context Intelligence Enhancement - Phase 1 (implemented: Git repository awareness foundation with repository detection, branch tracking, and smart command suggestions; Environment variable integration with comprehensive project type detection, framework identification, development tool recognition, and context-aware command suggestions for Node.js, Python, Java, Go, Rust, and Docker projects)
 - Improve OS command recognition for better handling of system commands like whoami (implemented: Enhanced command recognition with 145+ direct commands, 203 typo mappings, 115 fuzzy patterns, comprehensive user identification and system info patterns)
 
 ## Tier 3 & Tier 4 Roadmap
@@ -41,6 +42,7 @@ Preferred communication style: Simple, everyday language.
 The application follows a modular, cross-platform architecture with clear separation of concerns, designed for performance, security, and extensibility.
 
 ## Core Components
+- **Context Intelligence System**: Advanced Git repository awareness and environment variable integration providing intelligent project-specific command suggestions with support for 6+ project types and 15+ frameworks
 - **AI Translation Layer**: Integrates OpenAI's GPT-4o with a 6-tier performance optimization system providing sub-millisecond to low-latency command recognition:
   - Tier 1: Enhanced Typo Correction (<0.1ms) - 486+ command mappings
   - Tier 2: Direct Command Filter (<1ms) - 265+ instant commands 
@@ -58,6 +60,8 @@ The application follows a modular, cross-platform architecture with clear separa
 - **Cache Management**: High-performance file-based cache system with in-memory LRU layer, automatic SQLite migration, and cross-instance sharing for optimal performance (2-3ms latency vs. 10ms SQLite).
 - **CLI Interface**: Built with `Click` and `Rich`, providing an interactive mode with real-time performance indicators and subcommands.
 - **Interactive Input System**: Offers Readline-based command history navigation, persistence, and search functionality.
+- **Git Context Manager**: Provides Git repository awareness with branch tracking, status monitoring, conflict detection, and intelligent Git command suggestions with safety validation.
+- **Environment Context Manager**: Comprehensive project environment detection including project type identification, framework recognition, dependency analysis, and context-aware command suggestions tailored to specific development environments.
 
 ## Data Storage
 - **SQLite Database**: Local storage for command history and cache, indexed for efficient querying.
