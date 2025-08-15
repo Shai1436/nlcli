@@ -1014,10 +1014,24 @@ class CommandFilter:
         if normalized in self.direct_commands_with_args:
             return True
         
-        # Check if it starts with a known command
-        first_word = normalized.split()[0] if normalized.split() else ""
-        if first_word in self.direct_commands:
-            return True
+        # Check if it starts with a known command - but only for simple command + args patterns
+        # NOT for complex natural language that should go to AI translation
+        words = normalized.split()
+        if words and words[0] in self.direct_commands:
+            # Only treat as direct command if:
+            # 1. It's a single word (exact match already checked above), OR
+            # 2. It follows common command + flag/argument patterns
+            if len(words) == 1:
+                return True
+            elif len(words) <= 4 and all(
+                word.startswith('-') or  # flags like -l, --help
+                word.startswith('/') or  # Windows flags like /a
+                word.replace('.', '').replace('/', '').replace('\\', '').replace('~', '').replace('*', '').replace('?', '').replace('[', '').replace(']', '').isalnum() or  # paths, filenames
+                word in ['>', '>>', '<', '|', '&', '&&', '||']  # redirects, pipes
+                for word in words[1:]
+            ):
+                return True
+            # If it looks like natural language (complex sentence), send to AI
         
         # Check cross-platform command translation
         if self.check_cross_platform_translation(user_input):
@@ -1060,20 +1074,39 @@ class CommandFilter:
             result['source'] = 'args_match'
             return result
         
-        # Check if it starts with a known command and allow arguments
+        # Check if it starts with a known command and allow arguments - BUT ONLY for simple patterns
         words = normalized.split()
         if words and words[0] in self.direct_commands:
-            base_result = self.direct_commands[words[0]].copy()
-            
-            # Use the full command with arguments
-            result = {
-                'command': original_input,
-                'explanation': f"{base_result['explanation']} (with arguments: {' '.join(words[1:])})" if len(words) > 1 else base_result['explanation'],
-                'confidence': base_result['confidence'] * 0.95,  # Slightly lower confidence for commands with args
-                'direct': True,
-                'source': 'base_command_with_args'
-            }
-            return result
+            # Apply same logic as is_direct_command - only match simple command + args patterns
+            if len(words) == 1:
+                # Single command word - exact match
+                base_result = self.direct_commands[words[0]].copy()
+                result = {
+                    'command': original_input,
+                    'explanation': base_result['explanation'],
+                    'confidence': base_result['confidence'],
+                    'direct': True,
+                    'source': 'base_command_exact'
+                }
+                return result
+            elif len(words) <= 4 and all(
+                word.startswith('-') or  # flags like -l, --help
+                word.startswith('/') or  # Windows flags like /a
+                word.replace('.', '').replace('/', '').replace('\\', '').replace('~', '').replace('*', '').replace('?', '').replace('[', '').replace(']', '').isalnum() or  # paths, filenames
+                word in ['>', '>>', '<', '|', '&', '&&', '||']  # redirects, pipes
+                for word in words[1:]
+            ):
+                # Simple command with flags/arguments
+                base_result = self.direct_commands[words[0]].copy()
+                result = {
+                    'command': original_input,
+                    'explanation': f"{base_result['explanation']} (with arguments: {' '.join(words[1:])})",
+                    'confidence': base_result['confidence'] * 0.95,  # Slightly lower confidence for commands with args
+                    'direct': True,
+                    'source': 'base_command_with_args'
+                }
+                return result
+            # If it looks like natural language, don't match here - let it go to AI translation
         
         # Check cross-platform command translation
         cross_platform_result = self.check_cross_platform_translation(user_input)
