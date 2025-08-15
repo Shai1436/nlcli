@@ -42,10 +42,16 @@ class AITranslator:
         self.cache_manager = CacheManager() if enable_cache else None
         self.executor = ThreadPoolExecutor(max_workers=2)
         
-        # Context awareness
+        # Context awareness - Legacy
         from .context_manager import ContextManager
         config_dir = os.path.expanduser('~/.nlcli')
         self.context_manager = ContextManager(config_dir)
+        
+        # Enhanced Context Intelligence - Phase 4
+        from .git_context import GitContextManager
+        from .environment_context import EnvironmentContextManager
+        self.git_context = GitContextManager()
+        self.env_context = EnvironmentContextManager()
         
         # Command filter for direct execution
         from .command_filter import CommandFilter
@@ -265,6 +271,18 @@ class AITranslator:
                     'instant': True,
                     'fuzzy_matched': True
                 }
+            
+            # Step 1.4: Enhanced Context Intelligence - Git-aware commands
+            git_suggestion = self._check_git_context_commands(natural_language)
+            if git_suggestion:
+                logger.debug(f"Git context command for: {natural_language}")
+                return git_suggestion
+            
+            # Step 1.45: Enhanced Context Intelligence - Environment-aware commands
+            env_suggestion = self._check_environment_context_commands(natural_language)
+            if env_suggestion:
+                logger.debug(f"Environment context command for: {natural_language}")
+                return env_suggestion
             
             # Step 1.5: Check enhanced context-aware suggestions with pattern learning
             contextual_suggestions = self.context_manager.get_contextual_suggestions(natural_language)
@@ -728,3 +746,127 @@ class AITranslator:
         except Exception as e:
             logger.error(f"Error getting suggestions: {str(e)}")
             return []
+    
+    def _check_git_context_commands(self, natural_language: str) -> Optional[Dict]:
+        """
+        Check for Git context-aware commands using GitContextManager
+        
+        Args:
+            natural_language: User's natural language input
+            
+        Returns:
+            Dictionary with command suggestion or None
+        """
+        try:
+            # Get current Git repository state
+            git_state = self.git_context.get_repository_state()
+            
+            # If not in a Git repository, skip Git context suggestions
+            if not git_state.is_git_repo:
+                return None
+            
+            # Get Git command suggestion
+            git_suggestion = self.git_context.suggest_git_command(natural_language, git_state)
+            
+            if git_suggestion:
+                # Add safety warnings if any
+                warnings = self.git_context.get_git_safety_warnings(
+                    git_suggestion['command'], git_state
+                )
+                
+                # Enhance explanation with context
+                explanation = git_suggestion['explanation']
+                if warnings:
+                    explanation += f"\n\nWarnings: {'; '.join(warnings)}"
+                
+                # Add Git context information
+                context_info = []
+                if git_state.current_branch:
+                    context_info.append(f"Branch: {git_state.current_branch}")
+                if git_state.has_staged_changes:
+                    context_info.append(f"Staged files: {len(git_state.staged_files)}")
+                if git_state.has_unstaged_changes:
+                    context_info.append(f"Unstaged files: {len(git_state.unstaged_files)}")
+                if git_state.ahead_commits > 0:
+                    context_info.append(f"Ahead by {git_state.ahead_commits} commits")
+                if git_state.behind_commits > 0:
+                    context_info.append(f"Behind by {git_state.behind_commits} commits")
+                
+                if context_info:
+                    explanation += f"\n\nGit Context: {'; '.join(context_info)}"
+                
+                return {
+                    'command': git_suggestion['command'],
+                    'explanation': explanation,
+                    'confidence': git_suggestion.get('confidence', 0.9),
+                    'cached': False,
+                    'instant': True,
+                    'git_context_aware': True,
+                    'git_state': {
+                        'branch': git_state.current_branch,
+                        'has_changes': git_state.has_staged_changes or git_state.has_unstaged_changes,
+                        'warnings': warnings
+                    }
+                }
+            
+            return None
+            
+        except Exception as e:
+            logger.debug(f"Git context check failed: {e}")
+            return None
+    
+    def _check_environment_context_commands(self, natural_language: str) -> Optional[Dict]:
+        """
+        Check for environment-aware commands using EnvironmentContextManager
+        
+        Args:
+            natural_language: User's natural language input
+            
+        Returns:
+            Dictionary with command suggestion or None
+        """
+        try:
+            # Get current project environment
+            env_context = self.env_context.get_project_environment()
+            
+            # Get environment command suggestion
+            env_suggestion = self.env_context.suggest_environment_command(natural_language, env_context)
+            
+            if env_suggestion:
+                # Enhance explanation with context
+                explanation = env_suggestion['explanation']
+                
+                # Add environment context information
+                context_info = []
+                if env_context.project_type != "unknown":
+                    context_info.append(f"Project: {env_context.project_type}")
+                if env_context.framework:
+                    context_info.append(f"Framework: {env_context.framework}")
+                if env_context.package_manager:
+                    context_info.append(f"Package Manager: {env_context.package_manager}")
+                if env_context.environment_type != "development":
+                    context_info.append(f"Environment: {env_context.environment_type}")
+                
+                if context_info:
+                    explanation += f"\n\nProject Context: {'; '.join(context_info)}"
+                
+                return {
+                    'command': env_suggestion['command'],
+                    'explanation': explanation,
+                    'confidence': env_suggestion.get('confidence', 0.85),
+                    'cached': False,
+                    'instant': True,
+                    'env_context_aware': True,
+                    'project_context': {
+                        'type': env_context.project_type,
+                        'framework': env_context.framework,
+                        'package_manager': env_context.package_manager,
+                        'environment': env_context.environment_type
+                    }
+                }
+            
+            return None
+            
+        except Exception as e:
+            logger.debug(f"Environment context check failed: {e}")
+            return None
