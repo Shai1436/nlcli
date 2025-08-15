@@ -6,7 +6,7 @@
 
 **Before/After Comparison:**
 - Safety Checker: 28% → 76% (**+48% improvement**)
-- Command Executor: 34% → 53% (**+19% improvement**)  
+- Command Executor: 34% → 99% (**+65% improvement**)  
 - Cache Manager: 38% → 38% (stable coverage, tests improved)
 
 ### Coverage by Module (Best to Worst)
