@@ -286,15 +286,34 @@ class EnhancedInputHandler:
             User input string
         """
         
-        # Try enhanced input with typeahead, fallback to basic input
-        try:
-            if self.typeahead_enabled and os.name != 'nt':  # Unix-like systems
-                return self.get_input_with_typeahead(prompt)
-            else:
-                return self._get_basic_input(prompt)
-        except Exception:
-            # Fallback to basic input on any error
+        # Use simple typeahead for broader compatibility
+        if self.typeahead_enabled:
+            return self._get_input_with_simple_typeahead(prompt)
+        else:
             return self._get_basic_input(prompt)
+    
+    def _get_input_with_simple_typeahead(self, prompt: str) -> str:
+        """Get input with simple typeahead display after user presses enter"""
+        
+        # Get basic input first
+        user_input = input(prompt).strip()
+        
+        # If input is partial and could have completions, show suggestions
+        if user_input and len(user_input) >= 2:
+            completion = self.typeahead_controller.get_completion_for_input(user_input)
+            
+            if completion and completion.lower() != user_input.lower():
+                # Show the completion in muted white
+                completion_part = completion[len(user_input):]
+                print(f"\033[37m→ {completion}\033[0m")
+                
+                # Ask if user wants to use the completion
+                response = input("Press Enter to use completion, or type 'n' to continue: ").strip()
+                
+                if response.lower() != 'n' and not response:
+                    return completion
+        
+        return user_input
 
 
 class SimpleTypeaheadInput:
@@ -310,21 +329,31 @@ class SimpleTypeaheadInput:
         if not self.typeahead_enabled:
             return input(prompt)
         
-        # Display prompt
-        print(prompt, end='', flush=True)
+        # Get user input normally
+        user_input = input(prompt).strip()
         
-        # Get user input
-        user_input = input().strip()
-        
-        # If user input is partial, show suggestions
+        # Show typeahead suggestions after input
         if user_input and len(user_input) >= 2:
+            # Get best completion
+            completion = self.typeahead_controller.get_completion_for_input(user_input)
+            
+            if completion and completion.lower() != user_input.lower():
+                # Display completion suggestion in muted white
+                print(f"\033[37m💡 Did you mean: {completion}\033[0m")
+                
+                # Ask if user wants to use it
+                response = input("Use this completion? (y/N): ").strip().lower()
+                if response in ['y', 'yes']:
+                    return completion
+            
+            # Also show other suggestions
             suggestions = self.typeahead_controller.engine.get_suggestions(user_input, max_results=3)
             
-            if suggestions:
-                print(f"\033[37mSuggestions:\033[0m")
+            if suggestions and len(suggestions) > 1:
+                print(f"\033[37mOther suggestions:\033[0m")
                 for i, (suggestion, score) in enumerate(suggestions[:3]):
-                    confidence = "●" if score > 0.8 else "○"
-                    print(f"  {confidence} {suggestion}")
-                print()
+                    if suggestion.lower() != user_input.lower():
+                        confidence = "●" if score > 0.8 else "○"
+                        print(f"  {confidence} {suggestion}")
         
         return user_input
