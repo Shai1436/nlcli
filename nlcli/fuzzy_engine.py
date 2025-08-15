@@ -675,3 +675,7 @@ class IntentMatcher:
                         })
         
         return None
+
+
+# Alias for backward compatibility
+FuzzyEngine = AdvancedFuzzyEngine

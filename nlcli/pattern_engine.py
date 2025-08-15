@@ -591,3 +591,15 @@ class AdvancedPatternEngine:
         # Sort by confidence and return top suggestions
         suggestions.sort(key=lambda x: x['confidence'], reverse=True)
         return suggestions[:limit]
+    
+    def get_semantic_patterns(self) -> Dict[str, Dict]:
+        """Get all semantic patterns"""
+        return self.semantic_patterns
+    
+    def get_workflow_templates(self) -> Dict[str, Dict]:
+        """Get all workflow templates"""
+        return self.workflow_templates
+
+
+# Alias for backward compatibility
+PatternEngine = AdvancedPatternEngine
