@@ -31,14 +31,26 @@ class SafetyChecker:
         
         # Common dangerous patterns across platforms
         self.common_dangerous = [
-            # Deletion operations
-            r'\brm\s+(-[rf]+\s+)?/\b',  # rm -rf /
+            # Deletion operations - specific dangerous patterns
+            r'\brm\s+.*-rf\s+/\s*$',    # rm -rf /
+            r'\brm\s+-rf\s+/\s*$',      # rm -rf /
+            r'\brm\s+-r\s+-f\s+/\s*$',  # rm -r -f /
+            r'\brm\s+.*-rf\s*/\s*$',    # rm -rf/
+            r'\brm\s+-rf\s*/\s*$',      # rm -rf/
+            r'\brm\s+-rf\s+\*',         # rm -rf *
+            r'\brm\s+.*-rf\s+\*',       # rm something -rf *
+            r'\brm\s+-rf\s+~',          # rm -rf ~
+            r'\bsudo\s+rm\s+-rf\s+/',   # sudo rm -rf /
+            r'\bsudo\s+rm\s+-rf\s+\*', # sudo rm -rf *
+            
+            # Windows deletion
             r'\bdel\s+/[sq]\s+\*',      # del /s /q *
             r'\bformat\s+[c-z]:\b',     # format c:
             
             # System modification
-            r'\bchmod\s+777\s+/\b',     # chmod 777 /
-            r'\bsudo\s+rm\b',           # sudo rm
+            r'\bchmod\s+.*777.*/',      # chmod 777 /
+            r'\bchmod\s+-R\s+777\s+/', # chmod -R 777 /
+            r'\bsudo\s+rm\b',           # sudo rm (any)
             r'\bregedit\b',             # Registry editor
             r'\bfdisk\b',               # Disk partitioning
             
@@ -51,6 +63,14 @@ class SafetyChecker:
             r'\bdd\s+if=/dev/zero\b',   # Zero out disk
             r'\bshred\b',               # Secure delete
             r'\bwipe\b',                # Wipe disk
+            r'\bmkfs\b',                # Format filesystem
+            
+            # System critical operations
+            r'\bshutdown\b',            # System shutdown
+            r'\breboot\b',              # System reboot
+            r'\bhalt\b',                # System halt
+            r':\(\)\{\s*:\|\:&\s*\}',   # Fork bomb
+            r':\(\)\s*\{\s*:\|\:\&\s*\}\s*\;?\s*:',  # Fork bomb variants
         ]
         
         # Platform-specific patterns
@@ -136,15 +156,29 @@ class SafetyChecker:
         """Get human-readable reason for why command is dangerous"""
         
         danger_explanations = {
-            r'\brm\s+(-[rf]+\s+)?/\b': 'This command attempts to delete the root directory',
+            r'\brm\s+.*-rf\s+/\b': 'This command attempts to delete the root directory',
+            r'\brm\s+-rf\s+/\b': 'This command attempts to delete the root directory',
+            r'\brm\s+-r\s+-f\s+/\b': 'This command attempts to delete the root directory',
+            r'\brm\s+-rf\s+\*': 'This command will recursively delete all files and directories',
+            r'\brm\s+.*-rf\s+\*': 'This command will recursively delete all files and directories',
+            r'\brm\s+-rf\s+~': 'This command will delete the entire home directory',
+            r'\bsudo\s+rm\s+-rf\s+/': 'This command uses elevated privileges to delete the root directory',
+            r'\bsudo\s+rm\s+-rf\s+\*': 'This command uses elevated privileges to delete all files',
             r'\bdel\s+/[sq]\s+\*': 'This command will delete all files in the current directory',
             r'\bformat\s+[c-z]:\b': 'This command will format a disk drive, destroying all data',
-            r'\bchmod\s+777\s+/\b': 'This command gives full permissions to all users on the root directory',
+            r'\bchmod\s+.*777.*/': 'This command gives full permissions to all users on system directories',
+            r'\bchmod\s+-R\s+777\s+/': 'This command gives full permissions to all users on the root directory',
             r'\bsudo\s+rm\b': 'This command uses elevated privileges to delete files',
             r'\bregedit\b': 'This opens the Windows registry editor, which can damage the system',
             r'\bfdisk\b': 'This command can modify disk partitions and destroy data',
             r'\bdd\s+if=/dev/zero\b': 'This command can overwrite disk data',
-            r'\bkill\s+-9\s+1\b': 'This attempts to kill the init process, which can crash the system'
+            r'\bkill\s+-9\s+1\b': 'This attempts to kill the init process, which can crash the system',
+            r'\bmkfs\b': 'This command formats filesystems and can destroy data',
+            r'\bshutdown\b': 'This command will shut down the system',
+            r'\breboot\b': 'This command will restart the system',
+            r'\bhalt\b': 'This command will halt the system',
+            r':\(\)\{\s*:\|\:&\s*\}': 'This is a fork bomb that can crash the system',
+            r':\(\)\s*\{\s*:\|\:\&\s*\}\s*\;?\s*:': 'This is a fork bomb that can crash the system'
         }
         
         for pat, reason in danger_explanations.items():
