@@ -15,8 +15,9 @@ logger = setup_logging()
 class TypeaheadEngine:
     """Intelligent typeahead autocomplete engine with fuzzy matching and learning"""
     
-    def __init__(self, history_manager: HistoryManager):
+    def __init__(self, history_manager: HistoryManager, ai_translator=None):
         self.history_manager = history_manager
+        self.ai_translator = ai_translator  # For L1-L6 pipeline integration
         self._cache = {}
         self._cache_timestamp = 0
         self._cache_ttl = 60  # Cache for 60 seconds
@@ -162,9 +163,12 @@ class TypeaheadEngine:
             current_time - self._cache_timestamp < self._cache_ttl):
             return self._cache[cache_key]
         
+        # Get suggestions from L1-L6 pipeline if available
+        pipeline_suggestions = self._get_pipeline_suggestions(prefix)
+        
         # Get command history and common patterns
         history_commands = self.get_command_history()
-        all_candidates = history_commands + self.common_patterns
+        all_candidates = pipeline_suggestions + history_commands + self.common_patterns
         
         # Score all candidates
         scored_suggestions = []
@@ -251,6 +255,47 @@ class TypeaheadEngine:
         """Clear the suggestion cache"""
         self._cache.clear()
         self._cache_timestamp = 0
+    
+    def _get_pipeline_suggestions(self, prefix: str) -> List[str]:
+        """Get suggestions from L1-L6 performance pipeline"""
+        suggestions = []
+        
+        if not self.ai_translator:
+            return suggestions
+        
+        try:
+            # Try L1: Enhanced Typo Correction
+            if hasattr(self.ai_translator, 'typo_corrector'):
+                corrected = self.ai_translator.typo_corrector.correct_typo(prefix)
+                if corrected and corrected != prefix:
+                    suggestions.append(corrected)
+            
+            # Try L2: Direct Command Filter  
+            if hasattr(self.ai_translator, 'command_filter'):
+                direct_result = self.ai_translator.command_filter.get_direct_command_result(prefix)
+                if direct_result and 'natural_language' in direct_result:
+                    suggestions.append(direct_result['natural_language'])
+                
+                # Get similar direct commands
+                similar_commands = self.ai_translator.command_filter.get_similar_commands(prefix)
+                suggestions.extend(similar_commands[:3])
+            
+            # Try L3: Enhanced Pattern Engine
+            if hasattr(self.ai_translator, 'pattern_engine'):
+                pattern_matches = self.ai_translator.pattern_engine.get_semantic_patterns()
+                for pattern in pattern_matches[:3]:
+                    if prefix.lower() in pattern.lower():
+                        suggestions.append(pattern)
+            
+            # Try L4: Advanced Fuzzy Engine
+            if hasattr(self.ai_translator, 'fuzzy_engine'):
+                fuzzy_matches = self.ai_translator.fuzzy_engine.find_fuzzy_matches(prefix)
+                suggestions.extend(fuzzy_matches[:3])
+            
+        except Exception as e:
+            logger.debug(f"Pipeline suggestion error: {e}")
+        
+        return suggestions[:5]  # Limit pipeline suggestions
     
     def get_cache_stats(self) -> Dict[str, int]:
         """Get cache statistics for debugging"""
@@ -342,8 +387,8 @@ class TypeaheadDisplay:
 class TypeaheadController:
     """Main controller for typeahead functionality integration"""
     
-    def __init__(self, history_manager: HistoryManager):
-        self.engine = TypeaheadEngine(history_manager)
+    def __init__(self, history_manager: HistoryManager, ai_translator=None):
+        self.engine = TypeaheadEngine(history_manager, ai_translator)
         self.display = TypeaheadDisplay()
         self.enabled = True
         self.show_suggestions_menu = False

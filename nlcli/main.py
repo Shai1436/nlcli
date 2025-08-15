@@ -86,8 +86,8 @@ def interactive_mode(obj):
     os.makedirs(config_dir, exist_ok=True)
     history_file = os.path.join(config_dir, 'input_history')
     
-    # Initialize typeahead controller
-    typeahead_controller = TypeaheadController(history)
+    # Initialize typeahead controller with AI translator for L1-L6 pipeline integration
+    typeahead_controller = TypeaheadController(history, ai_translator)
     
     # Create enhanced input handler with typeahead support
     try:
