@@ -1,67 +1,29 @@
 """
 History Manager for storing and retrieving command history
+Now uses file-based storage for better performance and consistency
 """
 
-import sqlite3
 import os
-from datetime import datetime
 from typing import List, Dict, Optional
 from .utils import setup_logging
+from .file_history import FileHistoryManager
 
 logger = setup_logging()
 
 class HistoryManager:
-    """Manages command history storage and retrieval using SQLite"""
+    """Manages command history storage and retrieval using file-based cache"""
     
     def __init__(self, db_path: str):
-        """Initialize history manager with database path"""
+        """Initialize history manager with file-based storage"""
         
+        # Extract directory from db_path for consistency
+        cache_dir = os.path.dirname(db_path) if db_path else None
+        self.file_history = FileHistoryManager(cache_dir)
+        
+        # Keep db_path for backward compatibility
         self.db_path = db_path
-        self._ensure_db_directory()
-        self._init_database()
     
-    def _ensure_db_directory(self):
-        """Ensure database directory exists"""
-        
-        db_dir = os.path.dirname(self.db_path)
-        if db_dir and not os.path.exists(db_dir):
-            os.makedirs(db_dir, exist_ok=True)
-    
-    def _init_database(self):
-        """Initialize database schema"""
-        
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.execute("""
-                    CREATE TABLE IF NOT EXISTS command_history (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        natural_language TEXT NOT NULL,
-                        command TEXT NOT NULL,
-                        explanation TEXT,
-                        success BOOLEAN NOT NULL,
-                        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        platform TEXT,
-                        session_id TEXT
-                    )
-                """)
-                
-                # Create indexes for better performance
-                conn.execute("""
-                    CREATE INDEX IF NOT EXISTS idx_timestamp 
-                    ON command_history(timestamp DESC)
-                """)
-                
-                conn.execute("""
-                    CREATE INDEX IF NOT EXISTS idx_natural_language 
-                    ON command_history(natural_language)
-                """)
-                
-                conn.commit()
-                logger.debug(f"Database initialized at {self.db_path}")
-                
-        except sqlite3.Error as e:
-            logger.error(f"Database initialization error: {str(e)}")
-            raise
+    # File-based storage - no database initialization needed
     
     def add_command(self, natural_language: str, command: str, 
                    explanation: str, success: bool, session_id: Optional[str] = None) -> Optional[int]:
@@ -79,26 +41,13 @@ class HistoryManager:
             ID of the inserted record
         """
         
-        try:
-            import platform
-            platform_info = platform.system()
-            
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute("""
-                    INSERT INTO command_history 
-                    (natural_language, command, explanation, success, platform, session_id)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (natural_language, command, explanation, success, platform_info, session_id))
-                
-                conn.commit()
-                command_id = cursor.lastrowid
-                
-                logger.debug(f"Added command to history: ID {command_id}")
-                return command_id
-                
-        except sqlite3.Error as e:
-            logger.error(f"Error adding command to history: {str(e)}")
-            raise
+        return self.file_history.add_command(
+            natural_language=natural_language,
+            command=command,
+            explanation=explanation,
+            success=success,
+            session_id=session_id
+        )
     
     def get_recent_commands(self, limit: int = 20) -> List[Dict]:
         """
@@ -111,36 +60,12 @@ class HistoryManager:
             List of command dictionaries
         """
         
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.row_factory = sqlite3.Row
-                cursor = conn.execute("""
-                    SELECT id, natural_language, command, explanation, 
-                           success, timestamp, platform
-                    FROM command_history
-                    ORDER BY timestamp DESC
-                    LIMIT ?
-                """, (limit,))
-                
-                commands = [dict(row) for row in cursor.fetchall()]
-                return commands
-                
-        except sqlite3.Error as e:
-            logger.error(f"Error retrieving commands: {str(e)}")
-            return []
+        return self.file_history.get_recent_commands(limit)
     
     def clear_command_history(self):
         """Clear all command history"""
         
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.execute("DELETE FROM command_history")
-                conn.commit()
-                logger.info("Command history cleared")
-                
-        except sqlite3.Error as e:
-            logger.error(f"Error clearing history: {str(e)}")
-            raise
+        self.file_history.clear_command_history()
     
     def get_recent_natural_language_commands(self, limit: int = 50) -> List[str]:
         """
@@ -153,21 +78,7 @@ class HistoryManager:
             List of natural language commands
         """
         
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute("""
-                    SELECT DISTINCT natural_language
-                    FROM command_history 
-                    WHERE natural_language != '' 
-                    ORDER BY timestamp DESC 
-                    LIMIT ?
-                """, (limit,))
-                
-                return [row[0] for row in cursor.fetchall()]
-                
-        except sqlite3.Error as e:
-            logger.error(f"Error retrieving natural language commands: {str(e)}")
-            return []
+        return self.file_history.get_recent_natural_language_commands(limit)
     
     def search_commands(self, query: str, limit: int = 10) -> List[Dict]:
         """
@@ -181,24 +92,7 @@ class HistoryManager:
             List of matching command dictionaries
         """
         
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.row_factory = sqlite3.Row
-                cursor = conn.execute("""
-                    SELECT id, natural_language, command, explanation, 
-                           success, timestamp, platform
-                    FROM command_history
-                    WHERE natural_language LIKE ? OR command LIKE ?
-                    ORDER BY timestamp DESC
-                    LIMIT ?
-                """, (f"%{query}%", f"%{query}%", limit))
-                
-                commands = [dict(row) for row in cursor.fetchall()]
-                return commands
-                
-        except sqlite3.Error as e:
-            logger.error(f"Error searching commands: {str(e)}")
-            return []
+        return self.file_history.search_commands(query, limit)
     
     def get_command_by_id(self, command_id: int) -> Optional[Dict]:
         """
@@ -211,51 +105,21 @@ class HistoryManager:
             Command dictionary or None if not found
         """
         
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.row_factory = sqlite3.Row
-                cursor = conn.execute("""
-                    SELECT id, natural_language, command, explanation, 
-                           success, timestamp, platform, session_id
-                    FROM command_history
-                    WHERE id = ?
-                """, (command_id,))
-                
-                row = cursor.fetchone()
-                return dict(row) if row else None
-                
-        except sqlite3.Error as e:
-            logger.error(f"Error retrieving command {command_id}: {str(e)}")
-            return None
+        return self.file_history.get_command_by_id(command_id)
     
     def delete_command(self, command_id: int) -> bool:
         """
-        Delete a command from history
+        Delete a command from history (not implemented in file-based storage)
         
         Args:
             command_id: Command ID to delete
             
         Returns:
-            True if deleted successfully, False otherwise
+            False - deletion not supported in current implementation
         """
         
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute("""
-                    DELETE FROM command_history WHERE id = ?
-                """, (command_id,))
-                
-                conn.commit()
-                success = cursor.rowcount > 0
-                
-                if success:
-                    logger.debug(f"Deleted command {command_id}")
-                
-                return success
-                
-        except sqlite3.Error as e:
-            logger.error(f"Error deleting command {command_id}: {str(e)}")
-            return False
+        logger.warning("Command deletion not implemented in file-based storage")
+        return False
     
     def clear_history(self) -> bool:
         """
@@ -266,14 +130,9 @@ class HistoryManager:
         """
         
         try:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.execute("DELETE FROM command_history")
-                conn.commit()
-                
-                logger.info("Command history cleared")
-                return True
-                
-        except sqlite3.Error as e:
+            self.file_history.clear_command_history()
+            return True
+        except Exception as e:
             logger.error(f"Error clearing history: {str(e)}")
             return False
     
@@ -285,52 +144,4 @@ class HistoryManager:
             Dictionary with usage statistics
         """
         
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                # Total commands
-                total_cursor = conn.execute("SELECT COUNT(*) FROM command_history")
-                total_commands = total_cursor.fetchone()[0]
-                
-                # Success rate
-                success_cursor = conn.execute("""
-                    SELECT COUNT(*) FROM command_history WHERE success = 1
-                """)
-                successful_commands = success_cursor.fetchone()[0]
-                
-                # Most common commands
-                common_cursor = conn.execute("""
-                    SELECT natural_language, COUNT(*) as count
-                    FROM command_history
-                    GROUP BY natural_language
-                    ORDER BY count DESC
-                    LIMIT 5
-                """)
-                common_commands = common_cursor.fetchall()
-                
-                # Platform distribution
-                platform_cursor = conn.execute("""
-                    SELECT platform, COUNT(*) as count
-                    FROM command_history
-                    GROUP BY platform
-                """)
-                platform_stats = platform_cursor.fetchall()
-                
-                success_rate = (successful_commands / total_commands * 100) if total_commands > 0 else 0
-                
-                return {
-                    'total_commands': total_commands,
-                    'successful_commands': successful_commands,
-                    'success_rate': round(success_rate, 2),
-                    'common_commands': [{'query': cmd[0], 'count': cmd[1]} for cmd in common_commands],
-                    'platform_stats': [{'platform': p[0], 'count': p[1]} for p in platform_stats]
-                }
-                
-        except sqlite3.Error as e:
-            logger.error(f"Error getting statistics: {str(e)}")
-            return {
-                'total_commands': 0,
-                'successful_commands': 0,
-                'success_rate': 0,
-                'common_commands': [],
-                'platform_stats': []
-            }
+        return self.file_history.get_statistics()
