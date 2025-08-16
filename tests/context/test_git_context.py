@@ -582,7 +582,7 @@ class TestGitRepositoryStateGeneration:
         mock_find_git.return_value = None
         
         # Set very short cache time
-        self.manager._cache_ttl = 0.1
+        self.manager._cache_ttl = 1  # Use integer instead of float
         
         state1 = self.manager.get_repository_state()
         time.sleep(0.2)  # Wait for cache to expire
