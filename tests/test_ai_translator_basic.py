@@ -33,7 +33,7 @@ class TestAITranslatorBasic:
     
     def test_initialization_with_api_key(self):
         """Test initialization with API key"""
-        with patch('nlcli.ai_translator.OpenAI') as mock_openai:
+        with patch('nlcli.pipeline.ai_translator.OpenAI') as mock_openai:
             mock_client = Mock()
             mock_openai.return_value = mock_client
             
