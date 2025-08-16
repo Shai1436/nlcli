@@ -127,7 +127,7 @@ class TestAITranslatorFocused:
             translator.typo_corrector.correct_typo = Mock(return_value=(False, "test query", 1.0))
             
             # Call translate
-            result = translator._call_openai_api("search for pattern in files")
+            result = translator.translate("search for pattern in files")
             
             # Verify result
             assert result is not None
@@ -149,7 +149,7 @@ class TestAITranslatorFocused:
             translator.client = mock_client
             translator.platform_info = {'platform': 'Linux'}
             
-            result = translator._call_openai_api("test query")
+            result = translator.translate("test query")
             assert result is None
 
     @patch('nlcli.pipeline.ai_translator.OpenAI')
@@ -173,7 +173,7 @@ class TestAITranslatorFocused:
             translator.client = mock_client
             translator.platform_info = {'platform': 'Linux'}
             
-            result = translator._call_openai_api("test query")
+            result = translator.translate("test query")
             assert result is None
 
     def test_cache_integration(self):

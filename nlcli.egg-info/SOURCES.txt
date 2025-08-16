@@ -11,9 +11,3 @@ nlcli.egg-info/entry_points.txt
 nlcli.egg-info/not-zip-safe
 nlcli.egg-info/requires.txt
 nlcli.egg-info/top_level.txt
-tests/test_command_filter.py
-tests/test_config_manager.py
-tests/test_file_history.py
-tests/test_fuzzy_engine.py
-tests/test_pattern_engine.py
-tests/test_typo_corrector.py
