@@ -1297,15 +1297,14 @@ class CommandFilter:
         if normalized in self.direct_commands_with_args:
             return True
         
-        # Check if it starts with a known command - but only for simple command + args patterns
-        # NOT for complex natural language that should go to AI translation
+        # Check if it starts with a known command - but be stricter about natural language
         words = normalized.split()
         if words and words[0] in self.direct_commands:
-            # Only treat as direct command if:
-            # 1. It's a single word (exact match already checked above), OR
-            # 2. It follows common command + flag/argument patterns
+            # Single word commands are always OK (exact match already checked above)
             if len(words) == 1:
                 return True
+            # For multi-word inputs, only match if they follow clear command + args patterns  
+            # Do NOT match natural language sentences like "find python files"
             elif len(words) <= 4 and all(
                 word.startswith('-') or  # flags like -l, --help
                 word.startswith('/') or  # Windows flags like /a
@@ -1314,7 +1313,7 @@ class CommandFilter:
                 for word in words[1:]
             ):
                 return True
-            # If it looks like natural language (complex sentence), send to AI
+            # If it contains natural language words like "files", "all", "with", let intelligent patterns handle it
         
         # Check cross-platform command translation
         if self.check_cross_platform_translation(user_input):
@@ -1506,14 +1505,14 @@ class CommandFilter:
                     'source': 'base_command_exact'
                 }
                 return result
-            elif len(words) <= 4 and all(
+            elif len(words) > 1 and len(words) <= 4 and all(
                 word.startswith('-') or  # flags like -l, --help
                 word.startswith('/') or  # Windows flags like /a
                 word.replace('.', '').replace('/', '').replace('\\', '').replace('~', '').replace('*', '').replace('?', '').replace('[', '').replace(']', '').isalnum() or  # paths, filenames
                 word in ['>', '>>', '<', '|', '&', '&&', '||']  # redirects, pipes
                 for word in words[1:]
             ):
-                # Simple command with flags/arguments
+                # Simple command with flags/arguments - NOT natural language
                 base_result = self.direct_commands[words[0]].copy()
                 result = {
                     'command': original_input,
@@ -1523,7 +1522,7 @@ class CommandFilter:
                     'source': 'base_command_with_args'
                 }
                 return result
-            # If it looks like natural language, don't match here - let it go to AI translation
+            # If it contains natural language words or doesn't match simple patterns, don't match here
         
         # Check cross-platform command translation
         cross_platform_result = self.check_cross_platform_translation(user_input)
