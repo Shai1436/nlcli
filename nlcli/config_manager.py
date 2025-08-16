@@ -108,7 +108,7 @@ class ConfigManager:
         except Exception as e:
             logger.error(f"Error saving configuration: {str(e)}")
     
-    def get_setting(self, section: str, key: str, fallback: Optional[str] = None) -> str:
+    def get_setting(self, section: str, key: str, fallback: Optional[str] = None) -> Optional[str]:
         """
         Get configuration value
         
@@ -118,15 +118,18 @@ class ConfigManager:
             fallback: Default value if key not found
             
         Returns:
-            Configuration value
+            Configuration value or fallback
         """
         
         try:
             return self.config.get(section, key)
         except (configparser.NoSectionError, configparser.NoOptionError):
-            return fallback or self.defaults.get(section, {}).get(key, '')
+            if fallback is not None:
+                return fallback
+            default_value = self.defaults.get(section, {}).get(key)
+            return default_value if default_value else None
     
-    def get(self, section: str, key: str, fallback: Optional[str] = None) -> str:
+    def get(self, section: str, key: str, fallback: Optional[str] = None) -> Optional[str]:
         """Alias for get_setting for backward compatibility"""
         return self.get_setting(section, key, fallback)
     

@@ -1516,8 +1516,8 @@ class CommandFilter:
                 base_result = self.direct_commands[words[0]].copy()
                 result = {
                     'command': original_input,
-                    'explanation': f"{base_result['explanation']} (with arguments: {' '.join(words[1:])})",
-                    'confidence': base_result['confidence'] * 0.95,  # Slightly lower confidence for commands with args
+                    'explanation': f"{base_result['explanation']} with arguments: {' '.join(words[1:])}",
+                    'confidence': 0.95,  # Slightly lower confidence for commands with args
                     'direct': True,
                     'source': 'base_command_with_args'
                 }

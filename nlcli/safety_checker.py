@@ -87,12 +87,16 @@ class SafetyChecker:
         else:  # Unix-like systems
             self.platform_dangerous = [
                 r'\brm\s+-rf\s+/[^/\s]',
+                r'\brm\s+-rf\s+/',
                 r'\bmkfs\b',
                 r'\bkill\s+-9\s+1\b',
                 r'\bkillall\s+-9\b',
                 r'\bumount\s+/\b',
                 r'\bmount\s+.*\s+/\b',
-                r'\bsudo\s+.*passwd\b'
+                r'\bsudo\s+.*passwd\b',
+                r'\bchown\s+-R\s+.*\s+/',
+                r'\bchmod\s+-R\s+777\s+/',
+                r'\bchmod\s+777\s+-R\s+/'
             ]
         
         # Adjust patterns based on safety level
