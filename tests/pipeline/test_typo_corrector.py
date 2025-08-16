@@ -4,7 +4,7 @@ Basic tests for TypoCorrector - enhanced command recognition
 """
 
 import pytest
-from nlcli.typo_corrector import TypoCorrector
+from nlcli.pipeline.typo_corrector import TypoCorrector
 
 
 class TestTypoCorrector:

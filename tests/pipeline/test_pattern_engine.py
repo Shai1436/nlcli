@@ -3,7 +3,7 @@ Test suite for Enhanced Pattern Engine
 """
 
 import pytest
-from nlcli.pattern_engine import AdvancedPatternEngine
+from nlcli.pipeline.pattern_engine import AdvancedPatternEngine
 
 class TestAdvancedPatternEngine:
     """Test cases for the Advanced Pattern Engine"""

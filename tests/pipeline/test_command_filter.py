@@ -3,7 +3,7 @@ Test cases for command filter system
 """
 
 import pytest
-from nlcli.command_filter import CommandFilter
+from nlcli.pipeline.command_filter import CommandFilter
 
 
 class TestCommandFilter:

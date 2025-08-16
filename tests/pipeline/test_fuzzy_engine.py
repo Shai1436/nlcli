@@ -3,7 +3,7 @@ Test suite for Advanced Fuzzy Engine
 """
 
 import pytest
-from nlcli.fuzzy_engine import AdvancedFuzzyEngine, LevenshteinMatcher, SemanticMatcher, PhoneticMatcher, IntentMatcher
+from nlcli.pipeline.fuzzy_engine import AdvancedFuzzyEngine, LevenshteinMatcher, SemanticMatcher, PhoneticMatcher, IntentMatcher
 
 class TestAdvancedFuzzyEngine:
     """Test cases for the Advanced Fuzzy Engine"""
