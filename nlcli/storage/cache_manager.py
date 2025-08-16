@@ -9,7 +9,7 @@ import hashlib
 import time
 from pathlib import Path
 from typing import Optional, Dict, List
-from .utils import setup_logging
+from ..utils.utils import setup_logging
 from .file_cache import FileCacheManager
 from .cache_migrator import CacheMigrator
 

@@ -12,8 +12,8 @@ from openai import OpenAI
 from typing import Dict, Optional
 from rich.console import Console
 from rich.prompt import Prompt
-from .utils import get_platform_info, setup_logging
-from .cache_manager import CacheManager
+from ..utils.utils import get_platform_info, setup_logging
+from ..storage.cache_manager import CacheManager
 
 logger = setup_logging()
 console = Console()

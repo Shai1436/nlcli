@@ -6,7 +6,7 @@ import unittest
 import tempfile
 import os
 import shutil
-from nlcli.cache_manager import CacheManager
+from nlcli.storage.cache_manager import CacheManager
 
 
 class TestCacheManager(unittest.TestCase):

@@ -70,8 +70,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'nlcli=nlcli.main:cli',
-            'nl=nlcli.main:cli',
+            'nlcli=nlcli.cli.main:cli',
+            'nl=nlcli.cli.main:cli',
         ],
     },
     keywords=[

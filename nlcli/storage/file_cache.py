@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Optional, Dict, List
 from collections import OrderedDict
 from dataclasses import dataclass, asdict
-from .utils import setup_logging
+from ..utils.utils import setup_logging
 
 logger = setup_logging()
 

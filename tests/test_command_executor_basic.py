@@ -8,7 +8,7 @@ import platform
 import os
 import tempfile
 from unittest.mock import Mock, patch, MagicMock
-from nlcli.command_executor import CommandExecutor
+from nlcli.execution.command_executor import CommandExecutor
 
 
 class TestCommandExecutor:

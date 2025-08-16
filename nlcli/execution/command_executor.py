@@ -7,7 +7,7 @@ import os
 import platform
 import shlex
 from typing import Dict, Optional, List
-from .utils import setup_logging
+from ..utils.utils import setup_logging
 
 logger = setup_logging()
 

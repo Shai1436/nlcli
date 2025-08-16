@@ -5,7 +5,7 @@ Safety Checker module for validating command safety
 import re
 import platform
 from typing import Dict, List
-from .utils import setup_logging
+from ..utils.utils import setup_logging
 
 logger = setup_logging()
 

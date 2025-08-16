@@ -3,7 +3,7 @@ Unit tests for Safety Checker module
 """
 
 import unittest
-from nlcli.safety_checker import SafetyChecker
+from nlcli.execution.safety_checker import SafetyChecker
 
 
 class TestSafetyChecker(unittest.TestCase):

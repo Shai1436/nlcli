@@ -6,7 +6,7 @@ Basic tests for AITranslator with correct interface
 import pytest
 import os
 from unittest.mock import Mock, patch
-from nlcli.ai_translator import AITranslator
+from nlcli.pipeline.ai_translator import AITranslator
 
 
 class TestAITranslatorBasic:

@@ -6,7 +6,7 @@ import pytest
 import tempfile
 import os
 from pathlib import Path
-from nlcli.config_manager import ConfigManager
+from nlcli.storage.config_manager import ConfigManager
 
 
 class TestConfigManager:

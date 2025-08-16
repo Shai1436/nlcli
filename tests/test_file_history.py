@@ -9,7 +9,7 @@ import tempfile
 import os
 import json
 from unittest.mock import patch, mock_open
-from nlcli.file_history import FileHistoryManager
+from nlcli.storage.file_history import FileHistoryManager
 
 
 class TestFileHistoryManager:
