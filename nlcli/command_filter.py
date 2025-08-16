@@ -61,10 +61,31 @@ class CommandFilter:
             'env': {'command': 'env', 'explanation': 'Display environment variables', 'confidence': 1.0},
             'printenv': {'command': 'printenv', 'explanation': 'Display environment variables', 'confidence': 1.0},
             
-            # Network
+            # Network - Basic
             'ping': {'command': 'ping', 'explanation': 'Test network connectivity', 'confidence': 1.0},
             'curl': {'command': 'curl', 'explanation': 'Transfer data from servers', 'confidence': 1.0},
             'wget': {'command': 'wget', 'explanation': 'Download files from web', 'confidence': 1.0},
+            
+            # Network - Advanced
+            'ssh': {'command': 'ssh', 'explanation': 'Secure shell remote access', 'confidence': 1.0},
+            'scp': {'command': 'scp', 'explanation': 'Secure copy over network', 'confidence': 1.0},
+            'sftp': {'command': 'sftp', 'explanation': 'Secure file transfer protocol', 'confidence': 1.0},
+            'rsync': {'command': 'rsync', 'explanation': 'Remote/local file synchronization', 'confidence': 1.0},
+            'telnet': {'command': 'telnet', 'explanation': 'Remote terminal connection', 'confidence': 1.0},
+            'nc': {'command': 'nc', 'explanation': 'Netcat network utility', 'confidence': 1.0},
+            'netcat': {'command': 'netcat', 'explanation': 'Network connection utility', 'confidence': 1.0},
+            'nmap': {'command': 'nmap', 'explanation': 'Network discovery and security auditing', 'confidence': 1.0},
+            'netstat': {'command': 'netstat', 'explanation': 'Display network connections', 'confidence': 1.0},
+            'ss': {'command': 'ss', 'explanation': 'Socket statistics utility', 'confidence': 1.0},
+            'lsof': {'command': 'lsof', 'explanation': 'List open files and ports', 'confidence': 1.0},
+            'ifconfig': {'command': 'ifconfig', 'explanation': 'Configure network interface', 'confidence': 1.0},
+            'ip': {'command': 'ip', 'explanation': 'Show/manipulate routing and devices', 'confidence': 1.0},
+            'arp': {'command': 'arp', 'explanation': 'Display/modify ARP table', 'confidence': 1.0},
+            'route': {'command': 'route', 'explanation': 'Show/manipulate IP routing table', 'confidence': 1.0},
+            'traceroute': {'command': 'traceroute', 'explanation': 'Trace packets to network host', 'confidence': 1.0},
+            'dig': {'command': 'dig', 'explanation': 'DNS lookup utility', 'confidence': 1.0},
+            'nslookup': {'command': 'nslookup', 'explanation': 'Query DNS servers', 'confidence': 1.0},
+            'host': {'command': 'host', 'explanation': 'DNS lookup utility', 'confidence': 1.0},
             
             # Text processing
             'grep': {'command': 'grep', 'explanation': 'Search text patterns', 'confidence': 1.0},
@@ -120,6 +141,36 @@ class CommandFilter:
             'gcc': {'command': 'gcc', 'explanation': 'GNU C compiler', 'confidence': 1.0},
             'make': {'command': 'make', 'explanation': 'Build automation tool', 'confidence': 1.0},
             'cmake': {'command': 'cmake', 'explanation': 'Cross-platform build system', 'confidence': 1.0},
+            
+            # Shell Commands - CRITICAL MISSING COMMANDS
+            'bash': {'command': 'bash', 'explanation': 'Bourne Again Shell', 'confidence': 1.0},
+            'sh': {'command': 'sh', 'explanation': 'Bourne shell', 'confidence': 1.0},
+            'zsh': {'command': 'zsh', 'explanation': 'Z shell', 'confidence': 1.0},
+            'fish': {'command': 'fish', 'explanation': 'Friendly interactive shell', 'confidence': 1.0},
+            'csh': {'command': 'csh', 'explanation': 'C shell', 'confidence': 1.0},
+            'tcsh': {'command': 'tcsh', 'explanation': 'Enhanced C shell', 'confidence': 1.0},
+            'dash': {'command': 'dash', 'explanation': 'Debian Almquist shell', 'confidence': 1.0},
+            
+            # System Administration
+            'systemctl': {'command': 'systemctl', 'explanation': 'Control systemd services', 'confidence': 1.0},
+            'service': {'command': 'service', 'explanation': 'Control system services', 'confidence': 1.0},
+            'chkconfig': {'command': 'chkconfig', 'explanation': 'System service configuration', 'confidence': 1.0},
+            'mount': {'command': 'mount', 'explanation': 'Mount filesystems', 'confidence': 1.0},
+            'umount': {'command': 'umount', 'explanation': 'Unmount filesystems', 'confidence': 1.0},
+            'fdisk': {'command': 'fdisk', 'explanation': 'Disk partition utility', 'confidence': 1.0},
+            'crontab': {'command': 'crontab', 'explanation': 'Schedule cron jobs', 'confidence': 1.0},
+            'at': {'command': 'at', 'explanation': 'Schedule one-time jobs', 'confidence': 1.0},
+            'jobs': {'command': 'jobs', 'explanation': 'List active jobs', 'confidence': 1.0},
+            'bg': {'command': 'bg', 'explanation': 'Put job in background', 'confidence': 1.0},
+            'fg': {'command': 'fg', 'explanation': 'Bring job to foreground', 'confidence': 1.0},
+            'nohup': {'command': 'nohup', 'explanation': 'Run command immune to hangups', 'confidence': 1.0},
+            'screen': {'command': 'screen', 'explanation': 'Terminal multiplexer', 'confidence': 1.0},
+            'tmux': {'command': 'tmux', 'explanation': 'Terminal multiplexer', 'confidence': 1.0},
+            
+            # Container and Virtualization
+            'docker': {'command': 'docker', 'explanation': 'Container management', 'confidence': 1.0},
+            'kubectl': {'command': 'kubectl', 'explanation': 'Kubernetes command-line tool', 'confidence': 1.0},
+            'vagrant': {'command': 'vagrant', 'explanation': 'Virtual machine management', 'confidence': 1.0},
             
             # Database commands
             'mysql': {'command': 'mysql', 'explanation': 'MySQL client', 'confidence': 1.0},
@@ -196,6 +247,12 @@ class CommandFilter:
         # Platform-specific commands
         if self.platform == 'windows':
             self.direct_commands.update({
+                # Windows Shell Commands - CRITICAL ADDITIONS
+                'powershell': {'command': 'powershell', 'explanation': 'Windows PowerShell', 'confidence': 1.0},
+                'pwsh': {'command': 'pwsh', 'explanation': 'PowerShell Core', 'confidence': 1.0},
+                'cmd': {'command': 'cmd', 'explanation': 'Windows Command Prompt', 'confidence': 1.0},
+                
+                # Windows Basic Commands
                 'dir': {'command': 'dir', 'explanation': 'List directory contents (Windows)', 'confidence': 1.0},
                 'cls': {'command': 'cls', 'explanation': 'Clear screen (Windows)', 'confidence': 1.0},
                 'type': {'command': 'type', 'explanation': 'Display file contents (Windows)', 'confidence': 1.0},
@@ -204,6 +261,16 @@ class CommandFilter:
                 'del': {'command': 'del', 'explanation': 'Delete files (Windows)', 'confidence': 0.9},
                 'md': {'command': 'md', 'explanation': 'Create directory (Windows)', 'confidence': 1.0},
                 'rd': {'command': 'rd', 'explanation': 'Remove directory (Windows)', 'confidence': 0.9},
+                
+                # Windows Network Commands
+                'ipconfig': {'command': 'ipconfig', 'explanation': 'Display network configuration (Windows)', 'confidence': 1.0},
+                'tracert': {'command': 'tracert', 'explanation': 'Trace route to host (Windows)', 'confidence': 1.0},
+                'netsh': {'command': 'netsh', 'explanation': 'Network shell utility (Windows)', 'confidence': 1.0},
+                'tasklist': {'command': 'tasklist', 'explanation': 'List running processes (Windows)', 'confidence': 1.0},
+                'taskkill': {'command': 'taskkill', 'explanation': 'Terminate processes (Windows)', 'confidence': 0.9},
+                'schtasks': {'command': 'schtasks', 'explanation': 'Schedule tasks (Windows)', 'confidence': 1.0},
+                'sc': {'command': 'sc', 'explanation': 'Service control manager (Windows)', 'confidence': 1.0},
+                'wmic': {'command': 'wmic', 'explanation': 'Windows Management Instrumentation', 'confidence': 1.0},
             })
         else:
             # Unix/Linux/macOS specific
