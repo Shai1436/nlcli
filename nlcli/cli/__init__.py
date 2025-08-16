@@ -9,14 +9,14 @@ This module contains the CLI entry points and subcommands:
 """
 
 from .main import main, cli
-from .context_cli import context_cli
-from .filter_cli import filter_cli
-from .history_cli import history_cli
+from .context_cli import context
+from .filter_cli import filter
+from .history_cli import history
 
 __all__ = [
     'main',
     'cli',
-    'context_cli',
-    'filter_cli', 
-    'history_cli'
+    'context',
+    'filter', 
+    'history'
 ]

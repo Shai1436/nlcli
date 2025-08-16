@@ -9,7 +9,7 @@ import time
 import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
-from .utils import setup_logging
+from ..utils.utils import setup_logging
 
 logger = setup_logging()
 

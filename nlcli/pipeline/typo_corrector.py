@@ -5,7 +5,7 @@ Typo correction and fuzzy matching for command recognition
 import re
 from typing import Dict, List, Optional, Tuple
 from difflib import SequenceMatcher
-from .utils import setup_logging
+from ..utils.utils import setup_logging
 
 logger = setup_logging()
 

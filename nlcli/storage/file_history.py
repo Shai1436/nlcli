@@ -9,7 +9,7 @@ import threading
 from pathlib import Path
 from typing import List, Dict, Optional
 from dataclasses import dataclass, asdict
-from .utils import setup_logging
+from ..utils.utils import setup_logging
 
 logger = setup_logging()
 

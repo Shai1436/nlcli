@@ -7,14 +7,14 @@ This module handles user interaction and output formatting:
 - Rich output formatting and themes
 """
 
-from .interactive_input import InteractiveInput
-from .enhanced_input import EnhancedInput
+from .interactive_input import InteractiveInputHandler
+from .enhanced_input import EnhancedInputHandler
 from .output_formatter import OutputFormatter
-from .typeahead import TypeaheadAutocomplete
+from .typeahead import TypeaheadController
 
 __all__ = [
-    'InteractiveInput',
-    'EnhancedInput',
+    'InteractiveInputHandler',
+    'EnhancedInputHandler',
     'OutputFormatter',
-    'TypeaheadAutocomplete'
+    'TypeaheadController'
 ]

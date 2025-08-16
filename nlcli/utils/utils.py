@@ -74,6 +74,17 @@ def get_platform_info() -> Dict[str, str]:
         'system': f"{platform.system()} {platform.release()}"
     }
 
+def get_config_dir() -> Path:
+    """
+    Get the configuration directory path
+    
+    Returns:
+        Path to the configuration directory
+    """
+    config_dir = Path.home() / '.nlcli'
+    config_dir.mkdir(exist_ok=True)
+    return config_dir
+
 def get_shell_info() -> Dict[str, str]:
     """
     Get information about the current shell

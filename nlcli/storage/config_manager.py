@@ -6,7 +6,7 @@ import os
 import configparser
 from pathlib import Path
 from typing import Optional, Dict, Any
-from .utils import setup_logging
+from ..utils.utils import setup_logging, get_config_dir
 
 logger = setup_logging()
 

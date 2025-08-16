@@ -7,8 +7,8 @@ import re
 import time
 from typing import List, Optional, Tuple, Dict, Any
 from difflib import SequenceMatcher
-from .history_manager import HistoryManager
-from .utils import setup_logging
+from ..storage.history_manager import HistoryManager
+from ..utils.utils import setup_logging
 
 logger = setup_logging()
 

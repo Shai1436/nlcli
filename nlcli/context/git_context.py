@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
-from .utils import setup_logging
+from ..utils.utils import setup_logging
 
 logger = setup_logging()
 

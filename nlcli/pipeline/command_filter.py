@@ -6,7 +6,7 @@ Bypasses AI translation for exact command matches
 import re
 import platform
 from typing import Dict, List, Optional, Tuple, Callable
-from .utils import setup_logging
+from ..utils.utils import setup_logging
 
 logger = setup_logging()
 

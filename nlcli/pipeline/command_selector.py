@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.prompt import Prompt, IntPrompt
 from rich.table import Table
 from rich.panel import Panel
-from .utils import setup_logging
+from ..utils.utils import setup_logging
 
 logger = setup_logging()
 console = Console()

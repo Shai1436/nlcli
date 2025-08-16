@@ -12,20 +12,20 @@ from rich.prompt import Confirm
 from rich.text import Text
 from rich.table import Table
 
-from .ai_translator import AITranslator
-from .history_manager import HistoryManager
-from .safety_checker import SafetyChecker
-from .config_manager import ConfigManager
-from .command_executor import CommandExecutor
-from .output_formatter import OutputFormatter
+from ..pipeline.ai_translator import AITranslator
+from ..storage.history_manager import HistoryManager
+from ..execution.safety_checker import SafetyChecker
+from ..storage.config_manager import ConfigManager
+from ..execution.command_executor import CommandExecutor
+from ..ui.output_formatter import OutputFormatter
 
 from .context_cli import context
 from .history_cli import history as history_cli
 from .filter_cli import filter as filter_cli
-from .interactive_input import InteractiveInputHandler
-from .typeahead import TypeaheadController
-from .enhanced_input import EnhancedInputHandler, SimpleTypeaheadInput
-from .utils import setup_logging, get_platform_info
+from ..ui.interactive_input import InteractiveInputHandler
+from ..ui.typeahead import TypeaheadController
+from ..ui.enhanced_input import EnhancedInputHandler, SimpleTypeaheadInput
+from ..utils.utils import setup_logging, get_platform_info
 
 console = Console()
 logger = setup_logging()

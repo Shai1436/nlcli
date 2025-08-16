@@ -5,7 +5,7 @@ Now uses file-based storage for better performance and consistency
 
 import os
 from typing import List, Dict, Optional
-from .utils import setup_logging
+from ..utils.utils import setup_logging, get_config_dir
 from .file_history import FileHistoryManager
 
 logger = setup_logging()

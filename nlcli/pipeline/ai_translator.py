@@ -43,13 +43,13 @@ class AITranslator:
         self.executor = ThreadPoolExecutor(max_workers=2)
         
         # Context awareness - Legacy
-        from .context_manager import ContextManager
+        from ..context.context_manager import ContextManager
         config_dir = os.path.expanduser('~/.nlcli')
         self.context_manager = ContextManager(config_dir)
         
         # Enhanced Context Intelligence - Phase 4
-        from .git_context import GitContextManager
-        from .environment_context import EnvironmentContextManager
+        from ..context.git_context import GitContextManager
+        from ..context.environment_context import EnvironmentContextManager
         self.git_context = GitContextManager()
         self.env_context = EnvironmentContextManager()
         

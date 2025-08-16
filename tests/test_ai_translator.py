@@ -7,7 +7,7 @@ import pytest
 import tempfile
 import os
 from unittest.mock import Mock, patch, MagicMock
-from nlcli.ai_translator import AITranslator
+from nlcli.pipeline.ai_translator import AITranslator
 
 
 class TestAITranslator:

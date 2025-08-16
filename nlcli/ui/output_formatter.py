@@ -18,7 +18,7 @@ from rich.align import Align
 from rich.layout import Layout
 from rich import box
 from datetime import datetime
-from .utils import setup_logging
+from ..utils.utils import setup_logging
 
 logger = setup_logging()
 

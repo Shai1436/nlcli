@@ -7,7 +7,7 @@ import click
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-from .interactive_input import InteractiveInputHandler
+from ..ui.interactive_input import InteractiveInputHandler
 
 console = Console()
 
