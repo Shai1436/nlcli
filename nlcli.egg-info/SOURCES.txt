@@ -3,6 +3,7 @@ README.md
 pyproject.toml
 setup.py
 nlcli/__init__.py
+nlcli/main.py
 nlcli.egg-info/PKG-INFO
 nlcli.egg-info/SOURCES.txt
 nlcli.egg-info/dependency_links.txt

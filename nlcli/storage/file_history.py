@@ -152,7 +152,7 @@ class FileHistoryManager:
         try:
             with open(self.stats_file, 'w', encoding='utf-8') as f:
                 json.dump(self._stats, f)
-        except (OSError, PermissionError, json.JSONEncodeError):
+        except (OSError, PermissionError, ValueError):
             pass
     
     def add_command(self, natural_language: str, command: str, 

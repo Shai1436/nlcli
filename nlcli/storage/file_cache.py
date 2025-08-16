@@ -163,7 +163,7 @@ class FileCacheManager:
         try:
             with open(self.stats_file, 'w', encoding='utf-8') as f:
                 json.dump(self._stats, f)
-        except (OSError, PermissionError, json.JSONEncodeError):
+        except (OSError, PermissionError, ValueError):
             pass
     
     def _update_memory_cache(self, key: str, entry: CacheEntry):
@@ -246,7 +246,7 @@ class FileCacheManager:
                     try:
                         with open(self.cache_file, 'w', encoding='utf-8') as f:
                             json.dump(data, f, separators=(',', ':'))
-                    except (OSError, PermissionError, json.JSONEncodeError):
+                    except (OSError, PermissionError, ValueError):
                         pass  # Don't block on file write errors
                     
                     self._stats['file_hits'] += 1
