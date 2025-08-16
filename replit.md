@@ -27,85 +27,11 @@ Preferred communication style: Simple, everyday language.
 - Context Intelligence Enhancement - Phase 1
 - Typeahead Autocomplete System
 - Improve OS command recognition for better handling of system commands like whoami
-- Orphaned code cleanup - Successfully completed:
-  * Removed unused account_manager module (428 lines)
-  * Eliminated 12+ redundant/orphaned test files
-  * Reduced test suite from 44+ to 6 essential files (removed all SQLite/mock tests)
-  * Maintained all core functionality and test coverage
-  * Project now focused on 25 essential modules
-- Comprehensive error scanning and fixes - Successfully completed:
-  * Fixed 7 bare except clauses across utils.py, cache_migrator.py, enhanced_input.py, file_cache.py  
-  * Added proper exception handling with specific exception types
-  * Resolved LSP diagnostics and type safety issues
-  * Fixed test assertion logic in history manager tests
-  * All 25 modules now import without errors
-  * Code quality improved with specific exception handling
-- SQLite and mock test cleanup - Successfully completed:
-  * Removed all SQLite-based test files (history manager tests)
-  * Removed all unittest.mock dependent tests (~16 test files)
-  * Eliminated manual_tests directory with mock-heavy integration tests
-  * Streamlined to 6 essential test files focusing on core functionality
-  * Maintained working tests without external dependencies or mocking
-- SQLite to file-based cache migration - Successfully completed:
-  * Migrated HistoryManager from SQLite to JSON file storage
-  * Created FileHistoryManager with 2-4x better performance than SQLite
-  * Eliminated SQLite dependency completely from the project
-  * Maintained full backward compatibility with existing API
-  * Achieved architectural consistency with existing file cache system
-  * Storage: ~270KB for 1000 commands vs 1MB+ SQLite overhead
 - Fixed critical command filter bug
 - Enhanced intelligent find patterns
 - Added missing critical shell and networking commands
 - Enhanced command argument support
 - Intelligent find patterns implementation
-- Test coverage improvements - Successfully completed:
-  * Overall test coverage improved from 19% to 31% (+63% improvement)
-  * Added comprehensive test suites for critical modules with 0% coverage:
-    - file_history.py: 0% → 68% coverage with 18 comprehensive tests
-    - ai_translator.py: 0% → 76% coverage with translation and caching tests
-    - command_executor.py: 0% → 62% coverage with execution safety tests
-  * Enhanced existing test coverage for cache_manager.py: 38% → 82%
-  * Significantly improved command_executor.py: 31% → 49% (+58% improvement)
-  * All critical modules now have 30%+ test coverage ensuring code quality
-  * Fixed failing tests in config manager, safety checker, and command filter
-  * Added 21 comprehensive tests for command execution covering platform-specific behavior, error handling, and interactive modes
-- Code reorganization - Successfully completed:
-  * Restructured nlcli package into logical contextual folders for better maintainability
-  * Created 7 organized submodules: pipeline/, execution/, storage/, context/, ui/, cli/, utils/
-  * Moved 25+ Python files from flat structure into appropriate contextual folders
-  * Enhanced package organization with proper __init__.py files and import structure
-  * Improved code navigation and separation of concerns for enterprise-grade architecture
-- AI Translator test suite with mocks - Successfully completed:
-  * Created comprehensive test suite with 20+ test cases using unittest.mock
-  * Added focused tests for component initialization, API integration, and error handling
-  * Implemented proper mocking of OpenAI API calls, cache systems, and file operations
-  * Added tests for multi-tier processing system, input validation, and edge cases
-  * Achieved isolated testing environment with proper setup/teardown for each test
-  * Covered cache integration, platform detection, and context manager functionality
-  * Added resilience testing for various error conditions and timeout scenarios
-- Test suite reorganization - Successfully completed:
-  * Restructured test files to mirror source code folder organization
-  * Created dedicated mocks/ folder for external API testing isolation  
-  * Organized tests into 8 logical categories: pipeline/, execution/, storage/, context/, ui/, cli/, utils/, mocks/
-  * Enhanced test discoverability and maintainability with clear separation of concerns
-  * Added comprehensive test suite documentation with running instructions
-  * Improved enterprise-grade testing standards with scalable structure
-- Dead code cleanup - Successfully completed:
-  * Removed 11 unused functions across pipeline, execution, and storage modules
-  * Eliminated unused functions: get_learned_suggestions, translate_multilingual, get_pattern_suggestions, get_workflow_templates, enhance_command_recognition, execute_interactive, validate_command, get_command_info, get_supported_shells, get_safety_level_info, get_log_level
-  * Cleaned up corresponding test methods for deleted functions
-  * Removed unused imports (defaultdict, datetime) and fixed import dependencies
-  * Maintained all core functionality while reducing codebase complexity
-  * Achieved 16,755 total lines across 35 source files and 25 test files
-  * Verified all critical features remain intact after cleanup
-- Context CLI test coverage improvements - Successfully completed:
-  * Created comprehensive test suite for context_cli.py from 0% to 85%+ coverage
-  * Added 23 test cases covering all CLI commands: status, shortcuts, add-shortcut, remove-shortcut, suggestions
-  * Implemented mock-based testing for ContextManager, file operations, and external dependencies
-  * Added comprehensive error handling tests for file I/O, JSON parsing, and permission errors
-  * Created integration tests for command consistency and proper initialization
-  * Enhanced test coverage for CLI interface with proper click.testing.CliRunner usage
-  * Added edge case testing for git repositories, conda environments, directory truncation, and empty states
 
 # System Architecture
 
@@ -125,9 +51,9 @@ The application follows a modular, cross-platform architecture with clear separa
 - **Enhanced Typo Correction System**: Sub-millisecond typo detection with 486+ command mappings and conversational command recognition.
 - **Safety Validation**: Multi-level safety checking to prevent destructive operations, configurable by the user.
 - **Command Execution Engine**: Manages cross-platform command execution, timeout, error handling, and secure subprocess execution.
-- **History Management**: Stores command history in an SQLite database, tracking inputs, generated commands, and execution results.
+- **History Management**: Stores command history in a JSON file storage system for improved performance over SQLite.
 - **Configuration System**: Manages settings via INI files for AI parameters, performance, and user preferences.
-- **Cache Management**: High-performance file-based cache system with in-memory LRU layer, automatic SQLite migration, and cross-instance sharing (2-3ms latency).
+- **Cache Management**: High-performance file-based cache system with in-memory LRU layer and cross-instance sharing (2-3ms latency).
 - **CLI Interface**: Built with `Click` and `Rich`, offering an interactive mode with real-time performance indicators and subcommands.
 - **Interactive Input System**: Provides Readline-based command history navigation, persistence, and search.
 - **Git Context Manager**: Offers Git repository awareness (branch tracking, status, conflict detection) and intelligent Git command suggestions with safety validation.
@@ -135,7 +61,7 @@ The application follows a modular, cross-platform architecture with clear separa
 - **Typeahead Autocomplete System**: Real-time command completion with history-based suggestions, fuzzy matching, and visual feedback.
 
 ## Data Storage
-- **SQLite Database**: Local storage for command history and cache.
+- **JSON Files**: Local storage for command history and cache.
 - **Configuration Files**: INI format files for user and system configurations.
 
 ## Security Architecture
@@ -173,7 +99,6 @@ The application follows a modular, cross-platform architecture with clear separa
     - `rich`: For enhanced console output and formatting.
     - `openai`: Official client for OpenAI API interaction.
     - `configparser`: For managing INI-based configuration files.
-    - `sqlite3`: Python's built-in module for SQLite database interaction.
 - **System Dependencies**:
     - Python 3.8+ runtime environment.
     - Standard library modules inherent to Python.

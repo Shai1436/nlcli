@@ -90,7 +90,7 @@ def list(ctx, category, limit):
             return
     
     # Limit results
-    commands = list(all_commands.items())[:limit]
+    commands = sorted(all_commands.items())[:limit]
     
     if not commands:
         console.print("[yellow]No commands found.[/yellow]")
