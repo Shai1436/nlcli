@@ -10,7 +10,7 @@ import threading
 import concurrent.futures
 import time
 from typing import Dict, List, Optional, Tuple, Any, Set
-from collections import defaultdict, Counter
+from collections import defaultdict
 import difflib
 import unicodedata
 
@@ -447,29 +447,9 @@ class AdvancedFuzzyEngine:
         key_words = sorted([w for w in words if len(w) > 2])
         return '_'.join(key_words[:3])  # Use first 3 significant words
     
-    def get_learned_suggestions(self, text: str, limit: int = 3) -> List[Dict]:
-        """Get suggestions based on learned patterns"""
-        pattern_key = self._get_pattern_key(text)
-        
-        if pattern_key in self.user_patterns:
-            patterns = self.user_patterns[pattern_key]
-            # Sort by count and confidence
-            patterns.sort(key=lambda x: (x['count'], x['confidence']), reverse=True)
-            return patterns[:limit]
-        
-        return []
+
     
-    def translate_multilingual(self, text: str) -> str:
-        """Translate non-English commands to English"""
-        text_lower = text.lower()
-        
-        for language, mappings in self.language_mappings.items():
-            for foreign_word, english_word in mappings.items():
-                if foreign_word in text_lower:
-                    text = re.sub(r'\b' + re.escape(foreign_word) + r'\b', 
-                                english_word, text, flags=re.IGNORECASE)
-        
-        return text
+
 
 
 class LevenshteinMatcher:

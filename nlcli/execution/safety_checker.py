@@ -268,20 +268,4 @@ class SafetyChecker:
         
         return False
     
-    def get_safety_level_info(self) -> Dict:
-        """Get information about current safety level"""
-        
-        info = {
-            'current_level': self.safety_level,
-            'description': '',
-            'patterns_count': len(self.warning_patterns)
-        }
-        
-        if self.safety_level == 'high':
-            info['description'] = 'Maximum safety: Warns about any potentially risky commands including sudo, chmod, service management'
-        elif self.safety_level == 'medium':
-            info['description'] = 'Balanced safety: Warns about dangerous system operations and data destruction'
-        else:
-            info['description'] = 'Minimal safety: Only warns about highly destructive operations'
-        
-        return info
+

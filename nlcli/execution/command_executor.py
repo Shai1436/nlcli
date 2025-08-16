@@ -141,97 +141,9 @@ class CommandExecutor:
         
         return command
     
-    def execute_interactive(self, command: str, cwd: Optional[str] = None) -> Dict:
-        """
-        Execute command in interactive mode (for commands requiring input)
-        
-        Args:
-            command: Command to execute
-            cwd: Working directory
-            
-        Returns:
-            Dictionary with execution results
-        """
-        
-        result = {
-            'success': False,
-            'output': '',
-            'error': '',
-            'return_code': None,
-            'command': command
-        }
-        
-        try:
-            # Prepare command
-            prepared_command = self._prepare_command(command)
-            
-            logger.debug(f"Executing interactive command: {prepared_command}")
-            
-            # Execute with inherited stdin/stdout for interaction
-            if self.platform == 'windows':
-                process = subprocess.run(
-                    prepared_command,
-                    cwd=cwd,
-                    shell=True
-                )
-            else:
-                process = subprocess.run(
-                    prepared_command,
-                    cwd=cwd,
-                    shell=True
-                )
-            
-            result['return_code'] = process.returncode
-            result['exit_code'] = process.returncode
-            result['success'] = process.returncode == 0
-            result['output'] = "Interactive command completed"
-            
-        except Exception as e:
-            result['error'] = f"Interactive execution error: {str(e)}"
-            logger.error(f"Error in interactive execution: {command} - {str(e)}")
-        
-        return result
+
     
-    def validate_command(self, command: str) -> Dict:
-        """
-        Validate command before execution
-        
-        Args:
-            command: Command to validate
-            
-        Returns:
-            Dictionary with validation results
-        """
-        
-        result = {
-            'valid': True,
-            'warnings': [],
-            'errors': []
-        }
-        
-        # Check for empty command
-        if not command.strip():
-            result['valid'] = False
-            result['errors'].append("Empty command")
-            return result
-        
-        # Check for command injection attempts
-        suspicious_patterns = [
-            ';', '&&', '||', '|', '`', '$(',
-            '>', '>>', '<', '<<'
-        ]
-        
-        # Platform-specific validation
-        if self.platform == 'windows':
-            # Windows-specific checks
-            if command.strip().startswith('@'):
-                result['warnings'].append("Command starts with @ (batch file syntax)")
-        else:
-            # Unix-specific checks
-            if '|' in command and not self._is_safe_pipe(command):
-                result['warnings'].append("Command uses pipes - verify intended behavior")
-        
-        return result
+
     
     def _is_safe_pipe(self, command: str) -> bool:
         """Check if pipe usage in command is safe"""
@@ -250,59 +162,7 @@ class CommandExecutor:
         
         return True
     
-    def get_command_info(self, command: str) -> Dict:
-        """
-        Get information about a command
-        
-        Args:
-            command: Command to analyze
-            
-        Returns:
-            Dictionary with command information
-        """
-        
-        info = {
-            'command': command,
-            'binary': '',
-            'args': [],
-            'exists': False,
-            'path': '',
-            'type': 'unknown'
-        }
-        
-        try:
-            # Parse command
-            if self.platform == 'windows':
-                # Simple parsing for Windows
-                parts = command.split()
-                if parts:
-                    info['binary'] = parts[0]
-                    info['args'] = parts[1:]
-            else:
-                # Use shlex for Unix-like systems
-                try:
-                    parts = shlex.split(command)
-                    if parts:
-                        info['binary'] = parts[0]
-                        info['args'] = parts[1:]
-                except ValueError:
-                    # Fallback to simple split
-                    parts = command.split()
-                    if parts:
-                        info['binary'] = parts[0]
-                        info['args'] = parts[1:]
-            
-            # Check if binary exists
-            if info['binary']:
-                info['exists'] = self._command_exists(info['binary'])
-                if info['exists']:
-                    info['path'] = self._get_command_path(info['binary'])
-                    info['type'] = self._get_command_type(info['binary'])
-            
-        except Exception as e:
-            logger.error(f"Error getting command info: {str(e)}")
-        
-        return info
+
     
     def _command_exists(self, command: str) -> bool:
         """Check if command exists in PATH"""
@@ -376,15 +236,4 @@ class CommandExecutor:
         
         return 'unknown'
     
-    def get_supported_shells(self) -> List[str]:
-        """Get list of supported shells"""
-        
-        if self.platform == 'windows':
-            return ['cmd', 'powershell']
-        else:
-            shells = []
-            possible_shells = ['/bin/bash', '/bin/zsh', '/bin/sh', '/bin/fish']
-            for shell in possible_shells:
-                if os.path.exists(shell):
-                    shells.append(shell)
-            return shells
+

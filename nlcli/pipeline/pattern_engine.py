@@ -7,7 +7,6 @@ import re
 import json
 import logging
 from typing import Dict, List, Optional, Tuple, Any
-from datetime import datetime, timedelta
 import os
 
 logger = logging.getLogger(__name__)
@@ -561,44 +560,13 @@ class AdvancedPatternEngine:
         
         return None
     
-    def get_pattern_suggestions(self, text: str, limit: int = 5) -> List[Dict]:
-        """Get pattern suggestions for ambiguous input"""
-        suggestions = []
-        
-        # Get partial matches from semantic patterns
-        for pattern_name, pattern_info in self.semantic_patterns.items():
-            for pattern in pattern_info['patterns']:
-                # Looser matching for suggestions
-                if any(word in text.lower() for word in pattern.replace(r'\b', '').replace(r'\w+', '').split('.*')):
-                    suggestions.append({
-                        'type': 'semantic',
-                        'name': pattern_name,
-                        'explanation': pattern_info['explanation'],
-                        'confidence': 0.6
-                    })
-        
-        # Get partial matches from workflows
-        for workflow_name, workflow_info in self.workflow_templates.items():
-            for pattern in workflow_info['patterns']:
-                if any(word in text.lower() for word in pattern.replace(r'\b', '').replace(r'\w+', '').split('.*')):
-                    suggestions.append({
-                        'type': 'workflow',
-                        'name': workflow_name,
-                        'explanation': workflow_info['explanation'],
-                        'confidence': 0.6
-                    })
-        
-        # Sort by confidence and return top suggestions
-        suggestions.sort(key=lambda x: x['confidence'], reverse=True)
-        return suggestions[:limit]
+
     
     def get_semantic_patterns(self) -> Dict[str, Dict]:
         """Get all semantic patterns"""
         return self.semantic_patterns
     
-    def get_workflow_templates(self) -> Dict[str, Dict]:
-        """Get all workflow templates"""
-        return self.workflow_templates
+
 
 
 # Alias for backward compatibility

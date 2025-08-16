@@ -201,25 +201,22 @@ class ConfigManager:
             return api_key
         
         # Check config file
-        return self.get('ai', 'api_key', '')
+        return self.get('ai', 'api_key', '') or ''
     
     def get_safety_level(self) -> str:
         """Get safety level setting"""
         
-        return self.get('general', 'safety_level', 'medium')
+        return self.get('general', 'safety_level', 'medium') or 'medium'
     
     def get_db_path(self) -> str:
         """Get database file path"""
         
-        db_name = self.get('storage', 'db_name', 'nlcli_history.db')
-        config_dir = os.path.dirname(self.config_path)
+        db_name = self.get('storage', 'db_name', 'nlcli_history.db') or 'nlcli_history.db'
+        config_dir = os.path.dirname(self.config_path) or '.'
         
         return os.path.join(config_dir, db_name)
     
-    def get_log_level(self) -> str:
-        """Get logging level"""
-        
-        return self.get('general', 'log_level', 'INFO')
+
     
     def get_ai_config(self) -> Dict[str, Any]:
         """Get AI configuration"""

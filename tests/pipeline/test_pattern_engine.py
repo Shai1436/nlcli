@@ -82,19 +82,7 @@ class TestAdvancedPatternEngine:
         result = engine.process_natural_language("some random unmatched text")
         assert result is None
     
-    def test_pattern_suggestions(self):
-        """Test pattern suggestion functionality"""
-        engine = AdvancedPatternEngine()
-        
-        suggestions = engine.get_pattern_suggestions("find files", limit=3)
-        assert len(suggestions) <= 3
-        assert len(suggestions) > 0
-        
-        for suggestion in suggestions:
-            assert 'type' in suggestion
-            assert 'name' in suggestion
-            assert 'explanation' in suggestion
-            assert 'confidence' in suggestion
+
     
     def test_complex_patterns(self):
         """Test complex semantic patterns"""

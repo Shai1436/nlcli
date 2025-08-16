@@ -763,38 +763,3 @@ class TypoCorrector:
         suggestions.sort(key=lambda x: x[1], reverse=True)
         return suggestions[:max_suggestions]
     
-    def enhance_command_recognition(self, input_text: str) -> Dict:
-        """Enhanced command recognition with typo correction and fuzzy matching"""
-        
-        # Step 1: Try typo correction
-        corrected = self.correct_typo(input_text)
-        if corrected != input_text:
-            return {
-                'original': input_text,
-                'corrected': corrected,
-                'method': 'typo_correction',
-                'confidence': 0.9
-            }
-        
-        # Step 2: Try fuzzy matching
-        fuzzy_result = self.fuzzy_match(input_text)
-        if fuzzy_result:
-            command, score = fuzzy_result
-            return {
-                'original': input_text,
-                'corrected': command,
-                'method': 'fuzzy_match',
-                'confidence': score
-            }
-        
-        # Step 3: Provide suggestions if no direct match
-        suggestions = self.suggest_corrections(input_text)
-        if suggestions:
-            return {
-                'original': input_text,
-                'suggestions': suggestions,
-                'method': 'suggestions',
-                'confidence': 0.5
-            }
-        
-        return {'original': input_text, 'method': 'no_match', 'confidence': 0.0}
