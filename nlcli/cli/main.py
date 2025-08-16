@@ -116,15 +116,15 @@ def interactive_mode(obj):
                     console.print("[green]Goodbye![/green]")
                     break
                     
-                if user_input.lower() == 'history':
+                if user_input.lower() in ['nlhistory', 'nlh']:
                     show_history(history)
                     continue
                     
-                if user_input.lower() in ['help', 'h']:
+                if user_input.lower() in ['nlhelp', 'nlhp']:
                     show_help()
                     continue
                     
-                if user_input.lower() == 'clear':
+                if user_input.lower() in ['nlclear', 'nlc']:
                     console.clear()
                     continue
             
@@ -285,9 +285,9 @@ def show_help():
     help_text = """
 [bold]Available Commands:[/bold]
 • Type any natural language command
-• [cyan]history[/cyan] - Show command history
-• [cyan]clear[/cyan] - Clear the screen
-• [cyan]help[/cyan] - Show this help
+• [cyan]nlhistory[/cyan] (or [cyan]nlh[/cyan]) - Show command history
+• [cyan]nlclear[/cyan] (or [cyan]nlc[/cyan]) - Clear the screen
+• [cyan]nlhelp[/cyan] (or [cyan]nlhp[/cyan]) - Show this help
 • [cyan]quit[/cyan] - Exit the application
 
 [bold]Examples:[/bold]

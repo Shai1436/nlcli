@@ -57,7 +57,6 @@ class CommandFilter:
             'cal': {'command': 'cal', 'explanation': 'Display calendar', 'confidence': 1.0},
             'uname': {'command': 'uname', 'explanation': 'System information', 'confidence': 1.0},
             'hostname': {'command': 'hostname', 'explanation': 'Display system hostname', 'confidence': 1.0},
-            'history': {'command': 'history', 'explanation': 'Show command history', 'confidence': 1.0},
             'env': {'command': 'env', 'explanation': 'Display environment variables', 'confidence': 1.0},
             'printenv': {'command': 'printenv', 'explanation': 'Display environment variables', 'confidence': 1.0},
             

@@ -314,6 +314,14 @@ class EnhancedInputHandler:
                     return completion
         
         return user_input
+    
+    def save_history(self):
+        """Save history to database (for compatibility with main.py)"""
+        if self.history_manager and hasattr(self.history_manager, 'save'):
+            try:
+                self.history_manager.save()
+            except Exception:
+                pass  # Ignore errors during save
 
 
 class SimpleTypeaheadInput:
@@ -357,3 +365,8 @@ class SimpleTypeaheadInput:
                         print(f"  {confidence} {suggestion}")
         
         return user_input
+    
+    def save_history(self):
+        """Save history (for compatibility with main.py)"""
+        # SimpleTypeaheadInput doesn't manage persistent history
+        pass

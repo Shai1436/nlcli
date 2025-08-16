@@ -98,9 +98,6 @@ class TypoCorrector:
             'hostname': 'hostname',
             'hostnme': 'hostname',
             'hosname': 'hostname',
-            'histroy': 'history',
-            'hsitory': 'history',
-            'hitory': 'history',
             'midkr': 'mkdir',
             'mkdr': 'mkdir',
             'makedir': 'mkdir',
@@ -578,10 +575,6 @@ class TypoCorrector:
             'environment variables': ['env', 'printenv', 'show env'],
             'env vars': ['env', 'printenv', 'environment variables'],
             'show env': ['env', 'printenv', 'environment variables'],
-            'command history': ['history', 'past commands', 'previous commands'],
-            'past commands': ['history', 'command history', 'previous commands'],
-            'previous commands': ['history', 'command history', 'past commands'],
-            'show history': ['history', 'command history', 'past commands'],
             
             # File and directory patterns
             'list files': ['ls', 'show files', 'display files', 'file list', 'directory contents'],
@@ -662,7 +655,6 @@ class TypoCorrector:
             'pull changes': ['git pull', 'fetch changes', 'update repo'],
             'fetch changes': ['git pull', 'pull changes', 'update repo'],
             'update repo': ['git pull', 'pull changes', 'fetch changes'],
-            'show history': ['git log', 'commit history', 'git commits'],
             'commit history': ['git log', 'show history', 'git commits'],
             'git commits': ['git log', 'show history', 'commit history'],
             
