@@ -10,7 +10,7 @@ import time
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .history_manager import HistoryManager
+    from ..storage.history_manager import HistoryManager
     from .typeahead import TypeaheadController
 
 # Try to import readline
@@ -244,7 +244,7 @@ class EnhancedInputHandler:
         if not self.typeahead_controller or len(user_input) < 2:
             return ""
         
-        completion = self.typeahead_controller.get_completion_for_input(user_input)
+        completion = self.typeahead_controller.get_completion_for_input(user_input) if self.typeahead_controller else ""
         
         # Only return completion if it's significantly longer than input
         if completion and len(completion) > len(user_input) + 2:
@@ -300,7 +300,7 @@ class EnhancedInputHandler:
         
         # If input is partial and could have completions, show suggestions
         if user_input and len(user_input) >= 2:
-            completion = self.typeahead_controller.get_completion_for_input(user_input)
+            completion = self.typeahead_controller.get_completion_for_input(user_input) if self.typeahead_controller else ""
             
             if completion and completion.lower() != user_input.lower():
                 # Show the completion in muted white
@@ -343,7 +343,7 @@ class SimpleTypeaheadInput:
         # Show typeahead suggestions after input
         if user_input and len(user_input) >= 2:
             # Get best completion
-            completion = self.typeahead_controller.get_completion_for_input(user_input)
+            completion = self.typeahead_controller.get_completion_for_input(user_input) if self.typeahead_controller else ""
             
             if completion and completion.lower() != user_input.lower():
                 # Display completion suggestion in muted white
@@ -355,7 +355,7 @@ class SimpleTypeaheadInput:
                     return completion
             
             # Also show other suggestions
-            suggestions = self.typeahead_controller.engine.get_suggestions(user_input, max_results=3)
+            suggestions = self.typeahead_controller.engine.get_suggestions(user_input, max_results=3) if self.typeahead_controller and self.typeahead_controller.engine else []
             
             if suggestions and len(suggestions) > 1:
                 print(f"\033[37mOther suggestions:\033[0m")
