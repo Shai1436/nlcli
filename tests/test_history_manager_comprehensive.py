@@ -34,17 +34,17 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
     
     def test_add_entry_basic(self):
         """Test adding basic history entries"""
-        self.history_manager.add_entry(
+        self.history_manager.add_command(
             natural_language="list files",
-            generated_command="ls -la",
-            execution_result="total 16\ndrwxr-xr-x 2 user user 4096",
+            command="ls -la",
+            explanation="total 16\ndrwxr-xr-x 2 user user 4096",
             success=True
         )
         
-        entries = self.history_manager.get_recent_entries(1)
+        entries = self.history_manager.get_recent_commands(1)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0]['natural_language'], "list files")
-        self.assertEqual(entries[0]['generated_command'], "ls -la")
+        self.assertEqual(entries[0]['command'], "ls -la")
         self.assertTrue(entries[0]['success'])
     
     def test_add_entry_with_metadata(self):
@@ -56,15 +56,15 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
             'execution_time': 0.123
         }
         
-        self.history_manager.add_entry(
+        self.history_manager.add_command(
             natural_language="show processes",
-            generated_command="ps aux",
-            execution_result="PID USER COMMAND",
+            command="ps aux",
+            explanation="PID USER COMMAND",
             success=True,
-            metadata=metadata
+            session_id="test_session"
         )
         
-        entries = self.history_manager.get_recent_entries(1)
+        entries = self.history_manager.get_recent_commands(1)
         self.assertEqual(len(entries), 1)
         stored_metadata = entries[0].get('metadata', {})
         self.assertEqual(stored_metadata.get('platform'), 'linux')
@@ -74,18 +74,18 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
         """Test retrieving recent entries"""
         # Add multiple entries
         for i in range(5):
-            self.history_manager.add_entry(
+            self.history_manager.add_command(
                 natural_language=f"command {i}",
-                generated_command=f"cmd{i}",
-                execution_result=f"result {i}",
+                command=f"cmd{i}",
+                explanation=f"result {i}",
                 success=True
             )
         
         # Test different limits
-        entries = self.history_manager.get_recent_entries(3)
+        entries = self.history_manager.get_recent_commands(3)
         self.assertEqual(len(entries), 3)
         
-        entries = self.history_manager.get_recent_entries(10)
+        entries = self.history_manager.get_recent_commands(10)
         self.assertEqual(len(entries), 5)  # Only 5 entries exist
         
         # Check ordering (most recent first)
@@ -103,102 +103,102 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
         ]
         
         for nl, cmd, result in test_entries:
-            self.history_manager.add_entry(nl, cmd, result, True)
+            self.history_manager.add_command(nl, cmd, result, True)
         
         # Search by natural language
-        results = self.history_manager.search_entries("files")
+        results = self.history_manager.search_commands("files")
         self.assertEqual(len(results), 2)  # "list files" and "find python files"
         
         # Search by command
-        results = self.history_manager.search_entries("ls")
+        results = self.history_manager.search_commands("ls")
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]['generated_command'], "ls -la")
         
         # Case insensitive search
-        results = self.history_manager.search_entries("PYTHON")
+        results = self.history_manager.search_commands("PYTHON")
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]['natural_language'], "find python files")
     
     def test_get_entry_by_id(self):
         """Test retrieving specific entries by ID"""
-        entry_id = self.history_manager.add_entry(
+        entry_id = self.history_manager.add_command(
             natural_language="test command",
-            generated_command="test cmd",
-            execution_result="test result",
+            command="test cmd",
+            explanation="test result",
             success=True
         )
         
-        entry = self.history_manager.get_entry_by_id(entry_id)
+        entry = self.history_manager.get_command_by_id(entry_id)
         self.assertIsNotNone(entry)
         self.assertEqual(entry['natural_language'], "test command")
         self.assertEqual(entry['generated_command'], "test cmd")
         
         # Test non-existent ID
-        non_existent = self.history_manager.get_entry_by_id(99999)
+        non_existent = self.history_manager.get_command_by_id(99999)
         self.assertIsNone(non_existent)
     
     def test_update_entry(self):
         """Test updating existing history entries"""
-        entry_id = self.history_manager.add_entry(
+        entry_id = self.history_manager.add_command(
             natural_language="original command",
-            generated_command="original cmd",
-            execution_result="original result",
+            command="original cmd",
+            explanation="original result",
             success=False
         )
         
         # Update the entry
         success = self.history_manager.update_entry(
             entry_id,
-            execution_result="updated result",
+            explanation="updated result",
             success=True
         )
         
         self.assertTrue(success)
         
         # Verify update
-        entry = self.history_manager.get_entry_by_id(entry_id)
+        entry = self.history_manager.get_command_by_id(entry_id)
         self.assertEqual(entry['execution_result'], "updated result")
         self.assertTrue(entry['success'])
         self.assertEqual(entry['natural_language'], "original command")  # Unchanged
     
     def test_delete_entry(self):
         """Test deleting history entries"""
-        entry_id = self.history_manager.add_entry(
+        entry_id = self.history_manager.add_command(
             natural_language="delete me",
-            generated_command="rm temp",
-            execution_result="deleted",
+            command="rm temp",
+            explanation="deleted",
             success=True
         )
         
         # Verify entry exists
-        entry = self.history_manager.get_entry_by_id(entry_id)
+        entry = self.history_manager.get_command_by_id(entry_id)
         self.assertIsNotNone(entry)
         
         # Delete entry
-        success = self.history_manager.delete_entry(entry_id)
+        success = self.history_manager.delete_command(entry_id)
         self.assertTrue(success)
         
         # Verify deletion
-        entry = self.history_manager.get_entry_by_id(entry_id)
+        entry = self.history_manager.get_command_by_id(entry_id)
         self.assertIsNone(entry)
         
         # Test deleting non-existent entry
-        success = self.history_manager.delete_entry(99999)
+        success = self.history_manager.delete_command(99999)
         self.assertFalse(success)
     
     def test_clear_history(self):
         """Test clearing all history"""
         # Add multiple entries
         for i in range(5):
-            self.history_manager.add_entry(f"cmd {i}", f"command{i}", f"result {i}", True)
+            self.history_manager.add_command(f"cmd {i}", f"command{i}", f"result {i}", True)
         
-        entries = self.history_manager.get_recent_entries(10)
+        entries = self.history_manager.get_recent_commands(10)
         self.assertEqual(len(entries), 5)
         
         # Clear history
-        self.history_manager.clear_history()
+        self.history_manager.clear_command_history()
         
-        entries = self.history_manager.get_recent_entries(10)
+        entries = self.history_manager.get_recent_commands(10)
         self.assertEqual(len(entries), 0)
     
     def test_get_statistics(self):
@@ -206,7 +206,7 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
         # Add test data with mixed success/failure
         for i in range(10):
             success = i % 3 != 0  # 2/3 success rate
-            self.history_manager.add_entry(f"cmd {i}", f"command{i}", f"result {i}", success)
+            self.history_manager.add_command(f"cmd {i}", f"command{i}", f"result {i}", success)
         
         stats = self.history_manager.get_statistics()
         self.assertIsInstance(stats, dict)
@@ -233,7 +233,7 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
         ]
         
         for nl, cmd in commands:
-            self.history_manager.add_entry(nl, cmd, "result", True)
+            self.history_manager.add_command(nl, cmd, "result", True)
         
         frequent = self.history_manager.get_frequent_commands(5)
         self.assertIsInstance(frequent, list)
@@ -249,7 +249,7 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
         """Test exporting history to different formats"""
         # Add test data
         for i in range(3):
-            self.history_manager.add_entry(f"cmd {i}", f"command{i}", f"result {i}", True)
+            self.history_manager.add_command(f"cmd {i}", f"command{i}", f"result {i}", True)
         
         # Test JSON export
         json_export = self.history_manager.export_history('json')
@@ -285,7 +285,7 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
         self.assertEqual(imported_count, 2)
         
         # Verify imported data
-        entries = self.history_manager.get_recent_entries(5)
+        entries = self.history_manager.get_recent_commands(5)
         self.assertEqual(len(entries), 2)
         self.assertEqual(entries[1]['natural_language'], 'imported cmd 1')  # Reverse order
     
@@ -311,7 +311,7 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
         hm = HistoryManager(self.db_path)
         
         # Verify migration worked
-        entries = hm.get_recent_entries(1)
+        entries = hm.get_recent_commands(1)
         self.assertGreaterEqual(len(entries), 0)
     
     def test_concurrent_access(self):
@@ -321,12 +321,12 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
         hm2 = HistoryManager(self.db_path)
         
         # Both should be able to add entries
-        hm1.add_entry("cmd1", "command1", "result1", True)
-        hm2.add_entry("cmd2", "command2", "result2", True)
+        hm1.add_command("cmd1", "command1", "result1", True)
+        hm2.add_command("cmd2", "command2", "result2", True)
         
         # Both should see all entries
-        entries1 = hm1.get_recent_entries(5)
-        entries2 = hm2.get_recent_entries(5)
+        entries1 = hm1.get_recent_commands(5)
+        entries2 = hm2.get_recent_commands(5)
         
         self.assertEqual(len(entries1), 2)
         self.assertEqual(len(entries2), 2)
@@ -335,13 +335,13 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
         """Test performance with large history"""
         # Add many entries
         for i in range(100):
-            self.history_manager.add_entry(f"cmd {i}", f"command{i}", f"result {i}", True)
+            self.history_manager.add_command(f"cmd {i}", f"command{i}", f"result {i}", True)
         
         # Test that operations are still fast
         import time
         
         start_time = time.time()
-        entries = self.history_manager.get_recent_entries(10)
+        entries = self.history_manager.get_recent_commands(10)
         query_time = time.time() - start_time
         
         self.assertEqual(len(entries), 10)
@@ -349,7 +349,7 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
         
         # Test search performance
         start_time = time.time()
-        results = self.history_manager.search_entries("cmd 5")
+        results = self.history_manager.search_commands("cmd 5")
         search_time = time.time() - start_time
         
         self.assertLess(search_time, 1.0)  # Search should be fast
@@ -379,7 +379,7 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
         # Add entries with different success states
         for i in range(20):
             success = i % 2 == 0
-            self.history_manager.add_entry(f"cmd {i}", f"command{i}", f"result {i}", success)
+            self.history_manager.add_command(f"cmd {i}", f"command{i}", f"result {i}", success)
         
         # Test filtering by success
         successful_entries = self.history_manager.get_entries_by_success(True, limit=5)
@@ -388,8 +388,8 @@ class TestHistoryManagerComprehensive(unittest.TestCase):
             self.assertTrue(entry['success'])
         
         # Test pagination
-        page1 = self.history_manager.get_recent_entries(5, offset=0)
-        page2 = self.history_manager.get_recent_entries(5, offset=5)
+        page1 = self.history_manager.get_recent_commands(5, offset=0)
+        page2 = self.history_manager.get_recent_commands(5, offset=5)
         
         self.assertEqual(len(page1), 5)
         self.assertEqual(len(page2), 5)

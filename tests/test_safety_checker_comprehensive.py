@@ -40,7 +40,7 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         
         for cmd in safe_commands:
             with self.subTest(command=cmd):
-                result = self.safety_checker.is_safe(cmd)
+                result = self.safety_checker.check_command(cmd)
                 self.assertTrue(result, f"Command '{cmd}' should be safe")
     
     def test_is_safe_dangerous_commands(self):
@@ -69,7 +69,7 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         
         for cmd in dangerous_commands:
             with self.subTest(command=cmd):
-                result = self.safety_checker.is_safe(cmd)
+                result = self.safety_checker.check_command(cmd)
                 self.assertFalse(result, f"Command '{cmd}' should be dangerous")
     
     def test_check_command_basic(self):
@@ -106,7 +106,7 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         
         for cmd in safe_file_ops:
             with self.subTest(command=cmd):
-                result = self.safety_checker.is_safe(cmd)
+                result = self.safety_checker.check_command(cmd)
                 self.assertTrue(result, f"File operation '{cmd}' should be safe")
     
     def test_dangerous_file_operations(self):
@@ -124,7 +124,7 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         
         for cmd in dangerous_file_ops:
             with self.subTest(command=cmd):
-                result = self.safety_checker.is_safe(cmd)
+                result = self.safety_checker.check_command(cmd)
                 self.assertFalse(result, f"Dangerous file operation '{cmd}' should be blocked")
     
     def test_system_modification_commands(self):
@@ -143,7 +143,7 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         
         for cmd in dangerous_system_ops:
             with self.subTest(command=cmd):
-                result = self.safety_checker.is_safe(cmd)
+                result = self.safety_checker.check_command(cmd)
                 self.assertFalse(result, f"System modification '{cmd}' should be dangerous")
     
     def test_network_security_commands(self):
@@ -165,12 +165,12 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         
         for cmd in safe_network_cmds:
             with self.subTest(command=cmd):
-                result = self.safety_checker.is_safe(cmd)
+                result = self.safety_checker.check_command(cmd)
                 self.assertTrue(result, f"Network command '{cmd}' should be safe")
         
         for cmd in dangerous_network_cmds:
             with self.subTest(command=cmd):
-                result = self.safety_checker.is_safe(cmd)
+                result = self.safety_checker.check_command(cmd)
                 self.assertFalse(result, f"Dangerous network command '{cmd}' should be blocked")
     
     def test_package_management_safety(self):
@@ -193,7 +193,7 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         
         for cmd in safe_package_cmds:
             with self.subTest(command=cmd):
-                result = self.safety_checker.is_safe(cmd)
+                result = self.safety_checker.check_command(cmd)
                 self.assertTrue(result, f"Package list command '{cmd}' should be safe")
     
     def test_development_commands_safety(self):
@@ -214,7 +214,7 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         
         for cmd in safe_dev_cmds:
             with self.subTest(command=cmd):
-                result = self.safety_checker.is_safe(cmd)
+                result = self.safety_checker.check_command(cmd)
                 self.assertTrue(result, f"Development command '{cmd}' should be safe")
     
     def test_edge_cases(self):
@@ -230,8 +230,8 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         ]
         
         # Empty/whitespace should be safe
-        self.assertTrue(self.safety_checker.is_safe(''))
-        self.assertTrue(self.safety_checker.is_safe('   '))
+        self.assertTrue(self.safety_checker.check_command(''))
+        self.assertTrue(self.safety_checker.check_command('   '))
         
         # Command chaining with dangerous commands should be unsafe
         dangerous_chains = [
@@ -242,7 +242,7 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         
         for cmd in dangerous_chains:
             with self.subTest(command=cmd):
-                result = self.safety_checker.is_safe(cmd)
+                result = self.safety_checker.check_command(cmd)
                 self.assertFalse(result, f"Dangerous command chain '{cmd}' should be blocked")
     
     def test_case_sensitivity(self):
@@ -256,7 +256,7 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         
         for cmd in dangerous_variants:
             with self.subTest(command=cmd):
-                result = self.safety_checker.is_safe(cmd)
+                result = self.safety_checker.check_command(cmd)
                 self.assertFalse(result, f"Case variant '{cmd}' should be dangerous")
     
     def test_path_traversal_safety(self):
@@ -276,7 +276,7 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         
         for cmd in safe_paths:
             with self.subTest(command=cmd):
-                result = self.safety_checker.is_safe(cmd)
+                result = self.safety_checker.check_command(cmd)
                 self.assertTrue(result, f"Safe path command '{cmd}' should be allowed")
     
     def test_severity_levels(self):
@@ -306,19 +306,19 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         """Test whitelist functionality if implemented"""
         # Test that whitelisted commands are allowed even if they might seem dangerous
         with patch.object(self.safety_checker, '_is_whitelisted', return_value=True):
-            result = self.safety_checker.is_safe('custom_dangerous_command')
-            self.assertTrue(result)
+            result = self.safety_checker.check_command('custom_dangerous_command')
+            self.assertTrue(result.get('safe', False))
     
     def test_configuration_integration(self):
         """Test integration with configuration system"""
         # Test that safety level configuration affects behavior
         with patch.object(self.safety_checker, '_get_safety_level', return_value='strict'):
-            result = self.safety_checker.is_safe('sudo apt update')
+            result = self.safety_checker.check_command('sudo apt update')
             # In strict mode, even package updates might be blocked
             self.assertIsInstance(result, bool)
         
         with patch.object(self.safety_checker, '_get_safety_level', return_value='permissive'):
-            result = self.safety_checker.is_safe('sudo apt update')
+            result = self.safety_checker.check_command('sudo apt update')
             # In permissive mode, package updates should be allowed
             self.assertIsInstance(result, bool)
     
@@ -326,14 +326,14 @@ class TestSafetyCheckerComprehensive(unittest.TestCase):
         """Test error handling in safety checker"""
         # Test with None input
         try:
-            result = self.safety_checker.is_safe(None)
-            self.assertTrue(result)  # None should be safe (no command)
+            result = self.safety_checker.check_command(None)
+            self.assertTrue(result.get('safe', False))  # None should be safe (no command)
         except Exception:
             pass  # Some implementations might raise exceptions
         
         # Test with non-string input
         try:
-            result = self.safety_checker.is_safe(123)
+            result = self.safety_checker.check_command(123)
             self.assertIsInstance(result, bool)
         except Exception:
             pass  # Some implementations might raise exceptions
