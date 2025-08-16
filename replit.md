@@ -35,6 +35,7 @@ Preferred communication style: Simple, everyday language.
 - Fixed critical command filter bug (implemented: Corrected overly broad command matching that incorrectly treated natural language like "find all file older than 4 days" as direct commands instead of sending to AI translation, improved pattern recognition to distinguish between command+args vs natural language)
 - Enhanced intelligent find patterns (implemented: Added comprehensive pattern recognition for natural language find operations - "find all file older than 4 days" now directly executes as "find . -type f -mtime +4", supporting file age, size, name patterns, and extensions with cross-platform Windows/Unix compatibility)
 - Added missing critical shell and networking commands (implemented: Added 40+ essential commands including bash, zsh, ssh, netstat, systemctl, powershell, and comprehensive networking tools to Tier 2 Direct Command Filter, eliminating expensive AI translation for fundamental system commands)
+- Enhanced command argument support (implemented: Added 100+ command variations with common arguments like "chmod +x", "git add .", "docker ps -a", "tar -xzf", "grep -r", enabling direct execution of commands with parameters without AI translation)
 
 ## Tier 3 & Tier 4 Roadmap
 - Enhanced Pattern Engine - Phase 1 (implemented: 16 semantic patterns, 4 workflow templates, 5 parameter extractors with 100% test success rate, integrated into Tier 3 processing with 5ms target response time)

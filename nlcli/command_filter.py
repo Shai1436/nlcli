@@ -242,6 +242,108 @@ class CommandFilter:
             'npm list': {'command': 'npm list', 'explanation': 'List installed npm packages', 'confidence': 1.0},
             'npm version': {'command': 'npm version', 'explanation': 'Show npm and Node.js versions', 'confidence': 1.0},
             'node --version': {'command': 'node --version', 'explanation': 'Show Node.js version', 'confidence': 1.0},
+            
+            # File operations with common arguments
+            'chmod +x': {'command': 'chmod +x', 'explanation': 'Make file executable', 'confidence': 1.0},
+            'chmod 755': {'command': 'chmod 755', 'explanation': 'Set file permissions to 755', 'confidence': 1.0},
+            'chmod 644': {'command': 'chmod 644', 'explanation': 'Set file permissions to 644', 'confidence': 1.0},
+            'chmod -R': {'command': 'chmod -R', 'explanation': 'Change permissions recursively', 'confidence': 1.0},
+            'chown -R': {'command': 'chown -R', 'explanation': 'Change ownership recursively', 'confidence': 1.0},
+            'find .': {'command': 'find .', 'explanation': 'Find files in current directory', 'confidence': 1.0},
+            'find . -name': {'command': 'find . -name', 'explanation': 'Find files by name pattern', 'confidence': 1.0},
+            'find . -type f': {'command': 'find . -type f', 'explanation': 'Find files only', 'confidence': 1.0},
+            'find . -type d': {'command': 'find . -type d', 'explanation': 'Find directories only', 'confidence': 1.0},
+            'find / -name': {'command': 'find / -name', 'explanation': 'Find files system-wide by name', 'confidence': 1.0},
+            
+            # Network commands with arguments
+            'ping -c 4': {'command': 'ping -c 4', 'explanation': 'Ping with 4 packets', 'confidence': 1.0},
+            'ping -c 1': {'command': 'ping -c 1', 'explanation': 'Ping with 1 packet', 'confidence': 1.0},
+            'curl -X GET': {'command': 'curl -X GET', 'explanation': 'HTTP GET request', 'confidence': 1.0},
+            'curl -X POST': {'command': 'curl -X POST', 'explanation': 'HTTP POST request', 'confidence': 1.0},
+            'curl -I': {'command': 'curl -I', 'explanation': 'Get HTTP headers only', 'confidence': 1.0},
+            'curl -s': {'command': 'curl -s', 'explanation': 'Silent curl request', 'confidence': 1.0},
+            'wget -O': {'command': 'wget -O', 'explanation': 'Download to specific file', 'confidence': 1.0},
+            'wget -r': {'command': 'wget -r', 'explanation': 'Recursive download', 'confidence': 1.0},
+            'ssh -p': {'command': 'ssh -p', 'explanation': 'SSH with custom port', 'confidence': 1.0},
+            'ssh -i': {'command': 'ssh -i', 'explanation': 'SSH with identity file', 'confidence': 1.0},
+            'scp -r': {'command': 'scp -r', 'explanation': 'Recursive secure copy', 'confidence': 1.0},
+            'scp -P': {'command': 'scp -P', 'explanation': 'Secure copy with custom port', 'confidence': 1.0},
+            'netstat -tulpn': {'command': 'netstat -tulpn', 'explanation': 'Show all listening ports', 'confidence': 1.0},
+            'netstat -an': {'command': 'netstat -an', 'explanation': 'Show all connections', 'confidence': 1.0},
+            'ss -tulpn': {'command': 'ss -tulpn', 'explanation': 'Show listening sockets', 'confidence': 1.0},
+            'lsof -i': {'command': 'lsof -i', 'explanation': 'List network connections', 'confidence': 1.0},
+            
+            # System monitoring with arguments
+            'ps -aux': {'command': 'ps -aux', 'explanation': 'Show all processes detailed', 'confidence': 1.0},
+            'ps -ef': {'command': 'ps -ef', 'explanation': 'Show all processes full format', 'confidence': 1.0},
+            'ps -u': {'command': 'ps -u', 'explanation': 'Show user processes', 'confidence': 1.0},
+            'top -n 1': {'command': 'top -n 1', 'explanation': 'Show processes once', 'confidence': 1.0},
+            'htop -u': {'command': 'htop -u', 'explanation': 'Show processes for user', 'confidence': 1.0},
+            'kill -9': {'command': 'kill -9', 'explanation': 'Force kill process', 'confidence': 0.8},
+            'kill -15': {'command': 'kill -15', 'explanation': 'Gracefully terminate process', 'confidence': 0.9},
+            'killall -9': {'command': 'killall -9', 'explanation': 'Force kill all processes by name', 'confidence': 0.7},
+            
+            # File content operations
+            'cat -n': {'command': 'cat -n', 'explanation': 'Show file with line numbers', 'confidence': 1.0},
+            'head -n': {'command': 'head -n', 'explanation': 'Show first N lines', 'confidence': 1.0},
+            'tail -n': {'command': 'tail -n', 'explanation': 'Show last N lines', 'confidence': 1.0},
+            'tail -f': {'command': 'tail -f', 'explanation': 'Follow file changes', 'confidence': 1.0},
+            'grep -r': {'command': 'grep -r', 'explanation': 'Recursive text search', 'confidence': 1.0},
+            'grep -i': {'command': 'grep -i', 'explanation': 'Case-insensitive search', 'confidence': 1.0},
+            'grep -n': {'command': 'grep -n', 'explanation': 'Show line numbers in search', 'confidence': 1.0},
+            'grep -v': {'command': 'grep -v', 'explanation': 'Invert search results', 'confidence': 1.0},
+            
+            # Archive operations
+            'tar -xzf': {'command': 'tar -xzf', 'explanation': 'Extract gzip compressed tar', 'confidence': 1.0},
+            'tar -czf': {'command': 'tar -czf', 'explanation': 'Create gzip compressed tar', 'confidence': 1.0},
+            'tar -xf': {'command': 'tar -xf', 'explanation': 'Extract tar archive', 'confidence': 1.0},
+            'tar -tf': {'command': 'tar -tf', 'explanation': 'List tar archive contents', 'confidence': 1.0},
+            'unzip -l': {'command': 'unzip -l', 'explanation': 'List zip archive contents', 'confidence': 1.0},
+            'zip -r': {'command': 'zip -r', 'explanation': 'Create recursive zip archive', 'confidence': 1.0},
+            
+            # Copy/move operations
+            'cp -r': {'command': 'cp -r', 'explanation': 'Copy recursively', 'confidence': 1.0},
+            'cp -v': {'command': 'cp -v', 'explanation': 'Copy with verbose output', 'confidence': 1.0},
+            'mv -v': {'command': 'mv -v', 'explanation': 'Move with verbose output', 'confidence': 1.0},
+            'rm -rf': {'command': 'rm -rf', 'explanation': 'Force remove recursively', 'confidence': 0.7},
+            'rm -r': {'command': 'rm -r', 'explanation': 'Remove recursively', 'confidence': 0.8},
+            'rm -f': {'command': 'rm -f', 'explanation': 'Force remove files', 'confidence': 0.8},
+            'mkdir -p': {'command': 'mkdir -p', 'explanation': 'Create directory with parents', 'confidence': 1.0},
+            
+            # Git operations with arguments
+            'git add .': {'command': 'git add .', 'explanation': 'Stage all changes', 'confidence': 1.0},
+            'git add -A': {'command': 'git add -A', 'explanation': 'Stage all changes including deletions', 'confidence': 1.0},
+            'git commit -m': {'command': 'git commit -m', 'explanation': 'Commit with message', 'confidence': 1.0},
+            'git commit -am': {'command': 'git commit -am', 'explanation': 'Stage and commit with message', 'confidence': 1.0},
+            'git push origin': {'command': 'git push origin', 'explanation': 'Push to origin remote', 'confidence': 1.0},
+            'git pull origin': {'command': 'git pull origin', 'explanation': 'Pull from origin remote', 'confidence': 1.0},
+            'git checkout -b': {'command': 'git checkout -b', 'explanation': 'Create and switch to new branch', 'confidence': 1.0},
+            'git branch -d': {'command': 'git branch -d', 'explanation': 'Delete branch', 'confidence': 0.9},
+            'git log --oneline': {'command': 'git log --oneline', 'explanation': 'Show commit history one line per commit', 'confidence': 1.0},
+            'git diff --cached': {'command': 'git diff --cached', 'explanation': 'Show staged changes', 'confidence': 1.0},
+            'git reset --hard': {'command': 'git reset --hard', 'explanation': 'Hard reset to HEAD', 'confidence': 0.7},
+            'git stash': {'command': 'git stash', 'explanation': 'Stash current changes', 'confidence': 1.0},
+            'git stash pop': {'command': 'git stash pop', 'explanation': 'Apply and remove stash', 'confidence': 1.0},
+            
+            # Docker operations
+            'docker ps -a': {'command': 'docker ps -a', 'explanation': 'Show all containers', 'confidence': 1.0},
+            'docker images -a': {'command': 'docker images -a', 'explanation': 'Show all images', 'confidence': 1.0},
+            'docker run -d': {'command': 'docker run -d', 'explanation': 'Run container in background', 'confidence': 1.0},
+            'docker run -it': {'command': 'docker run -it', 'explanation': 'Run container interactively', 'confidence': 1.0},
+            'docker exec -it': {'command': 'docker exec -it', 'explanation': 'Execute command in container', 'confidence': 1.0},
+            'docker logs -f': {'command': 'docker logs -f', 'explanation': 'Follow container logs', 'confidence': 1.0},
+            'docker stop': {'command': 'docker stop', 'explanation': 'Stop container', 'confidence': 1.0},
+            'docker rm': {'command': 'docker rm', 'explanation': 'Remove container', 'confidence': 0.9},
+            'docker rmi': {'command': 'docker rmi', 'explanation': 'Remove image', 'confidence': 0.9},
+            
+            # System administration
+            'systemctl status': {'command': 'systemctl status', 'explanation': 'Check service status', 'confidence': 1.0},
+            'systemctl start': {'command': 'systemctl start', 'explanation': 'Start service', 'confidence': 0.9},
+            'systemctl stop': {'command': 'systemctl stop', 'explanation': 'Stop service', 'confidence': 0.9},
+            'systemctl restart': {'command': 'systemctl restart', 'explanation': 'Restart service', 'confidence': 0.9},
+            'systemctl enable': {'command': 'systemctl enable', 'explanation': 'Enable service on boot', 'confidence': 0.9},
+            'systemctl disable': {'command': 'systemctl disable', 'explanation': 'Disable service on boot', 'confidence': 0.9},
+            'service --status-all': {'command': 'service --status-all', 'explanation': 'Show all service statuses', 'confidence': 1.0},
         }
         
         # Platform-specific commands
