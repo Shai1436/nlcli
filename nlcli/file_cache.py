@@ -73,7 +73,9 @@ class FileCacheManager:
             'file_hits': 0,
             'misses': 0,
             'writes': 0,
-            'total_entries': 0
+            'total_entries': 0,
+            'total_hits': 0,
+            'total_requests': 0
         }
         
         # Initialize cache
@@ -195,6 +197,8 @@ class FileCacheManager:
         
         # Try memory cache first (fastest)
         with self._lock:
+            self._stats['total_requests'] += 1
+            
             if input_hash in self.memory_cache:
                 entry = self.memory_cache[input_hash]
                 
@@ -206,6 +210,7 @@ class FileCacheManager:
                 self.memory_cache.move_to_end(input_hash)
                 
                 self._stats['memory_hits'] += 1
+                self._stats['total_hits'] += 1
                 
                 result = {
                     'command': entry.command,
@@ -245,6 +250,7 @@ class FileCacheManager:
                         pass  # Don't block on file write errors
                     
                     self._stats['file_hits'] += 1
+                    self._stats['total_hits'] += 1
                     
                     result = {
                         'command': entry.command,
@@ -372,25 +378,27 @@ class FileCacheManager:
         """Get cache performance statistics"""
         
         with self._lock:
-            total_requests = self._stats['memory_hits'] + self._stats['file_hits'] + self._stats['misses']
+            total_requests = self._stats.get('total_requests', 0)
+            total_hits = self._stats.get('total_hits', 0)
             hit_rate = 0.0
             
             if total_requests > 0:
-                hit_rate = (self._stats['memory_hits'] + self._stats['file_hits']) / total_requests
+                hit_rate = (total_hits / total_requests) * 100
             
             memory_hit_rate = 0.0
             if total_requests > 0:
-                memory_hit_rate = self._stats['memory_hits'] / total_requests
+                memory_hit_rate = (self._stats['memory_hits'] / total_requests) * 100
             
             return {
                 'total_entries': self._stats['total_entries'],
                 'memory_entries': len(self.memory_cache),
                 'total_requests': total_requests,
+                'total_hits': total_hits,
                 'memory_hits': self._stats['memory_hits'],
                 'file_hits': self._stats['file_hits'],
                 'misses': self._stats['misses'],
-                'hit_rate': round(hit_rate, 3),
-                'memory_hit_rate': round(memory_hit_rate, 3),
+                'hit_rate': round(hit_rate, 1),
+                'memory_hit_rate': round(memory_hit_rate, 1),
                 'writes': self._stats['writes']
             }
     

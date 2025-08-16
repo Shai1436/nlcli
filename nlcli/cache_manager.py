@@ -145,6 +145,23 @@ class CacheManager:
         else:
             self._cache_sqlite_translation(natural_language, platform, translation_result)
     
+    # Backward compatibility aliases
+    def store_translation(self, input_hash: str, natural_language: str, command: str, 
+                         explanation: str, confidence: float, platform: str):
+        """Legacy method for storing translations (backward compatibility)"""
+        translation_result = {
+            'command': command,
+            'explanation': explanation,
+            'confidence': confidence
+        }
+        self.cache_translation(natural_language, platform, translation_result)
+    
+    def get_translation(self, input_hash: str) -> Optional[Dict]:
+        """Legacy method for getting translations (backward compatibility)"""
+        # This is a simplified version - in real usage, we'd need to track input hashes
+        logger.warning("get_translation with input_hash is deprecated, use get_cached_translation instead")
+        return None
+    
     def get_popular_commands(self, limit: int = 10) -> List[Dict]:
         """Get most frequently used commands"""
         
