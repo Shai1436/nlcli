@@ -1324,7 +1324,136 @@ class CommandFilter:
         if self._check_intelligent_patterns(user_input):
             return True
         
+        # Check intelligent find patterns
+        if self._check_intelligent_find_patterns(user_input):
+            return True
+        
         return False
+    
+    def _check_intelligent_find_patterns(self, user_input: str) -> bool:
+        """Check if input matches intelligent find patterns like 'find python files'"""
+        import re
+        
+        user_input = user_input.lower().strip()
+        
+        # Pattern: "find [type] files" where type could be python, js, css, etc.
+        find_pattern = re.match(r'^find\s+(\w+)\s+files?$', user_input)
+        if find_pattern:
+            file_type = find_pattern.group(1)
+            return True
+        
+        # Pattern: "find files with extension [ext]"
+        find_ext_pattern = re.match(r'^find\s+files?\s+with\s+extension\s+(\w+)$', user_input)
+        if find_ext_pattern:
+            return True
+        
+        # Pattern: "find all [type] files"
+        find_all_pattern = re.match(r'^find\s+all\s+(\w+)\s+files?$', user_input)
+        if find_all_pattern:
+            return True
+        
+        # Pattern: "find *.ext files"
+        find_wildcard_pattern = re.match(r'^find\s+\*\.(\w+)\s+files?$', user_input)
+        if find_wildcard_pattern:
+            return True
+        
+        return False
+    
+    def _get_intelligent_find_result(self, user_input: str) -> Optional[Dict]:
+        """Generate intelligent find command results for natural language patterns"""
+        import re
+        
+        user_input_lower = user_input.lower().strip()
+        
+        # File type mappings
+        file_extensions = {
+            'python': 'py',
+            'javascript': 'js',
+            'js': 'js',
+            'typescript': 'ts',
+            'ts': 'ts',
+            'css': 'css',
+            'html': 'html',
+            'json': 'json',
+            'xml': 'xml',
+            'yaml': 'yml',
+            'yml': 'yml',
+            'text': 'txt',
+            'txt': 'txt',
+            'log': 'log',
+            'config': 'conf',
+            'conf': 'conf',
+            'java': 'java',
+            'cpp': 'cpp',
+            'c': 'c',
+            'php': 'php',
+            'ruby': 'rb',
+            'go': 'go',
+            'rust': 'rs',
+            'shell': 'sh',
+            'bash': 'sh',
+            'sql': 'sql',
+            'markdown': 'md',
+            'md': 'md'
+        }
+        
+        # Pattern: "find [type] files"
+        find_pattern = re.match(r'^find\s+(\w+)\s+files?$', user_input_lower)
+        if find_pattern:
+            file_type = find_pattern.group(1)
+            if file_type in file_extensions:
+                ext = file_extensions[file_type]
+                command = f'find . -name "*.{ext}"'
+                return {
+                    'command': command,
+                    'explanation': f'Find all {file_type} files in current directory',
+                    'confidence': 0.95,
+                    'direct': True,
+                    'source': 'intelligent_find'
+                }
+        
+        # Pattern: "find all [type] files"
+        find_all_pattern = re.match(r'^find\s+all\s+(\w+)\s+files?$', user_input_lower)
+        if find_all_pattern:
+            file_type = find_all_pattern.group(1)
+            if file_type in file_extensions:
+                ext = file_extensions[file_type]
+                command = f'find . -name "*.{ext}"'
+                return {
+                    'command': command,
+                    'explanation': f'Find all {file_type} files recursively',
+                    'confidence': 0.95,
+                    'direct': True,
+                    'source': 'intelligent_find'
+                }
+        
+        # Pattern: "find files with extension [ext]"
+        find_ext_pattern = re.match(r'^find\s+files?\s+with\s+extension\s+(\w+)$', user_input_lower)
+        if find_ext_pattern:
+            ext = find_ext_pattern.group(1)
+            command = f'find . -name "*.{ext}"'
+            return {
+                'command': command,
+                'explanation': f'Find all files with .{ext} extension',
+                'confidence': 0.95,
+                'direct': True,
+                'source': 'intelligent_find'
+            }
+        
+        # Pattern: "find *.ext files"
+        find_wildcard_pattern = re.match(r'^find\s+\*\.(\w+)\s+files?$', user_input_lower)
+        if find_wildcard_pattern:
+            ext = find_wildcard_pattern.group(1)
+            command = f'find . -name "*.{ext}"'
+            return {
+                'command': command,
+                'explanation': f'Find all .{ext} files',
+                'confidence': 0.95,
+                'direct': True,
+                'source': 'intelligent_find'
+            }
+        
+        return None
     
     def get_direct_command_result(self, user_input: str) -> Optional[Dict]:
         """
@@ -1356,6 +1485,11 @@ class CommandFilter:
             result['direct'] = True
             result['source'] = 'args_match'
             return result
+        
+        # Check intelligent find patterns
+        find_result = self._get_intelligent_find_result(user_input)
+        if find_result:
+            return find_result
         
         # Check if it starts with a known command and allow arguments - BUT ONLY for simple patterns
         words = normalized.split()
