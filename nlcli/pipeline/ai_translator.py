@@ -258,19 +258,8 @@ class AITranslator:
                     'method': metadata.get('method', 'unknown')
                 }
             
-            # Step 2.6: Fallback to basic fuzzy matching for typos and variations
-            basic_fuzzy_result = self.typo_corrector.fuzzy_match(natural_language, threshold=0.7)
-            if basic_fuzzy_result:
-                command, confidence = basic_fuzzy_result
-                logger.debug(f"Basic fuzzy match found: '{natural_language}' -> '{command}' (confidence: {confidence:.2f})")
-                return {
-                    'command': command,
-                    'explanation': self._get_command_explanation(command),
-                    'confidence': confidence,
-                    'cached': False,
-                    'instant': True,
-                    'fuzzy_matched': True
-                }
+            # Step 2.6: Enhanced fuzzy matching now handles all typo variations
+            # (Removed redundant basic fuzzy matching from typo_corrector)
             
             # Step 1.4: Enhanced Context Intelligence - Git-aware commands
             git_suggestion = self._check_git_context_commands(natural_language)
