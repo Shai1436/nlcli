@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch, MagicMock, call
 import sys
 import io
 from click.testing import CliRunner
-from nlcli.main import main, cli, process_command, interactive_mode
+from nlcli.main import main, cli, cli, process_command, interactive_mode
 
 
 class TestMainCLIComprehensive(unittest.TestCase):

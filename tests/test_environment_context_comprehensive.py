@@ -9,7 +9,7 @@ import tempfile
 import os
 import json
 from pathlib import Path
-from nlcli.environment_context import EnvironmentContext
+from nlcli.environment_context import EnvironmentContextManager
 
 
 class TestEnvironmentContextComprehensive(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestEnvironmentContextComprehensive(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures"""
         self.temp_dir = tempfile.mkdtemp()
-        self.env_context = EnvironmentContext()
+        self.env_context = EnvironmentContextManager()
     
     def tearDown(self):
         """Clean up test fixtures"""
@@ -27,7 +27,7 @@ class TestEnvironmentContextComprehensive(unittest.TestCase):
     
     def test_initialization(self):
         """Test EnvironmentContext initialization"""
-        context = EnvironmentContext()
+        context = EnvironmentContextManager()
         self.assertIsNotNone(context)
     
     def test_detect_python_project(self):

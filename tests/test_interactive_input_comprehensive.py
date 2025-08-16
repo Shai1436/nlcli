@@ -214,7 +214,7 @@ class TestInteractiveInputComprehensive(unittest.TestCase):
             '"quoted string"',
             "'single quoted'",
             'mixed "quotes" and \'apostrophes\'',
-            'unicode "quotes" and 'apostrophes''
+            'unicode "quotes" and \'apostrophes\''
         ]
         
         for input_text in inputs_with_quotes:

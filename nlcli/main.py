@@ -30,6 +30,10 @@ from .utils import setup_logging, get_platform_info
 console = Console()
 logger = setup_logging()
 
+def main():
+    """Main entry point for the CLI application"""
+    cli()
+
 @click.group(invoke_without_command=True)
 @click.option('--config-path', help='Path to configuration file')
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose logging')

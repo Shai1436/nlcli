@@ -9,7 +9,7 @@ import tempfile
 import os
 import subprocess
 from pathlib import Path
-from nlcli.git_context import GitContext
+from nlcli.git_context import GitContextManager
 
 
 class TestGitContextComprehensive(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestGitContextComprehensive(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures"""
         self.temp_dir = tempfile.mkdtemp()
-        self.git_context = GitContext()
+        self.git_context = GitContextManager()
     
     def tearDown(self):
         """Clean up test fixtures"""
@@ -27,7 +27,7 @@ class TestGitContextComprehensive(unittest.TestCase):
     
     def test_initialization(self):
         """Test GitContext initialization"""
-        context = GitContext()
+        context = GitContextManager()
         self.assertIsNotNone(context)
     
     def test_is_git_repository_true(self):
@@ -322,9 +322,9 @@ node_modules/
     
     def test_analyze_commit_history(self):
         """Test analysis of commit history patterns"""
-        mock_log = """John Doe	2023-12-01	Fix bug in authentication
-Jane Smith	2023-11-30	Add new feature
-John Doe	2023-11-29	Update documentation
+        mock_log = """John Doe  2023-12-01      Fix bug in authentication
+Jane Smith      2023-11-30      Add new feature
+John Doe        2023-11-29      Update documentation
 """
         with patch('subprocess.run') as mock_run:
             mock_run.return_value.stdout = mock_log
@@ -337,8 +337,8 @@ John Doe	2023-11-29	Update documentation
     
     def test_get_submodule_info(self):
         """Test getting submodule information"""
-        mock_submodules = """160000 commit abc1234 0	external/library
-160000 commit def5678 0	vendor/plugin
+        mock_submodules = """160000 commit abc1234 0    external/library
+160000 commit def5678 0 vendor/plugin
 """
         with patch('subprocess.run') as mock_run:
             mock_run.return_value.stdout = mock_submodules
@@ -394,8 +394,8 @@ v2.0.0-beta
     
     def test_detect_large_files(self):
         """Test detection of large files in repository"""
-        mock_output = """1048576	large_file.bin
-2097152	huge_dataset.csv
+        mock_output = """1048576        large_file.bin
+2097152 huge_dataset.csv
 """
         with patch('subprocess.run') as mock_run:
             mock_run.return_value.stdout = mock_output
