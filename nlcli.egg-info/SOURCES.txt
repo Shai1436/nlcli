@@ -3,7 +3,6 @@ README.md
 pyproject.toml
 setup.py
 nlcli/__init__.py
-nlcli/account_manager.py
 nlcli/ai_translator.py
 nlcli/cache_manager.py
 nlcli/cache_migrator.py
