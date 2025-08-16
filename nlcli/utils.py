@@ -110,7 +110,7 @@ def get_shell_info() -> Dict[str, str]:
                 )
                 if result.returncode == 0:
                     info['shell_version'] = result.stdout.split('\n')[0]
-        except:
+        except (subprocess.SubprocessError, OSError, subprocess.TimeoutExpired):
             pass
     
     return info
@@ -242,7 +242,7 @@ def get_system_stats() -> Dict:
                 'free': format_file_size(disk_usage.free),
                 'percent_used': round((disk_usage.used / disk_usage.total) * 100, 1)
             }
-        except:
+        except (OSError, ValueError, ZeroDivisionError):
             pass
     except Exception as e:
         logger = logging.getLogger('nlcli')

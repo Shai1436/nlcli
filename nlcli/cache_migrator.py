@@ -92,7 +92,7 @@ class CacheMigrator:
             if self.json_path.exists():
                 try:
                     self.json_path.unlink()
-                except:
+                except (OSError, PermissionError):
                     pass
             
             return False

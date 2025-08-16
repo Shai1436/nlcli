@@ -236,7 +236,7 @@ class EnhancedInputHandler:
                 if char in 'ABCD':  # Arrow key endings
                     break
             return seq
-        except:
+        except (OSError, UnicodeDecodeError):
             return ""
     
     def _get_completion_for_display(self, user_input: str) -> str:

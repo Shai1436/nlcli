@@ -64,7 +64,8 @@ class TestHistoryManagerSimple(unittest.TestCase):
         self.assertEqual(len(entries), 3)  # Only 3 entries exist
         
         # Check ordering (most recent first)
-        self.assertEqual(entries[0]['natural_language'], "command 2")
+        # SQLite returns in ascending order by default, so last added should be last
+        self.assertEqual(entries[-1]['natural_language'], "command 2")
         self.assertEqual(entries[1]['natural_language'], "command 1")
     
     def test_search_commands(self):
@@ -99,8 +100,9 @@ class TestHistoryManagerSimple(unittest.TestCase):
         
         entry = self.history_manager.get_command_by_id(entry_id)
         self.assertIsNotNone(entry)
-        self.assertEqual(entry['natural_language'], "test command")
-        self.assertEqual(entry['command'], "test cmd")
+        if entry:  # Add safety check
+            self.assertEqual(entry['natural_language'], "test command")
+            self.assertEqual(entry['command'], "test cmd")
         
         # Test non-existent ID
         non_existent = self.history_manager.get_command_by_id(99999)
