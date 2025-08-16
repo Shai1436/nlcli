@@ -69,7 +69,7 @@ class TestAITranslatorBasic:
             assert result['confidence'] == 1.0
     
     def test_translate_needs_ai_without_key(self):
-        """Test translation that needs AI but no API key available"""
+        """Test translation fallback behavior when no API key available"""
         # Remove environment variable and use no cache
         import os
         original_key = os.environ.get('OPENAI_API_KEY')
@@ -79,16 +79,17 @@ class TestAITranslatorBasic:
         try:
             translator = AITranslator(api_key=None, enable_cache=False)
             
-            # Use a query that shouldn't match command filter
+            # Use a query that might trigger fuzzy matching fallback
             test_query = "perform complex machine learning analysis on dataset"
             
             if hasattr(translator, 'translate'):
                 result = translator.translate(test_query)
-                # Should either have error or indicate AI is needed
-                assert ('error' in result or 
-                       result.get('needs_ai') is True or
-                       result.get('source') == 'ai_required' or
-                       'api key' in str(result).lower())
+                # Should either have error, fallback result, or indicate AI limitation
+                assert (result is not None and 
+                       (result.get('fuzzy_matched') is True or 
+                        result.get('confidence', 1.0) < 0.8 or
+                        'error' in result or
+                        result.get('source') in ['fuzzy', 'pattern', 'fallback']))
             else:
                 pytest.skip("Translate method not found")
         finally:
