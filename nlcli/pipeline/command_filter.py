@@ -236,3 +236,74 @@ class CommandFilter:
             'match_type': 'no_match',
             'source': 'command_filter'
         }
+    
+    def get_statistics(self) -> Dict[str, Any]:
+        """Get command filter statistics for CLI management"""
+        
+        # Count direct commands by category
+        categories = {
+            'navigation': 0,
+            'file_ops': 0,
+            'system': 0,
+            'text_processing': 0,
+            'network': 0,
+            'git': 0,
+            'archives': 0,
+            'process_management': 0,
+            'development': 0,
+            'other': 0
+        }
+        
+        # Basic category mapping based on common commands
+        category_mapping = {
+            # Navigation
+            'ls': 'navigation', 'pwd': 'navigation', 'cd': 'navigation',
+            'find': 'navigation', 'locate': 'navigation', 'which': 'navigation',
+            
+            # File operations
+            'cat': 'file_ops', 'cp': 'file_ops', 'mv': 'file_ops', 'rm': 'file_ops',
+            'mkdir': 'file_ops', 'rmdir': 'file_ops', 'touch': 'file_ops', 'chmod': 'file_ops',
+            'chown': 'file_ops', 'ln': 'file_ops',
+            
+            # System
+            'ps': 'system', 'top': 'system', 'htop': 'system', 'df': 'system',
+            'du': 'system', 'free': 'system', 'uptime': 'system', 'whoami': 'system',
+            'id': 'system', 'uname': 'system', 'hostname': 'system', 'date': 'system',
+            
+            # Text processing
+            'grep': 'text_processing', 'sort': 'text_processing', 'uniq': 'text_processing',
+            'wc': 'text_processing', 'head': 'text_processing', 'tail': 'text_processing',
+            'awk': 'text_processing', 'sed': 'text_processing',
+            
+            # Network
+            'ping': 'network', 'curl': 'network', 'wget': 'network', 'ssh': 'network',
+            'scp': 'network', 'netstat': 'network',
+            
+            # Process management
+            'kill': 'process_management', 'killall': 'process_management', 'pkill': 'process_management',
+            'jobs': 'process_management', 'bg': 'process_management', 'fg': 'process_management',
+            'nohup': 'process_management',
+            
+            # Archives
+            'tar': 'archives', 'zip': 'archives', 'unzip': 'archives', 'gzip': 'archives',
+            'gunzip': 'archives',
+            
+            # Development
+            'git': 'git', 'npm': 'development', 'pip': 'development', 'make': 'development',
+            'docker': 'development', 'node': 'development', 'python': 'development'
+        }
+        
+        # Count commands by category
+        all_commands = {**self.direct_commands, **self.direct_commands_with_args}
+        for cmd in all_commands:
+            base_cmd = cmd.split()[0]  # Get base command for compound commands
+            category = category_mapping.get(base_cmd, 'other')
+            categories[category] += 1
+        
+        return {
+            'platform': self.platform.title(),
+            'total_direct_commands': len(self.direct_commands),
+            'total_commands_with_args': len(self.direct_commands_with_args),
+            'total_available': len(all_commands),
+            'categories': categories
+        }

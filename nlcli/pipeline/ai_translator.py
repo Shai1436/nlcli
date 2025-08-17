@@ -45,7 +45,7 @@ class AITranslator:
         # Initialize Pipeline Components (Level 1-4) - Clean Architecture
         from .shell_adapter import ShellAdapter
         from .command_filter import CommandFilter 
-        from .pattern_engine import AdvancedPatternEngine
+        from .pattern_engine import PatternEngine
         from .fuzzy_engine import AdvancedFuzzyEngine
         from ..ui.command_selector import CommandSelector
         
@@ -54,7 +54,7 @@ class AITranslator:
         
         # Level 2-4: Processing components
         self.command_filter = CommandFilter()
-        self.pattern_engine = AdvancedPatternEngine()
+        self.pattern_engine = PatternEngine()
         self.fuzzy_engine = AdvancedFuzzyEngine()
         self.command_selector = CommandSelector()
         
@@ -203,7 +203,7 @@ class AITranslator:
                 return {**level2_result, 'cached': False, 'instant': True}
             
             # Level 3: Pattern Engine - Natural language patterns
-            level3_result = self.pattern_engine.process_natural_language(natural_language)
+            level3_result = self.pattern_engine.get_pipeline_metadata(natural_language, context)
             if level3_result:
                 logger.debug(f"Level 3 (Pattern Engine): Pattern match found")
                 return {**level3_result, 'cached': False, 'instant': True}

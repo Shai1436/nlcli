@@ -11,13 +11,13 @@ This module contains the core processing pipeline components:
 from .ai_translator import AITranslator
 from .command_filter import CommandFilter
 from .fuzzy_engine import AdvancedFuzzyEngine
-from .pattern_engine import AdvancedPatternEngine
+from .pattern_engine import PatternEngine
 from .shell_adapter import ShellAdapter
 
 __all__ = [
     'AITranslator',
     'CommandFilter', 
     'AdvancedFuzzyEngine',
-    'AdvancedPatternEngine',
+    'PatternEngine',
     'ShellAdapter'
 ]

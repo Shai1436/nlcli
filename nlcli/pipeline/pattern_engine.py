@@ -11,7 +11,7 @@ import os
 
 logger = logging.getLogger(__name__)
 
-class AdvancedPatternEngine:
+class PatternEngine:
     """Advanced semantic pattern recognition for complex workflows"""
     
     def __init__(self):
@@ -566,8 +566,36 @@ class AdvancedPatternEngine:
         """Get all semantic patterns"""
         return self.semantic_patterns
     
+    def get_pipeline_metadata(self, natural_language: str, metadata: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Level 3 Pipeline: Pattern Engine
+        Process natural language through semantic patterns and workflows
+        
+        Args:
+            natural_language: User's natural language input
+            metadata: Context metadata from shell adapter
+            
+        Returns:
+            Pipeline metadata dict if pattern matched, None otherwise
+        """
+        
+        # Process through enhanced pattern engine
+        result = self.process_natural_language(natural_language)
+        
+        if result:
+            # Add pipeline metadata
+            result.update({
+                'pipeline_level': 3,
+                'match_type': result.get('pattern_type', 'pattern'),
+                'source': 'pattern_engine',
+                'metadata': metadata
+            })
+            
+            return result
+        
+        return None
+    
 
 
 
 # Alias for backward compatibility
-PatternEngine = AdvancedPatternEngine
