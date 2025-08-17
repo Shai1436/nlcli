@@ -5,6 +5,7 @@ Utility functions for the Natural Language CLI Tool
 import logging
 import os
 import platform
+import subprocess
 import sys
 from pathlib import Path
 from typing import Dict, Optional
@@ -111,7 +112,6 @@ def get_shell_info() -> Dict[str, str]:
     # Try to get shell version
     if info['shell']:
         try:
-            import subprocess
             if info['shell'] in ['bash', 'zsh']:
                 result = subprocess.run(
                     [info['shell'], '--version'],
@@ -329,7 +329,7 @@ def get_command_examples() -> Dict[str, list]:
             'show network connections'
         ],
         'text_processing': [
-            'search for "TODO" in all Python files',
+            'find TODO comments in Python files',
             'count lines in all text files',
             'replace "old" with "new" in config.txt',
             'sort lines in data.csv',
