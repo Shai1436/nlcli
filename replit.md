@@ -32,6 +32,7 @@ Preferred communication style: Simple, everyday language.
 - Added missing critical shell and networking commands
 - Enhanced command argument support
 - Intelligent find patterns implementation
+- COMPLETED: Three-phase context-driven architecture refactoring (Aug 17, 2025)
 
 # System Architecture
 
@@ -39,7 +40,8 @@ The application follows a modular, cross-platform architecture with clear separa
 
 ## Core Components
 - **Context Intelligence System**: Provides advanced Git repository awareness and environment variable integration for project-specific command suggestions (6+ project types, 15+ frameworks).
-- **AI Translation Layer**: Integrates OpenAI's GPT-4o with a 6-tier performance optimization system for command recognition: Enhanced Typo Correction, Direct Command Filter, Enhanced Pattern Engine, Advanced Fuzzy Engine, Local Cache System, and AI Translation.
+- **Enhanced Shell Adapter**: Centralized system expertise providing comprehensive context with 18 metadata fields including platform detection, shell identification, command categorization, cross-platform equivalents, and confidence scoring.
+- **Context-Driven AI Translation Layer**: Streamlined AI translator that accepts context from shell adapter instead of self-detecting platform information, integrating OpenAI's GPT-4o with optimized performance.
 - **Command Filter System**: Directly executes 265+ known commands with sub-1ms response times, supporting platform-aware and cross-platform recognition.
 - **Interactive Command Selection**: Handles ambiguous natural language requests by presenting options, extracting parameters, and learning user preferences.
 - **Enhanced Typo Correction System**: Sub-millisecond typo detection with 486+ command mappings and conversational command recognition.
@@ -48,7 +50,7 @@ The application follows a modular, cross-platform architecture with clear separa
 - **History Management**: Stores command history in a JSON file storage system.
 - **Configuration System**: Manages settings via INI files for AI parameters, performance, and user preferences.
 - **Cache Management**: High-performance file-based cache system with in-memory LRU layer and cross-instance sharing.
-- **CLI Interface**: Built with `Click` and `Rich`, offering an interactive mode with real-time performance indicators and subcommands.
+- **CLI Interface**: Built with `Click` and `Rich`, offering an interactive mode with real-time performance indicators and subcommands using context-driven pipeline flow.
 - **Interactive Input System**: Provides Readline-based command history navigation, persistence, and search.
 - **Git Context Manager**: Offers Git repository awareness and intelligent Git command suggestions with safety validation.
 - **Environment Context Manager**: Comprehensive project environment detection and context-aware command suggestions.
@@ -72,9 +74,10 @@ The application follows a modular, cross-platform architecture with clear separa
 - **Typeahead Visuals**: Muted white visual feedback for command completion.
 
 ## Technical Implementations
-- **Performance Optimization**: 6-tier system for sub-millisecond to low-latency command recognition.
+- **Context-Driven Architecture**: Three-phase refactoring completed August 17, 2025, implementing clean separation of concerns where shell adapter provides system expertise to AI translator for language processing.
+- **Performance Optimization**: 6-tier system for sub-millisecond to low-latency command recognition with context computed once to eliminate duplicate platform detection.
 - **Cross-OS Compatibility**: 221 cross-platform mappings in Tier 2 with comprehensive Windows↔Unix translation, PowerShell cmdlet support, and CMD/Bash/Zsh/PowerShell terminal coverage.
-- **Test-Driven Development**: Comprehensive unit test suite for robust error handling and edge case validation.
+- **Test-Driven Development**: Comprehensive unit test suite for robust error handling and edge case validation with 30.3% line coverage.
 
 ## Feature Specifications
 - **Enhanced Command Filter**: Supports intelligent command variations with parameters.

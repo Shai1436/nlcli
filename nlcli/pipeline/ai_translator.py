@@ -35,7 +35,7 @@ class AITranslator:
             except Exception as e:
                 logger.warning(f"Failed to initialize OpenAI client: {e}")
                 self.client = None
-        self.platform_info = get_platform_info()
+        # Platform info will be provided via context from shell adapter
         
         # Performance optimizations
         self.enable_cache = enable_cache
@@ -191,12 +191,13 @@ class AITranslator:
             'git clone': ['clone repository', 'copy repo']
         }
         
-    def translate(self, natural_language: str, timeout: float = 8.0) -> Optional[Dict]:
+    def translate(self, natural_language: str, context: Optional[Dict] = None, timeout: float = 8.0) -> Optional[Dict]:
         """
-        Translate natural language to OS command with performance optimizations
+        Translate natural language to OS command using provided context
         
         Args:
             natural_language: User's natural language input
+            context: Platform/shell context from shell_adapter (optional for backwards compatibility)
             timeout: Maximum time to wait for API response
             
         Returns:
@@ -204,14 +205,32 @@ class AITranslator:
         """
         
         try:
-            # Step 0: Try shell adaptation first
-            adapted_input = self.shell_adapter.correct_typo(natural_language)
-            if adapted_input != natural_language:
-                logger.debug(f"Shell command adapted: '{natural_language}' -> '{adapted_input}'")
-                # Use adapted input for further processing
-                natural_language = adapted_input
+            # Use provided context or fallback to shell adapter for backwards compatibility
+            if context is None:
+                context = self.shell_adapter.get_command_context(natural_language)
+                logger.debug("Context not provided, generated from shell adapter for backwards compatibility")
             
-            # Step 1: Check for direct command execution (fastest)
+            # Use context-provided corrected input
+            if context.get('is_typo_corrected', False):
+                corrected_input = context.get('corrected_input', natural_language)
+                logger.debug(f"Using context-corrected input: '{natural_language}' -> '{corrected_input}'")
+                natural_language = corrected_input
+            
+            # Step 1: Check if context indicates this is a direct command (fastest)
+            if context.get('is_direct_command', False):
+                logger.debug(f"Context indicates direct command: {natural_language}")
+                return {
+                    'command': context.get('corrected_input', natural_language),
+                    'explanation': f"Direct execution of {context.get('command_category', 'system')} command",
+                    'confidence': 0.95 + context.get('confidence_boost', 0.0),
+                    'cached': False,
+                    'instant': True,
+                    'context_direct': True,
+                    'platform': context.get('platform', 'unknown'),
+                    'shell': context.get('shell', 'unknown')
+                }
+            
+            # Step 1.1: Check for direct command execution (fallback for backwards compatibility)
             if self.command_filter.is_direct_command(natural_language):
                 direct_result = self.command_filter.get_direct_command_result(natural_language)
                 if direct_result:
@@ -220,7 +239,7 @@ class AITranslator:
                         **direct_result,
                         'cached': False,
                         'instant': True,
-                        'shell_adapted': adapted_input != natural_language
+                        'context_corrected': context.get('is_typo_corrected', False)
                     }
             
             # Step 2: Enhanced Pattern Engine - Tier 3 Semantic Recognition (5ms target)
@@ -310,8 +329,9 @@ class AITranslator:
             
             # Step 2: Check cache (sub-millisecond response)
             if self.cache_manager:
+                platform_key = context.get('platform', 'unknown')
                 cached_result = self.cache_manager.get_cached_translation(
-                    natural_language, self.platform_info['system']
+                    natural_language, platform_key
                 )
                 if cached_result:
                     logger.debug(f"Cache hit for: {natural_language}")
@@ -353,12 +373,13 @@ class AITranslator:
                             }
             
             # Step 3: AI translation with timeout (2-5 second response)
-            api_result = self._translate_with_ai(natural_language, timeout)
+            api_result = self._translate_with_ai(natural_language, timeout, context)
             
             # Cache the result for future use
             if api_result and self.cache_manager:
+                platform_key = context.get('platform', 'unknown')
                 self.cache_manager.cache_translation(
-                    natural_language, self.platform_info['system'], api_result
+                    natural_language, platform_key, api_result
                 )
             
             return api_result
@@ -559,7 +580,7 @@ class AITranslator:
             console.print("[red]AI translation will be unavailable.[/red]")
             return False
     
-    def _translate_with_ai(self, natural_language: str, timeout: float) -> Optional[Dict]:
+    def _translate_with_ai(self, natural_language: str, timeout: float, context: Optional[Dict] = None) -> Optional[Dict]:
         """Perform AI translation with timeout"""
         
         # Check if we have a valid client, if not try to prompt for API key
@@ -568,8 +589,8 @@ class AITranslator:
                 return None
         
         def api_call():
-            # Create system prompt based on platform
-            system_prompt = self._create_system_prompt()
+            # Create system prompt based on context
+            system_prompt = self._create_system_prompt(context)
             
             # Create user prompt
             user_prompt = f"""
@@ -634,22 +655,32 @@ class AITranslator:
             logger.error(f"AI translation error: {str(e)}")
             return None
     
-    def _create_system_prompt(self) -> str:
-        """Create system prompt based on current platform"""
+    def _create_system_prompt(self, context: Optional[Dict] = None) -> str:
+        """Create system prompt based on context"""
         
-        platform_name = self.platform_info['platform']
-        shell_info = self._get_shell_info()
+        if context:
+            platform_name = context.get('platform', 'unknown')
+            shell_info = context.get('shell', 'unknown')
+            os_name = context.get('os_name', 'Unknown')
+            architecture = context.get('architecture', 'unknown')
+        else:
+            # Fallback for backwards compatibility
+            platform_name = platform.system().lower()
+            shell_info = self._get_shell_info()
+            os_name = platform.system()
+            architecture = platform.machine()
         
         return f"""
         You are an expert system administrator assistant that translates natural language requests into OS commands.
         
         SYSTEM INFORMATION:
         - Platform: {platform_name}
+        - Operating System: {os_name}
         - Shell: {shell_info}
-        - Python Version: {self.platform_info['python_version']}
+        - Architecture: {architecture}
         
         TRANSLATION RULES:
-        1. Always provide commands appropriate for {platform_name}
+        1. Always provide commands appropriate for {platform_name} ({os_name})
         2. Use the most common and safe version of commands
         3. Provide clear, detailed explanations
         4. Consider command safety and mark dangerous operations
@@ -676,9 +707,13 @@ class AITranslator:
         - Always explain potential risks in the explanation
         """
     
-    def _get_shell_info(self) -> str:
+    def _get_shell_info(self, context: Optional[Dict] = None) -> str:
         """Get information about the current shell"""
         
+        if context:
+            return context.get('shell', 'unknown')
+        
+        # Fallback for backwards compatibility
         system = platform.system().lower()
         
         if system == 'windows':

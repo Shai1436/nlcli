@@ -13,6 +13,7 @@ from rich.text import Text
 from rich.table import Table
 
 from ..pipeline.ai_translator import AITranslator
+from ..pipeline.shell_adapter import ShellAdapter
 from ..storage.history_manager import HistoryManager
 from ..execution.safety_checker import SafetyChecker
 from ..storage.config_manager import ConfigManager
@@ -67,6 +68,7 @@ def cli(ctx, config_path, verbose):
             api_key=None,
             enable_cache=cache_setting.lower() == 'true' if cache_setting else True
         )
+    ctx.obj['shell_adapter'] = ShellAdapter()
     ctx.obj['safety_checker'] = SafetyChecker(config.get_safety_level())
     ctx.obj['executor'] = CommandExecutor()
     ctx.obj['formatter'] = OutputFormatter()
@@ -84,6 +86,7 @@ def interactive_mode(obj):
     
     history = obj['history']
     ai_translator = obj['ai_translator']
+    shell_adapter = obj['shell_adapter']
     safety_checker = obj['safety_checker']
     executor = obj['executor']
     config = obj['config']
@@ -131,18 +134,27 @@ def interactive_mode(obj):
                     console.clear()
                     continue
             
-                # Translate natural language to command
+                # Generate context and translate natural language to command
                 start_time = time.time()
                 console.print("[yellow]Translating...[/yellow]")
                 
                 try:
-                    api_timeout = float(obj['config'].get('performance', 'api_timeout', fallback='8.0'))
-                    translation_result = ai_translator.translate(user_input, timeout=api_timeout)
+                    # Step 1: Generate context from shell adapter
+                    context = shell_adapter.get_command_context(user_input)
                     
-                    # Show performance info
+                    # Step 2: Use context-driven translation
+                    api_timeout = float(obj['config'].get('performance', 'api_timeout', fallback='8.0'))
+                    translation_result = ai_translator.translate(user_input, context=context, timeout=api_timeout)
+                    
+                    # Show performance info with context details
                     elapsed = time.time() - start_time
                     if translation_result:
-                        if translation_result.get('direct'):
+                        platform = context.get('platform', 'unknown')
+                        shell = context.get('shell', 'unknown')
+                        
+                        if translation_result.get('context_direct'):
+                            console.print(f"[dim blue]🚀 Context-direct ({platform}/{shell}) ({elapsed:.3f}s)[/dim blue]")
+                        elif translation_result.get('direct'):
                             console.print(f"[dim blue]🚀 Direct execution ({elapsed:.3f}s)[/dim blue]")
                         elif translation_result.get('context_aware'):
                             context_type = translation_result.get('context_type', 'unknown')
@@ -152,7 +164,7 @@ def interactive_mode(obj):
                         elif translation_result.get('cached'):
                             console.print(f"[dim green]📋 Cached result ({elapsed:.3f}s)[/dim green]")
                         else:
-                            console.print(f"[dim yellow]🤖 AI translation ({elapsed:.3f}s)[/dim yellow]")
+                            console.print(f"[dim yellow]🤖 AI translation ({platform}/{shell}) ({elapsed:.3f}s)[/dim yellow]")
                     
                     if not translation_result:
                         console.print("[red]Could not translate the command. Please try rephrasing.[/red]")

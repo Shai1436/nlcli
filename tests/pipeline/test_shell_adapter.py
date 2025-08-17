@@ -321,8 +321,8 @@ class TestCommandMappingIntegrity:
         # Verify that we have reasonable number of mappings
         assert stats['total_active'] >= 30, "Should have at least 30 command mappings"
         
-        # Verify components add up correctly (excluding 'platform' and 'total_active')
-        component_keys = [k for k in stats.keys() if k not in ['platform', 'total_active']]
+        # Verify components add up correctly (excluding 'platform', 'total_active', and 'current_shell')
+        component_keys = [k for k in stats.keys() if k not in ['platform', 'total_active', 'current_shell']]
         component_total = sum(stats[k] for k in component_keys)
         assert component_total == stats['total_active'], "Components should sum to total"
     
