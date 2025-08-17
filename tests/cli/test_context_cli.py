@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch, MagicMock, mock_open
 from click.testing import CliRunner
 from pathlib import Path
 
-from nlcli.cli.context_cli import context, status, shortcuts, add_shortcut, remove_shortcut, suggestions, _get_shortcut_description
+from nlcli.cli.context_ui import context, status, shortcuts, add_shortcut, remove_shortcut, suggestions, _get_shortcut_description
 
 
 class TestContextCLI:
@@ -74,7 +74,7 @@ class TestStatusCommand:
             'recent_directories': ['/test/project', '/test/other', '/home/user']
         }
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     def test_status_command_with_git_repo(self, mock_expanduser, mock_context_manager):
         """Test status command with git repository"""
@@ -95,7 +95,7 @@ class TestStatusCommand:
         assert '/test/venv' in result.output
         assert 'Recent' in result.output and 'Directories' in result.output
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     def test_status_command_without_git_repo(self, mock_expanduser, mock_context_manager):
         """Test status command without git repository"""
@@ -118,7 +118,7 @@ class TestStatusCommand:
         assert 'No' in result.output
         assert 'None detected' in result.output
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     def test_status_command_with_conda_env(self, mock_expanduser, mock_context_manager):
         """Test status command with conda environment"""
@@ -141,7 +141,7 @@ class TestStatusCommand:
         assert 'Conda Environment' in result.output
         assert 'myenv' in result.output
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     def test_status_command_no_recent_directories(self, mock_expanduser, mock_context_manager):
         """Test status command with no recent directories"""
@@ -162,7 +162,7 @@ class TestStatusCommand:
         # Should not show Recent Directories table
         assert 'Recent Directories' not in result.output
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     def test_status_command_long_directory_truncation(self, mock_expanduser, mock_context_manager):
         """Test status command with long directory names"""
@@ -202,7 +202,7 @@ class TestShortcutsCommand:
             'targz': 'tar -czf'
         }
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     def test_shortcuts_command(self, mock_expanduser, mock_context_manager):
         """Test shortcuts command displays categorized shortcuts"""
@@ -228,7 +228,7 @@ class TestShortcutsCommand:
         assert 'l' in result.output
         assert 'df' in result.output
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     def test_shortcuts_command_empty_categories(self, mock_expanduser, mock_context_manager):
         """Test shortcuts command with minimal shortcuts"""
@@ -282,7 +282,7 @@ class TestAddShortcutCommand:
         """Set up test environment"""
         self.runner = CliRunner()
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     @patch('builtins.open', new_callable=mock_open)
     def test_add_shortcut_success(self, mock_file, mock_expanduser, mock_context_manager):
@@ -306,7 +306,7 @@ class TestAddShortcutCommand:
         handle = mock_file.return_value.__enter__.return_value
         handle.write.assert_called()
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     @patch('builtins.open', new_callable=mock_open, read_data='{"existing": "command"}')
     def test_add_shortcut_to_existing_file(self, mock_file, mock_expanduser, mock_context_manager):
@@ -327,7 +327,7 @@ class TestAddShortcutCommand:
         # Verify file was read and written
         mock_file.assert_called()
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     @patch('builtins.open', side_effect=OSError("Permission denied"))
     def test_add_shortcut_file_error(self, mock_file, mock_expanduser, mock_context_manager):
@@ -346,7 +346,7 @@ class TestAddShortcutCommand:
         assert 'Error adding shortcut' in result.output
         assert 'Permission denied' in result.output
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     @patch('builtins.open', new_callable=mock_open, read_data='invalid json')
     def test_add_shortcut_json_error(self, mock_file, mock_expanduser, mock_context_manager):
@@ -372,7 +372,7 @@ class TestRemoveShortcutCommand:
         """Set up test environment"""
         self.runner = CliRunner()
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     @patch('builtins.open', new_callable=mock_open, read_data='{"test": "echo hello", "other": "ls"}')
     def test_remove_shortcut_success(self, mock_file, mock_expanduser, mock_context_manager):
@@ -393,7 +393,7 @@ class TestRemoveShortcutCommand:
         # Verify file operations
         mock_file.assert_called()
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     @patch('builtins.open', new_callable=mock_open, read_data='{"other": "ls"}')
     def test_remove_shortcut_not_found(self, mock_file, mock_expanduser, mock_context_manager):
@@ -411,7 +411,7 @@ class TestRemoveShortcutCommand:
         assert result.exit_code == 0
         assert "Shortcut 'nonexistent' not found" in result.output
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     def test_remove_shortcut_no_file(self, mock_expanduser, mock_context_manager):
         """Test removing shortcut when no shortcuts file exists"""
@@ -428,7 +428,7 @@ class TestRemoveShortcutCommand:
         assert result.exit_code == 0
         assert "Shortcut 'test' not found" in result.output
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     @patch('builtins.open', side_effect=OSError("Permission denied"))
     def test_remove_shortcut_file_error(self, mock_file, mock_expanduser, mock_context_manager):
@@ -471,7 +471,7 @@ class TestSuggestionsCommand:
             }
         ]
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     def test_suggestions_command(self, mock_expanduser, mock_context_manager):
         """Test suggestions command with context-aware suggestions"""
@@ -491,7 +491,7 @@ class TestSuggestionsCommand:
         assert '90% confidence' in result.output
         assert 'Source: context_manager (git)' in result.output
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     def test_suggestions_command_no_suggestions(self, mock_expanduser, mock_context_manager):
         """Test suggestions command with no suggestions"""
@@ -508,7 +508,7 @@ class TestSuggestionsCommand:
         # Should show "Context-Aware Suggestions" header even without suggestions
         assert 'Context-Aware Suggestions' in result.output
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     def test_suggestions_command_multiple_suggestions(self, mock_expanduser, mock_context_manager):
         """Test suggestions command with multiple suggestions per phrase"""
@@ -560,7 +560,7 @@ class TestIntegrationScenarios:
         for command in expected_commands:
             assert command in result.output
     
-    @patch('nlcli.cli.context_cli.ContextManager')
+    @patch('nlcli.cli.context_ui.ContextManager')
     @patch('os.path.expanduser')
     def test_context_manager_initialization_consistent(self, mock_expanduser, mock_context_manager):
         """Test that ContextManager is initialized consistently across commands"""

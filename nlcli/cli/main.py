@@ -20,7 +20,7 @@ from ..storage.config_manager import ConfigManager
 from ..execution.command_executor import CommandExecutor
 from ..ui.output_formatter import OutputFormatter
 
-from .context_cli import context
+from .context_ui import context
 from .history_cli import history as history_cli
 from .filter_cli import filter as filter_cli
 from ..ui.interactive_input import InteractiveInputHandler
