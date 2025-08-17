@@ -50,7 +50,7 @@ class SemanticMatcher:
                 'command': 'ls -la',
                 'explanation': 'List files and directories with details',
                 'variations': [
-                    'list files', 'show files', 'display files', 'files', 'dir', 'directory',
+                    'list files', 'show files', 'display files', 'dir', 'directory',
                     'ls', 'list directory', 'show directory', 'what files', 'file list',
                     'show contents', 'directory contents', 'folder contents', 'list all files'
                 ]
@@ -69,9 +69,10 @@ class SemanticMatcher:
                 'command': 'find . -type f -size +100M -exec ls -lh {} \\; | head -20',
                 'explanation': 'Find large files over 100MB',
                 'variations': [
-                    'find large files', 'big files', 'huge files', 'large file search',
+                    'find large files', 'show large files', 'big files', 'huge files', 'large file search',
                     'find lare files', 'show big files', 'list huge files', 'oversized files',
-                    'files bigger than', 'large size files', 'heavy files'
+                    'files bigger than', 'large size files', 'heavy files', 'search large files',
+                    'locate large files', 'display large files'
                 ]
             },
             
@@ -582,12 +583,28 @@ class SemanticMatcher:
         # Jaccard similarity with bonus for key words
         jaccard = len(intersection) / len(union)
         
-        # Boost score for important command words
+        # Boost score for important command words and specific patterns
         important_words = {'show', 'list', 'find', 'process', 'file', 'network', 'disk', 'memory'}
         important_overlap = intersection.intersection(important_words)
         
         if important_overlap:
             jaccard += 0.1 * len(important_overlap)
+        
+        # Special boost for exact multi-word phrase matches
+        if len(words1) > 1 and len(words2) > 1:
+            # Check for consecutive word matches (phrase matching)
+            str1_words = str1.split()
+            str2_words = str2.split()
+            
+            # Bonus for matching consecutive words
+            for i in range(len(str1_words)):
+                for j in range(len(str2_words)):
+                    if i < len(str1_words) and j < len(str2_words):
+                        if str1_words[i] == str2_words[j]:
+                            # Check if next word also matches
+                            if (i + 1 < len(str1_words) and j + 1 < len(str2_words) and 
+                                str1_words[i + 1] == str2_words[j + 1]):
+                                jaccard += 0.15  # Bonus for consecutive word pairs
         
         return min(jaccard, 1.0)
     

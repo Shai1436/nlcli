@@ -79,8 +79,12 @@ class OutputFormatter:
             'base_command_with_args': ('⚡', 'bright_yellow', 'Base command'),
             'intelligent_pattern': ('🎯', 'bright_cyan', 'Smart pattern'),
             'context_aware': ('🎯', 'bright_cyan', 'Context aware'),
+            'pattern_engine': ('🎯', 'bright_cyan', 'Pattern match'),
+            'fuzzy_engine': ('🔍', 'bright_blue', 'Fuzzy match'),
+            'semantic_matcher': ('🧠', 'bright_magenta', 'Semantic ML'),
+            'semantic_matcher_fallback': ('🧠', 'bright_magenta', 'Semantic match'),
             'cached': ('📋', 'bright_green', 'Cached result'),
-            'ai_translation': ('🤖', 'bright_magenta', 'AI translated')
+            'ai_translation': ('🤖', 'bright_red', 'AI translated')
         }
         
         source = result.get('source', 'unknown')
