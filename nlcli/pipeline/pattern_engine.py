@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Dict, List, Optional, Tuple, Any
 import os
-from .parameter_resolver import ParameterResolver
+from ..utils.parameter_resolver import ParameterResolver
 
 logger = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@ import logging
 import os
 import pickle
 from typing import Dict, List, Optional, Tuple, Any
-from .parameter_resolver import ParameterResolver, ParameterDefinition, ParameterType
+from ..utils.parameter_resolver import ParameterResolver, ParameterDefinition, ParameterType
 
 logger = logging.getLogger(__name__)
 
