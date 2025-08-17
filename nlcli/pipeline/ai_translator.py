@@ -53,25 +53,18 @@ class AITranslator:
         self.git_context = GitContextManager()
         self.env_context = EnvironmentContextManager()
         
-        # Command filter for direct execution
-        from .command_filter import CommandFilter
-        self.command_filter = CommandFilter()
-        
-        # Shell adapter for platform-aware command recognition
+        # Initialize Pipeline Components (Level 1-4)
         from .shell_adapter import ShellAdapter
-        self.shell_adapter = ShellAdapter()
-        
-        # Command selector for interactive choice handling
-        from .command_selector import CommandSelector
-        self.command_selector = CommandSelector()
-        
-        # Enhanced Pattern Engine for Tier 3 semantic recognition
+        from .command_filter import CommandFilter 
         from .pattern_engine import AdvancedPatternEngine
-        self.pattern_engine = AdvancedPatternEngine()
-        
-        # Advanced Fuzzy Engine for Tier 4 multi-algorithm matching
         from .fuzzy_engine import AdvancedFuzzyEngine
-        self.fuzzy_engine = AdvancedFuzzyEngine()
+        from .command_selector import CommandSelector
+        
+        self.shell_adapter = ShellAdapter()        # Level 1: Context
+        self.command_filter = CommandFilter()     # Level 2: Direct commands  
+        self.pattern_engine = AdvancedPatternEngine()  # Level 3: Natural language patterns
+        self.fuzzy_engine = AdvancedFuzzyEngine()      # Level 4: Fuzzy matching
+        self.command_selector = CommandSelector()  # Interactive selection
         
         # Common command patterns for instant recognition (50+ patterns)
         self.instant_patterns = {
@@ -205,174 +198,32 @@ class AITranslator:
         """
         
         try:
-            # Use provided context or fallback to shell adapter for backwards compatibility
-            if context is None:
-                context = self.shell_adapter.get_command_context(natural_language)
-                logger.debug("Context not provided, generated from shell adapter for backwards compatibility")
+            # NEW PIPELINE FLOW (Levels 1-5)
             
-            # Use context-provided corrected input
-            if context.get('is_typo_corrected', False):
-                corrected_input = context.get('corrected_input', natural_language)
-                logger.debug(f"Using context-corrected input: '{natural_language}' -> '{corrected_input}'")
-                natural_language = corrected_input
+            # Level 1: Shell Adapter - Get context
+            context = self.shell_adapter.get_pipeline_metadata(natural_language)
+            logger.debug(f"Level 1 (Shell Adapter): Context generated")
             
-            # Step 1: Check if context indicates this is a direct command (fastest)
-            if context.get('is_direct_command', False):
-                logger.debug(f"Context indicates direct command: {natural_language}")
-                return {
-                    'command': context.get('corrected_input', natural_language),
-                    'explanation': f"Direct execution of {context.get('command_category', 'system')} command",
-                    'confidence': 0.95 + context.get('confidence_boost', 0.0),
-                    'cached': False,
-                    'instant': True,
-                    'context_direct': True,
-                    'platform': context.get('platform', 'unknown'),
-                    'shell': context.get('shell', 'unknown')
-                }
+            # Level 2: Command Filter - Check direct commands
+            level2_result = self.command_filter.get_pipeline_metadata(natural_language)
+            if level2_result:
+                logger.debug(f"Level 2 (Command Filter): Direct match found")
+                return {**level2_result, 'cached': False, 'instant': True}
             
-            # Step 1.1: Check for direct command execution (fallback for backwards compatibility)
-            if self.command_filter.is_direct_command(natural_language):
-                direct_result = self.command_filter.get_direct_command_result(natural_language)
-                if direct_result:
-                    logger.debug(f"Direct command match for: {natural_language}")
-                    return {
-                        **direct_result,
-                        'cached': False,
-                        'instant': True,
-                        'context_corrected': context.get('is_typo_corrected', False)
-                    }
+            # Level 3: Pattern Engine - Natural language patterns
+            level3_result = self.pattern_engine.process_natural_language(natural_language)
+            if level3_result:
+                logger.debug(f"Level 3 (Pattern Engine): Pattern match found")
+                return {**level3_result, 'cached': False, 'instant': True}
             
-            # Step 2: Enhanced Pattern Engine - Tier 3 Semantic Recognition (5ms target)
-            pattern_result = self.pattern_engine.process_natural_language(natural_language)
-            if pattern_result:
-                logger.debug(f"Enhanced pattern match ({pattern_result['pattern_type']}): {natural_language}")
-                return {
-                    **pattern_result,
-                    'cached': False,
-                    'instant': True,
-                    'tier': 3,
-                    'enhanced_pattern': True
-                }
+            # Level 4: Fuzzy Engine - Fuzzy matching + typo correction
+            level4_result = self.fuzzy_engine.get_pipeline_metadata(natural_language, context)
+            if level4_result:
+                logger.debug(f"Level 4 (Fuzzy Engine): Fuzzy match found")
+                return {**level4_result, 'cached': False, 'instant': True}
             
-            # Step 2.1: Check for instant pattern matches (sub-millisecond response)
-            instant_result = self._check_instant_patterns(natural_language)
-            if instant_result:
-                logger.debug(f"Instant pattern match for: {natural_language}")
-                return instant_result
-            
-            # Step 2.5: Advanced Fuzzy Engine - Tier 4 Multi-Algorithm Matching (15ms target)
-            fuzzy_result = self.fuzzy_engine.fuzzy_match(natural_language, threshold=0.7)
-            if fuzzy_result:
-                command, confidence, metadata = fuzzy_result
-                logger.debug(f"Advanced fuzzy match found: '{natural_language}' -> '{command}' (confidence: {confidence:.2f}, algorithm: {metadata.get('algorithm', 'Unknown')})")
-                return {
-                    'command': command,
-                    'explanation': self._get_command_explanation(command),
-                    'confidence': confidence,
-                    'cached': False,
-                    'instant': True,
-                    'tier': 4,
-                    'advanced_fuzzy': True,
-                    'algorithm': metadata.get('algorithm', 'Unknown'),
-                    'method': metadata.get('method', 'unknown')
-                }
-            
-            # Step 2.6: Enhanced fuzzy matching now handles all typo variations
-            # (Removed redundant basic fuzzy matching from shell_adapter)
-            
-            # Step 1.4: Enhanced Context Intelligence - Git-aware commands
-            git_suggestion = self._check_git_context_commands(natural_language)
-            if git_suggestion:
-                logger.debug(f"Git context command for: {natural_language}")
-                return git_suggestion
-            
-            # Step 1.45: Enhanced Context Intelligence - Environment-aware commands
-            env_suggestion = self._check_environment_context_commands(natural_language)
-            if env_suggestion:
-                logger.debug(f"Environment context command for: {natural_language}")
-                return env_suggestion
-            
-            # Step 1.5: Check enhanced context-aware suggestions with pattern learning
-            contextual_suggestions = self.context_manager.get_contextual_suggestions(natural_language)
-            if contextual_suggestions:
-                # Use the highest confidence contextual suggestion
-                best_suggestion = contextual_suggestions[0]  # Already sorted by confidence
-                if best_suggestion['confidence'] > 0.85:
-                    logger.debug(f"Enhanced context suggestion for: {natural_language} (confidence: {best_suggestion['confidence']:.2f})")
-                    return {
-                        'command': best_suggestion['command'],
-                        'explanation': best_suggestion['explanation'],
-                        'confidence': best_suggestion['confidence'],
-                        'instant': True,
-                        'cached': False,
-                        'context_aware': True,
-                        'context_type': best_suggestion['context_type'],
-                        'source': best_suggestion.get('source', 'context_aware')
-                    }
-            
-            # Fallback to basic context suggestions if enhanced ones don't meet threshold
-            context_suggestions = self.context_manager.get_context_suggestions(natural_language)
-            if context_suggestions:
-                # Use the highest confidence context suggestion
-                best_suggestion = max(context_suggestions, key=lambda x: x['confidence'])
-                if best_suggestion['confidence'] > 0.80:
-                    logger.debug(f"Basic context suggestion for: {natural_language}")
-                    return {
-                        'command': best_suggestion['command'],
-                        'explanation': best_suggestion['explanation'],
-                        'confidence': best_suggestion['confidence'],
-                        'instant': True,
-                        'cached': False,
-                        'context_aware': True,
-                        'context_type': best_suggestion['context_type']
-                    }
-            
-            # Step 2: Check cache (sub-millisecond response)
-            if self.cache_manager:
-                platform_key = context.get('platform', 'unknown')
-                cached_result = self.cache_manager.get_cached_translation(
-                    natural_language, platform_key
-                )
-                if cached_result:
-                    logger.debug(f"Cache hit for: {natural_language}")
-                    return cached_result
-            
-            # Step 2.8: Check for ambiguous commands and offer interactive selection
-            if self.command_selector.is_ambiguous(natural_language):
-                options = self.command_selector.get_command_options(natural_language)
-                if options:
-                    # Check if user has a learned preference
-                    preferred = self.command_selector.get_preferred_option(natural_language, options)
-                    if preferred:
-                        # Use learned preference
-                        command = self.command_selector.suggest_parameters(preferred['command'], natural_language)
-                        explanation = f"{preferred['description']} (auto-selected based on your preference)"
-                        logger.debug(f"Interactive selection (auto): {natural_language} -> {command}")
-                        return {
-                            'command': command,
-                            'explanation': explanation,
-                            'confidence': 0.95,
-                            'cached': False,
-                            'instant': False,
-                            'interactive_selected': True
-                        }
-                    else:
-                        # Present options for user selection
-                        selected = self.command_selector.present_options(natural_language, options)
-                        if selected:
-                            command = self.command_selector.suggest_parameters(selected['command'], natural_language)
-                            explanation = f"{selected['description']} - {selected['use_case']}"
-                            logger.debug(f"Interactive selection (manual): {natural_language} -> {command}")
-                            return {
-                                'command': command,
-                                'explanation': explanation,
-                                'confidence': 0.95,
-                                'cached': False,
-                                'instant': False,
-                                'interactive_selected': True
-                            }
-            
-            # Step 3: AI translation with timeout (2-5 second response)
+            # Level 5: AI Translation - OpenAI fallback
+            logger.debug(f"Level 5 (AI Translation): Using OpenAI fallback")
             api_result = self._translate_with_ai(natural_language, timeout, context)
             
             # Cache the result for future use

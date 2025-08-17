@@ -9,6 +9,7 @@ import logging
 import threading
 import concurrent.futures
 import time
+import platform
 from typing import Dict, List, Optional, Tuple, Any, Set
 from collections import defaultdict
 import difflib
@@ -20,6 +21,10 @@ class AdvancedFuzzyEngine:
     """Advanced fuzzy matching with parallelized multi-algorithm scoring and early termination"""
     
     def __init__(self):
+        # Fast typo correction (Level 4 - inherited from removed smart_fuzzy_matcher)
+        self.platform = platform.system().lower()
+        self._load_typo_mappings()
+        
         self.algorithms = [
             LevenshteinMatcher(),
             SemanticMatcher(),
@@ -36,6 +41,63 @@ class AdvancedFuzzyEngine:
         self.early_termination_threshold = 0.95  # Stop if we get >95% confidence
         self.max_parallel_threads = 4
         self.algorithm_timeout = 0.005  # 5ms timeout per algorithm
+    
+    def _load_typo_mappings(self):
+        """Load fast typo corrections for Level 4 processing"""
+        # Essential typos for multi-platform support
+        self.typo_mappings = {
+            # Universal typos
+            'sl': 'ls', 'lls': 'ls', 'lss': 'ls', 'pwdd': 'pwd', 'cdd': 'cd',
+            'rmm': 'rm', 'cpp': 'cp', 'mvv': 'mv', 'mkdirr': 'mkdir',
+            'toch': 'touch', 'catt': 'cat', 'gti': 'git', 'gt': 'git',
+            'pign': 'ping', 'claer': 'clear', 'clr': 'clear',
+            
+            # System commands
+            'pss': 'ps', 'topp': 'top', 'fnd': 'find', 'gerp': 'grep',
+            'sudoo': 'sudo', 'suod': 'sudo', 'crul': 'curl', 'wegt': 'wget'
+        }
+        
+        if self.platform == 'windows':
+            self.typo_mappings.update({
+                'dri': 'dir', 'dirr': 'dir', 'typee': 'type',
+                'copyy': 'copy', 'movee': 'move', 'dell': 'del'
+            })
+    
+    def fast_typo_correction(self, command: str) -> str:
+        """Fast hash-based typo correction (sub-1ms)"""
+        command_lower = command.lower().strip()
+        return self.typo_mappings.get(command_lower, command)
+    
+    def get_pipeline_metadata(self, user_input: str, context: Optional[Dict] = None) -> Optional[Dict]:
+        """
+        Level 4 Pipeline: Fuzzy matching with typo correction
+        """
+        corrected = self.fast_typo_correction(user_input)
+        if corrected != user_input:
+            return {
+                'command': corrected,
+                'explanation': f'Typo corrected: {user_input} → {corrected}',
+                'confidence': 0.95,
+                'pipeline_level': 4,
+                'match_type': 'typo_correction',
+                'source': 'fuzzy_engine'
+            }
+        
+        # Run advanced fuzzy matching
+        result = self.fuzzy_match(user_input, threshold=self.confidence_threshold)
+        if result:
+            command, confidence, metadata = result
+            return {
+                'command': command,
+                'explanation': f'Fuzzy match found: {user_input} → {command}',
+                'confidence': confidence,
+                'pipeline_level': 4,
+                'match_type': 'fuzzy_match',
+                'source': 'fuzzy_engine',
+                'algorithm': metadata.get('algorithm', 'unknown')
+            }
+        
+        return None
         
     def _load_intent_categories(self) -> Dict[str, Dict]:
         """Load intent-based categorization patterns"""
