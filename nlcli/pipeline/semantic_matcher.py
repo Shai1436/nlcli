@@ -7,6 +7,7 @@ import logging
 import os
 import pickle
 from typing import Dict, List, Optional, Tuple, Any
+from .parameter_resolver import ParameterResolver, ParameterDefinition, ParameterType
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,9 @@ class SemanticMatcher:
         self.pattern_embeddings = None
         self.pattern_commands = {}
         self.cache_file = os.path.expanduser("~/.nlcli_semantic_cache.pkl")
+        
+        # Initialize parameter resolver
+        self.parameter_resolver = ParameterResolver()
         
         # Initialize model and embeddings
         self._initialize_model()
@@ -415,22 +419,35 @@ class SemanticMatcher:
                 pattern_name = self.pattern_embeddings['mapping'][best_idx]
                 pattern_config = self.pattern_commands[pattern_name]
                 
-                # Extract parameters if needed
-                parameters = self._extract_parameters(natural_input, pattern_config)
+                # Use parameter resolver for validation
+                required_params = self.parameter_resolver.get_parameter_definitions(pattern_name)
+                param_result = self.parameter_resolver.extract_parameters(
+                    natural_input, required_params, context
+                )
                 
-                # Build command
-                command = self._build_command(pattern_config, parameters)
+                # Check if pattern should match based on parameter availability
+                if not self.parameter_resolver.should_match_pattern(
+                    natural_input, required_params, self.confidence_threshold
+                ):
+                    return None  # Fall to next pipeline level
+                
+                # Build command with resolved parameters
+                command = self.parameter_resolver.resolve_template(
+                    pattern_config.get('command', ''), param_result.extracted
+                )
                 
                 result = {
                     'command': command,
                     'explanation': pattern_config['explanation'],
-                    'confidence': min(95, int(best_similarity * 100)),
+                    'confidence': min(95, int(best_similarity * param_result.confidence * 100)),
                     'source': 'semantic_matcher',
                     'pipeline_level': 5,
                     'pattern_name': pattern_name,
                     'semantic_similarity': best_similarity,
                     'matched_variation': self.pattern_embeddings['variations'][best_idx],
-                    'parameters': parameters
+                    'parameters': param_result.extracted,
+                    'defaults_applied': param_result.defaults_applied,
+                    'parameter_confidence': param_result.confidence
                 }
                 
                 logger.debug(f"Level 5 (Semantic): {pattern_name} (similarity: {best_similarity:.3f})")
@@ -542,20 +559,35 @@ class SemanticMatcher:
                     best_pattern = config
         
         if best_match and best_score >= self.confidence_threshold:
-            # Extract parameters and build command
-            parameters = self._extract_parameters(natural_input, best_pattern)
-            command = self._build_command(best_pattern, parameters)
+            # Use parameter resolver for fallback matching too
+            required_params = self.parameter_resolver.get_parameter_definitions(best_match)
+            param_result = self.parameter_resolver.extract_parameters(
+                natural_input, required_params, {}
+            )
+            
+            # Check if pattern should match based on parameter availability
+            if not self.parameter_resolver.should_match_pattern(
+                natural_input, required_params, self.confidence_threshold
+            ):
+                return None  # Fall to next pipeline level
+            
+            # Build command with resolved parameters
+            command = self.parameter_resolver.resolve_template(
+                best_pattern.get('command', ''), param_result.extracted
+            )
             
             return {
                 'command': command,
                 'explanation': best_pattern['explanation'],
-                'confidence': min(95, int(best_score * 100)),
+                'confidence': min(95, int(best_score * param_result.confidence * 100)),
                 'source': 'semantic_matcher_fallback',
                 'pipeline_level': 5,
                 'pattern_name': best_match,
                 'semantic_similarity': best_score,
                 'matched_variation': f'fallback_match_{best_match}',
-                'parameters': parameters
+                'parameters': param_result.extracted,
+                'defaults_applied': param_result.defaults_applied,
+                'parameter_confidence': param_result.confidence
             }
         
         return None

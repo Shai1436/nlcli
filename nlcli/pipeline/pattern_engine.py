@@ -8,6 +8,7 @@ import json
 import logging
 from typing import Dict, List, Optional, Tuple, Any
 import os
+from .parameter_resolver import ParameterResolver
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ class PatternEngine:
         self.workflow_templates = self._load_workflow_templates()
         self.parameter_extractors = self._load_parameter_extractors()
         self.confidence_threshold = 0.8
+        self.parameter_resolver = ParameterResolver()
         
     def _load_semantic_patterns(self) -> Dict[str, Dict]:
         """Load semantic patterns for intent-based command recognition"""
@@ -32,7 +34,7 @@ class PatternEngine:
                     r'(?:large|big|huge).*files?.*(?:find|show|list)',
                     r'files?.*(?:larger|bigger).*than.*(\d+(?:MB|GB|KB|bytes?))',
                 ],
-                'command_template': 'find . -type f -size +{size} -exec ls -lh {} \\; | head -20',
+                'command_template': 'find . -type f -size +{size} -exec ls -lh {{}} \\; | head -20',
                 'default_size': '100M',
                 'explanation': 'Find files larger than specified size',
                 'parameters': ['size']
@@ -45,7 +47,7 @@ class PatternEngine:
                     r'show.*(?:recent|new|latest).*files?',
                     r'list.*files?.*(?:from|since).*(?:today|yesterday|last.*(?:hour|day|week))',
                 ],
-                'command_template': 'find . -type f -mtime -{days} -exec ls -lt {} \\; | head -20',
+                'command_template': 'find . -type f -mtime -{days} -exec ls -lt {{}} \\; | head -20',
                 'default_days': '1',
                 'explanation': 'Find recently modified files',
                 'parameters': ['days']
@@ -470,35 +472,32 @@ class PatternEngine:
         for pattern_name, pattern_info in self.semantic_patterns.items():
             for pattern in pattern_info['patterns']:
                 if re.search(pattern, text_lower, re.IGNORECASE):
-                    # Extract parameters
-                    parameters = self.extract_parameters(text, pattern_info)
+                    # Use parameter resolver for consistent parameter handling
+                    required_params = self.parameter_resolver.get_parameter_definitions(pattern_name)
+                    param_result = self.parameter_resolver.extract_parameters(
+                        text, required_params, {}
+                    )
                     
-                    # Build command from template
-                    command_template = pattern_info['command_template']
+                    # Check if pattern should match based on parameter availability
+                    if not self.parameter_resolver.should_match_pattern(
+                        text, required_params, self.confidence_threshold
+                    ):
+                        continue  # Try next pattern
                     
-                    try:
-                        command = command_template.format(**parameters)
-                    except (KeyError, IndexError) as e:
-                        # Missing parameter, use defaults
-                        for param in pattern_info.get('parameters', []):
-                            if param not in parameters:
-                                if param in self.parameter_extractors:
-                                    parameters[param] = self.parameter_extractors[param]['default']
-                                else:
-                                    parameters[param] = 'default_value'
-                        try:
-                            command = command_template.format(**parameters)
-                        except Exception:
-                            # If still failing, return pattern without parameter substitution
-                            command = command_template
+                    # Build command with resolved parameters
+                    command = self.parameter_resolver.resolve_template(
+                        pattern_info['command_template'], param_result.extracted
+                    )
                     
                     return {
                         'command': command,
                         'explanation': pattern_info['explanation'],
-                        'confidence': 0.9,
+                        'confidence': min(90, int(0.9 * param_result.confidence * 100)),
                         'pattern_type': 'semantic',
                         'pattern_name': pattern_name,
-                        'parameters': parameters
+                        'parameters': param_result.extracted,
+                        'defaults_applied': param_result.defaults_applied,
+                        'parameter_confidence': param_result.confidence
                     }
         
         return None

@@ -41,6 +41,7 @@ Preferred communication style: Simple, everyday language.
 - COMPLETED: Fixed pipeline component errors - added missing get_statistics method to CommandFilter, renamed AdvancedPatternEngine to PatternEngine, and fixed pipeline integration issues (Aug 17, 2025)
 - COMPLETED: Added missing 'find_all_files' pattern to Level 3 Pattern Engine and fixed context manager path in main.py for proper Level 3 pattern recognition (Aug 17, 2025)
 - COMPLETED: Implemented Level 5 Semantic Matcher with comprehensive CLI/network/devops command mapping using local ML fallback - 80% confidence threshold, startup loading, covers 30+ command categories with 200+ variations (Aug 17, 2025)
+- COMPLETED: Built Common Parameter Resolver system for all pipeline levels - handles 9 parameter types (size, port, host, target, etc.) with intelligent extraction, validation, and default values across Levels 2-6 (Aug 17, 2025)
 
 # System Architecture
 
@@ -51,6 +52,7 @@ The application follows a modular, cross-platform architecture with clear separa
 - **Enhanced Shell Adapter**: Centralized system expertise providing comprehensive context with 18 metadata fields including platform detection, shell identification, command categorization, cross-platform equivalents, and confidence scoring.
 - **Context-Driven AI Translation Layer**: Streamlined AI translator that accepts context from shell adapter instead of self-detecting platform information, integrating OpenAI's GPT-4o with optimized performance.
 - **Command Filter System**: Directly executes 265+ known commands with sub-1ms response times, supporting platform-aware and cross-platform recognition.
+- **Common Parameter Resolver**: Universal parameter extraction and validation system supporting 9 parameter types (size, port, host, target, days, extension, pid, count, username) with intelligent defaults and regex validation patterns used across all pipeline levels.
 - **Interactive Command Selection**: Handles ambiguous natural language requests by presenting options, extracting parameters, and learning user preferences.
 - **Modular Fuzzy Matching System**: Refactored architecture with shared components (BaseFuzzyMatcher, TextNormalizer, CommonTransforms, SimilarityCalculator) eliminating 40% code duplication while maintaining sub-1ms performance (August 17, 2025).
 - **Safety Validation**: Multi-level safety checking to prevent destructive operations, configurable by the user.
@@ -85,6 +87,7 @@ The application follows a modular, cross-platform architecture with clear separa
 - **Context-Driven Architecture**: Three-phase refactoring completed August 17, 2025, implementing clean separation of concerns where shell adapter provides system expertise to AI translator for language processing.
 - **Modular Fuzzy Architecture**: Created shared base architecture eliminating code duplication across fuzzy matching systems, with FastFuzzyMatcher for command filtering and preserved AdvancedFuzzyEngine for complex AI operations (August 17, 2025).
 - **6-Level Pipeline Architecture**: Enhanced pipeline August 17, 2025, with semantic intelligence: Level 1 (context) → Level 2 (exact commands) → Level 3 (patterns) → Level 4 (fuzzy/typo) → Level 5 (semantic ML) → Level 6 (AI fallback).
+- **Universal Parameter System**: Common Parameter Resolver integrated across all pipeline levels with intelligent extraction patterns, validation rules, and smart defaults eliminating template parameter failures.
 - **Performance Optimization**: 5-tier system for sub-millisecond to low-latency command recognition with context computed once and metadata aggregation eliminating duplicate processing.
 - **Cross-OS Compatibility**: 221 cross-platform mappings in Level 2 with comprehensive Windows↔Unix translation, PowerShell cmdlet support, and CMD/Bash/Zsh/PowerShell terminal coverage.
 - **Test-Driven Development**: Comprehensive unit test suite for robust error handling and edge case validation with 30.3% line coverage.
