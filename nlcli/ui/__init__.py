@@ -11,10 +11,12 @@ from .interactive_input import InteractiveInputHandler
 from .enhanced_input import EnhancedInputHandler
 from .output_formatter import OutputFormatter
 from .typeahead import TypeaheadController
+from .command_selector import CommandSelector
 
 __all__ = [
     'InteractiveInputHandler',
     'EnhancedInputHandler',
     'OutputFormatter',
-    'TypeaheadController'
+    'TypeaheadController',
+    'CommandSelector'
 ]

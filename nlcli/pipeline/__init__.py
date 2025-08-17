@@ -5,21 +5,19 @@ This module contains the core processing pipeline components:
 - AI translation using OpenAI GPT-4o
 - Command filtering and direct execution
 - Fuzzy matching and pattern recognition
-- Typo correction and command selection
+- Shell adapter for context generation
 """
 
 from .ai_translator import AITranslator
 from .command_filter import CommandFilter
-from .fuzzy_engine import FuzzyEngine
-from .pattern_engine import PatternEngine
+from .fuzzy_engine import AdvancedFuzzyEngine
+from .pattern_engine import AdvancedPatternEngine
 from .shell_adapter import ShellAdapter
-from .command_selector import CommandSelector
 
 __all__ = [
     'AITranslator',
     'CommandFilter', 
-    'FuzzyEngine',
-    'PatternEngine',
-    'ShellAdapter',
-    'CommandSelector'
+    'AdvancedFuzzyEngine',
+    'AdvancedPatternEngine',
+    'ShellAdapter'
 ]
