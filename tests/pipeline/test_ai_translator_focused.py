@@ -41,7 +41,7 @@ class TestAITranslatorFocused:
             assert translator.enable_cache is True
             assert hasattr(translator, 'cache_manager')
             assert hasattr(translator, 'command_filter')
-            assert hasattr(translator, 'typo_corrector')
+            assert hasattr(translator, 'shell_adapter')
             assert hasattr(translator, 'platform_info')
             
             # Verify OpenAI was called correctly
@@ -123,8 +123,8 @@ class TestAITranslatorFocused:
             # Mock internal methods to bypass other tiers
             translator.command_filter = Mock()
             translator.command_filter.get_direct_command = Mock(return_value=None)
-            translator.typo_corrector = Mock()
-            translator.typo_corrector.correct_typo = Mock(return_value=(False, "test query", 1.0))
+            translator.shell_adapter = Mock()
+            translator.shell_adapter.correct_typo = Mock(return_value=(False, "test query", 1.0))
             
             # Call translate
             result = translator.translate("search for pattern in files")
@@ -218,7 +218,7 @@ class TestAITranslatorFocused:
             
             # Verify all components exist
             required_components = [
-                'command_filter', 'typo_corrector', 'command_selector',
+                'command_filter', 'shell_adapter', 'command_selector',
                 'pattern_engine', 'fuzzy_engine', 'context_manager',
                 'git_context', 'env_context'
             ]

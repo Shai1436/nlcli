@@ -13,7 +13,7 @@ from pathlib import Path
 from nlcli.pipeline.ai_translator import AITranslator
 from nlcli.storage.cache_manager import CacheManager
 from nlcli.pipeline.command_filter import CommandFilter
-from nlcli.pipeline.typo_corrector import TypoCorrector
+from nlcli.pipeline.shell_adapter import ShellAdapter
 
 
 class TestAITranslatorIntegration:
@@ -83,7 +83,7 @@ class TestAITranslatorIntegration:
         mock_client.chat.completions.create.assert_not_called()
 
     @patch('nlcli.pipeline.ai_translator.OpenAI')
-    def test_real_typo_corrector_integration(self, mock_openai):
+    def test_real_shell_adapter_integration(self, mock_openai):
         """Test AI translator with real typo corrector"""
         
         # Setup OpenAI mock for corrected input

@@ -255,9 +255,9 @@ class TestAITranslatorMocks:
         assert result is None
 
     @patch('nlcli.pipeline.ai_translator.CommandFilter')
-    @patch('nlcli.pipeline.ai_translator.TypoCorrector')
+    @patch('nlcli.pipeline.ai_translator.ShellAdapter')
     @patch('nlcli.pipeline.ai_translator.OpenAI')
-    def test_direct_command_filter(self, mock_openai, mock_typo_corrector, mock_command_filter):
+    def test_direct_command_filter(self, mock_openai, mock_shell_adapter, mock_command_filter):
         """Test direct command filtering without AI translation"""
         
         # Setup mocks
@@ -272,7 +272,7 @@ class TestAITranslatorMocks:
         
         mock_typo = Mock()
         mock_typo.correct_typo.return_value = (False, "ls", 1.0)
-        mock_typo_corrector.return_value = mock_typo
+        mock_shell_adapter.return_value = mock_typo
         
         translator = AITranslator(api_key=self.api_key, enable_cache=False)
         
@@ -287,15 +287,15 @@ class TestAITranslatorMocks:
         # Verify command filter was used
         mock_filter.get_direct_command.assert_called_once()
 
-    @patch('nlcli.pipeline.ai_translator.TypoCorrector')
+    @patch('nlcli.pipeline.ai_translator.ShellAdapter')
     @patch('nlcli.pipeline.ai_translator.OpenAI')
-    def test_typo_correction(self, mock_openai, mock_typo_corrector):
+    def test_typo_correction(self, mock_openai, mock_shell_adapter):
         """Test typo correction functionality"""
         
         # Setup mocks
         mock_typo = Mock()
         mock_typo.correct_typo.return_value = (True, "list files", 0.9)
-        mock_typo_corrector.return_value = mock_typo
+        mock_shell_adapter.return_value = mock_typo
         
         # Mock successful translation after typo correction
         mock_client = Mock()

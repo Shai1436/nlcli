@@ -27,7 +27,7 @@ class TestAITranslatorComprehensive:
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     @patch('nlcli.pipeline.ai_translator.CommandFilter')
-    @patch('nlcli.pipeline.ai_translator.TypoCorrector')
+    @patch('nlcli.pipeline.ai_translator.ShellAdapter')
     @patch('nlcli.pipeline.ai_translator.OpenAI')
     @patch('nlcli.pipeline.ai_translator.CacheManager')
     def test_pure_ai_translation_success(self, mock_cache_manager, mock_openai, mock_typo, mock_filter):
@@ -104,7 +104,7 @@ class TestAITranslatorComprehensive:
         mock_client.chat.completions.create.assert_not_called()
 
     @patch('nlcli.pipeline.ai_translator.CommandFilter')
-    @patch('nlcli.pipeline.ai_translator.TypoCorrector')
+    @patch('nlcli.pipeline.ai_translator.ShellAdapter')
     @patch('nlcli.pipeline.ai_translator.OpenAI')
     def test_typo_correction_tier(self, mock_openai, mock_typo, mock_filter):
         """Test typo correction functionality"""
@@ -142,7 +142,7 @@ class TestAITranslatorComprehensive:
         mock_typo_instance.correct_typo.assert_called()
 
     @patch('nlcli.pipeline.ai_translator.CommandFilter')
-    @patch('nlcli.pipeline.ai_translator.TypoCorrector')
+    @patch('nlcli.pipeline.ai_translator.ShellAdapter')
     @patch('nlcli.pipeline.ai_translator.OpenAI')
     @patch('nlcli.pipeline.ai_translator.CacheManager')
     def test_cache_hit_scenario(self, mock_cache_manager, mock_openai, mock_typo, mock_filter):
@@ -181,7 +181,7 @@ class TestAITranslatorComprehensive:
         mock_client.chat.completions.create.assert_not_called()
 
     @patch('nlcli.pipeline.ai_translator.CommandFilter')
-    @patch('nlcli.pipeline.ai_translator.TypoCorrector')
+    @patch('nlcli.pipeline.ai_translator.ShellAdapter')
     @patch('nlcli.pipeline.ai_translator.OpenAI')
     @patch('nlcli.pipeline.ai_translator.CacheManager')
     def test_openai_error_handling(self, mock_cache_manager, mock_openai, mock_typo, mock_filter):
@@ -212,7 +212,7 @@ class TestAITranslatorComprehensive:
         assert result is None
 
     @patch('nlcli.pipeline.ai_translator.CommandFilter')
-    @patch('nlcli.pipeline.ai_translator.TypoCorrector')
+    @patch('nlcli.pipeline.ai_translator.ShellAdapter')
     @patch('nlcli.pipeline.ai_translator.OpenAI')
     def test_invalid_json_response(self, mock_openai, mock_typo, mock_filter):
         """Test handling of invalid JSON from OpenAI"""
@@ -241,7 +241,7 @@ class TestAITranslatorComprehensive:
         assert result is None
 
     @patch('nlcli.pipeline.ai_translator.CommandFilter')
-    @patch('nlcli.pipeline.ai_translator.TypoCorrector')
+    @patch('nlcli.pipeline.ai_translator.ShellAdapter')
     @patch('nlcli.pipeline.ai_translator.OpenAI')
     def test_no_api_key_scenario(self, mock_openai, mock_typo, mock_filter):
         """Test behavior when no API key is available"""
@@ -271,7 +271,7 @@ class TestAITranslatorComprehensive:
             assert result is None, f"Expected None for input: '{empty_input}'"
 
     @patch('nlcli.pipeline.ai_translator.CommandFilter')
-    @patch('nlcli.pipeline.ai_translator.TypoCorrector')
+    @patch('nlcli.pipeline.ai_translator.ShellAdapter')
     @patch('nlcli.pipeline.ai_translator.OpenAI')
     @patch('nlcli.pipeline.ai_translator.CacheManager')
     def test_platform_info_in_prompt(self, mock_cache_manager, mock_openai, mock_typo, mock_filter):
@@ -318,7 +318,7 @@ class TestAITranslatorComprehensive:
         assert 'Platform:' in system_message['content']
 
     @patch('nlcli.pipeline.ai_translator.CommandFilter')
-    @patch('nlcli.pipeline.ai_translator.TypoCorrector')
+    @patch('nlcli.pipeline.ai_translator.ShellAdapter')
     @patch('nlcli.pipeline.ai_translator.OpenAI')
     def test_confidence_levels(self, mock_openai, mock_typo, mock_filter):
         """Test various confidence levels from AI responses"""
@@ -356,7 +356,7 @@ class TestAITranslatorComprehensive:
             assert result['confidence'] == confidence
 
     @patch('nlcli.pipeline.ai_translator.CommandFilter')
-    @patch('nlcli.pipeline.ai_translator.TypoCorrector')
+    @patch('nlcli.pipeline.ai_translator.ShellAdapter')
     @patch('nlcli.pipeline.ai_translator.OpenAI')
     def test_timeout_handling(self, mock_openai, mock_typo, mock_filter):
         """Test timeout handling for AI requests"""
@@ -388,7 +388,7 @@ class TestAITranslatorComprehensive:
         
         with patch('nlcli.pipeline.ai_translator.OpenAI') as mock_openai:
             with patch('nlcli.pipeline.ai_translator.CommandFilter') as mock_filter:
-                with patch('nlcli.pipeline.ai_translator.TypoCorrector') as mock_typo:
+                with patch('nlcli.pipeline.ai_translator.ShellAdapter') as mock_typo:
                     with patch('time.time') as mock_time:
                         # Mock time progression
                         mock_time.side_effect = [1000.0, 1002.5]  # 2.5 second execution
