@@ -58,7 +58,7 @@ class AITranslator:
         from .command_filter import CommandFilter 
         from .pattern_engine import AdvancedPatternEngine
         from .fuzzy_engine import AdvancedFuzzyEngine
-        from .command_selector import CommandSelector
+        from ..ui.command_selector import CommandSelector
         
         self.shell_adapter = ShellAdapter()        # Level 1: Context
         self.command_filter = CommandFilter()     # Level 2: Direct commands  
