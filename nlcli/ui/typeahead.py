@@ -265,8 +265,8 @@ class TypeaheadEngine:
         
         try:
             # Try L1: Enhanced Typo Correction
-            if hasattr(self.ai_translator, 'shell_corrector'):
-                corrected = self.ai_translator.shell_corrector.correct_typo(prefix)
+            if hasattr(self.ai_translator, 'shell_adapter'):
+                corrected = self.ai_translator.shell_adapter.correct_typo(prefix)
                 if corrected and corrected != prefix:
                     suggestions.append(corrected)
             

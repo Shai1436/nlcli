@@ -57,9 +57,9 @@ class AITranslator:
         from .command_filter import CommandFilter
         self.command_filter = CommandFilter()
         
-        # Multi-shell corrector for enhanced recognition
-        from .shell_corrector import ShellCorrector
-        self.shell_corrector = ShellCorrector()
+        # Shell adapter for platform-aware command recognition
+        from .shell_adapter import ShellAdapter
+        self.shell_adapter = ShellAdapter()
         
         # Command selector for interactive choice handling
         from .command_selector import CommandSelector
@@ -204,12 +204,12 @@ class AITranslator:
         """
         
         try:
-            # Step 0: Try shell command correction first
-            corrected_input = self.shell_corrector.correct_typo(natural_language)
-            if corrected_input != natural_language:
-                logger.debug(f"Shell command corrected: '{natural_language}' -> '{corrected_input}'")
-                # Use corrected input for further processing
-                natural_language = corrected_input
+            # Step 0: Try shell adaptation first
+            adapted_input = self.shell_adapter.correct_typo(natural_language)
+            if adapted_input != natural_language:
+                logger.debug(f"Shell command adapted: '{natural_language}' -> '{adapted_input}'")
+                # Use adapted input for further processing
+                natural_language = adapted_input
             
             # Step 1: Check for direct command execution (fastest)
             if self.command_filter.is_direct_command(natural_language):
@@ -220,7 +220,7 @@ class AITranslator:
                         **direct_result,
                         'cached': False,
                         'instant': True,
-                        'shell_corrected': corrected_input != natural_language
+                        'shell_adapted': adapted_input != natural_language
                     }
             
             # Step 2: Enhanced Pattern Engine - Tier 3 Semantic Recognition (5ms target)
@@ -259,7 +259,7 @@ class AITranslator:
                 }
             
             # Step 2.6: Enhanced fuzzy matching now handles all typo variations
-            # (Removed redundant basic fuzzy matching from shell_corrector)
+            # (Removed redundant basic fuzzy matching from shell_adapter)
             
             # Step 1.4: Enhanced Context Intelligence - Git-aware commands
             git_suggestion = self._check_git_context_commands(natural_language)

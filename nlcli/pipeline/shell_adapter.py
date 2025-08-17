@@ -1,6 +1,6 @@
 """
-Multi-Shell Command Corrector (Tier 1) - Cross-Platform Support
-Streamlined for sub-millisecond response times with intelligent shell detection
+Shell Adapter (Tier 1) - Cross-Platform Shell Intelligence
+Streamlined for sub-millisecond response times with intelligent platform detection
 """
 
 import platform
@@ -9,11 +9,11 @@ from ..utils.utils import setup_logging
 
 logger = setup_logging()
 
-class ShellCorrector:
-    """Lightweight multi-shell command corrector for Tier 1 - cross-platform support"""
+class ShellAdapter:
+    """Lightweight shell adapter for Tier 1 - intelligent cross-platform command adaptation"""
     
     def __init__(self):
-        """Initialize shell corrector with multi-shell command corrections"""
+        """Initialize shell adapter with platform-aware command mappings"""
         self.platform = platform.system().lower()
         self._load_multi_shell_typos()
     

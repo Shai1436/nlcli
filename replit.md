@@ -157,12 +157,12 @@ The application follows a modular, cross-platform architecture with clear separa
   * Extended LevenshteinMatcher to include typo variations for better coverage
   * Removed maintenance overhead of 300+ static typo mappings
   * Achieved scalable typo detection that works with new commands automatically
-- Multi-Shell Support Enhancement - Successfully completed:
-  * Extended Tier 1 to multi-shell command corrector supporting bash, zsh, fish, CMD, PowerShell
-  * Renamed from TypoCorrector to ShellCorrector to reflect enhanced cross-platform functionality
+- Shell Adapter Enhancement - Successfully completed:
+  * Extended Tier 1 to shell adapter supporting bash, zsh, fish, CMD, PowerShell
+  * Renamed from TypoCorrector to ShellAdapter to reflect intelligent platform adaptation
   * Added platform-aware command detection with 80+ shell-specific mappings
   * Implemented universal commands that work across all platforms (14 mappings)
   * Added Windows-specific support for CMD and PowerShell cmdlets (17 mappings)
   * Added Unix/Linux/macOS-specific commands for bash/zsh/fish shells (19 mappings)
   * Maintained sub-millisecond performance with platform-optimized command sets
-  * Achieved comprehensive cross-shell command correction for enterprise environments
+  * Achieved comprehensive cross-shell command adaptation for enterprise environments
