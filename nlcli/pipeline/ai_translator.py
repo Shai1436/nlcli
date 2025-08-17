@@ -214,7 +214,22 @@ class AITranslator:
                 logger.debug(f"Level 4 (Fuzzy Engine): Fuzzy match found")
                 return {**level4_result, 'cached': False, 'instant': True}
             
-            # Level 5: AI Translation - OpenAI fallback
+            # Level 5: Semantic Matcher - Local ML model semantic matching
+            try:
+                from .semantic_matcher import SemanticMatcher
+                if not hasattr(self, '_semantic_matcher'):
+                    self._semantic_matcher = SemanticMatcher()
+                
+                level5_result = self._semantic_matcher.get_pipeline_metadata(natural_language, context)
+                if level5_result:
+                    logger.debug(f"Level 5 (Semantic Matcher): Semantic match found")
+                    return {**level5_result, 'cached': False, 'instant': True}
+            except ImportError:
+                logger.debug("Semantic Matcher not available")
+            except Exception as e:
+                logger.warning(f"Semantic Matcher error: {e}")
+            
+            # Level 6: AI Translation - OpenAI fallback
             logger.debug(f"Level 5 (AI Translation): Using OpenAI fallback")
             api_result = self._translate_with_ai(natural_language, timeout, context)
             
