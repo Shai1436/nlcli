@@ -51,6 +51,20 @@ class PatternEngine:
                 'parameters': ['days']
             },
             
+            'find_all_files': {
+                'patterns': [
+                    r'find.*(?:all|every).*files?',
+                    r'(?:list|show).*(?:all|every).*files?',
+                    r'(?:all|every).*files?.*(?:find|list|show)',
+                    r'^find files$',
+                    r'^list files$',
+                    r'^show files$',
+                ],
+                'command_template': 'find . -type f',
+                'explanation': 'Find all files in current directory and subdirectories',
+                'parameters': []
+            },
+            
             'find_by_extension': {
                 'patterns': [
                     r'find.*(?:all|any).*\.(\w+).*files?',

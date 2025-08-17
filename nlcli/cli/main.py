@@ -205,8 +205,8 @@ def interactive_mode(obj):
                     # Store in history
                     history.add_command(user_input, command, explanation, result['success'])
                     
-                    # Update enhanced context with command execution
-                    ai_translator.context_manager.update_command_history(
+                    # Update enhanced context with command execution  
+                    ai_translator.shell_adapter.context_manager.update_command_history(
                         command=command, 
                         success=result['success'],
                         natural_language=user_input,
