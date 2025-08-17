@@ -208,44 +208,6 @@ class AITranslator:
                 logger.debug(f"Level 3 (Pattern Engine): Pattern match found")
                 return {**level3_result, 'cached': False, 'instant': True}
             
-            # Level 3.5: AI Pattern Enhancement - Semantic pattern matching
-            try:
-                from .ai_pattern_enhancer import AIPatternEnhancer
-                ai_enhancer = AIPatternEnhancer()
-                ai_pattern_result = ai_enhancer.find_semantic_match(natural_language)
-                
-                if ai_pattern_result:
-                    pattern_name, confidence, pattern_config = ai_pattern_result
-                    
-                    # Build command from template
-                    command_template = pattern_config.get('command', '')
-                    parameters = pattern_config.get('parameters', {})
-                    
-                    try:
-                        command = command_template.format(**parameters)
-                    except KeyError:
-                        command = command_template
-                    
-                    result = {
-                        'command': command,
-                        'explanation': pattern_config.get('explanation', 'AI semantic match'),
-                        'confidence': min(95, int(confidence * 100)),
-                        'source': 'ai_pattern_enhancer',
-                        'pipeline_level': 3.5,
-                        'pattern_name': pattern_name,
-                        'ai_confidence': confidence,
-                        'parameters': parameters,
-                        'cached': False,
-                        'instant': True
-                    }
-                    
-                    logger.debug(f"Level 3.5 (AI Pattern Enhancement): {pattern_name} (confidence: {confidence:.2f})")
-                    return result
-            except ImportError:
-                logger.debug("AI Pattern Enhancer not available")
-            except Exception as e:
-                logger.warning(f"AI Pattern Enhancement error: {e}")
-            
             # Level 4: Fuzzy Engine - Fuzzy matching + typo correction
             level4_result = self.fuzzy_engine.get_pipeline_metadata(natural_language, context)
             if level4_result:
