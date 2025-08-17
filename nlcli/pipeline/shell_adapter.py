@@ -105,9 +105,9 @@ class ShellAdapter:
         
         # Fish shell specific typos
         self.fish_typos = {
-            'funcsave': 'funcsave',  # Common fish typo
             'fishh': 'fish',
             'funnction': 'function',
+            'fish_confg': 'fish_config',
         }
         
         # Zsh specific typos  
