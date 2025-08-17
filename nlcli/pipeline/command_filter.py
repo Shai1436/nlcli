@@ -14,9 +14,9 @@ class CommandFilter:
         self._load_direct_commands()
         self._load_intelligent_patterns()
         
-        # Initialize fast fuzzy matcher for typo correction
-        from .fast_fuzzy_matcher import FastFuzzyMatcher
-        self.fuzzy_matcher = FastFuzzyMatcher()
+        # Initialize smart fuzzy matcher for typo correction
+        from .smart_fuzzy_matcher import SmartFuzzyMatcher
+        self.fuzzy_matcher = SmartFuzzyMatcher()
     
     def _load_direct_commands(self):
         """Load platform-specific direct command mappings"""
