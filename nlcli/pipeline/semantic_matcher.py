@@ -572,13 +572,18 @@ class SemanticMatcher:
                 return None  # Fall to next pipeline level
             
             # Build command with resolved parameters
-            command = self.parameter_resolver.resolve_template(
-                best_pattern.get('command', ''), param_result.extracted
-            )
+            if best_pattern is not None:
+                command = self.parameter_resolver.resolve_template(
+                    best_pattern.get('command', ''), param_result.extracted
+                )
+                explanation = best_pattern.get('explanation', 'Semantic match')
+            else:
+                command = ''
+                explanation = 'Semantic match'
             
             return {
                 'command': command,
-                'explanation': best_pattern['explanation'],
+                'explanation': explanation,
                 'confidence': min(95, int(best_score * param_result.confidence * 100)),
                 'source': 'semantic_matcher_fallback',
                 'pipeline_level': 5,
