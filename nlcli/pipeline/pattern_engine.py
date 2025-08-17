@@ -9,6 +9,7 @@ import logging
 from typing import Dict, List, Optional, Tuple, Any
 import os
 from ..utils.parameter_resolver import ParameterResolver
+from ..utils.file_extension_resolver import FileExtensionResolver
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class PatternEngine:
         self.parameter_extractors = self._load_parameter_extractors()
         self.confidence_threshold = 0.8
         self.parameter_resolver = ParameterResolver()
+        self.extension_resolver = FileExtensionResolver()
         
     def _load_semantic_patterns(self) -> Dict[str, Dict]:
         """Load semantic patterns for intent-based command recognition"""
@@ -53,20 +55,6 @@ class PatternEngine:
                 'parameters': ['days']
             },
             
-            'find_all_files': {
-                'patterns': [
-                    r'find.*(?:all|every).*files?',
-                    r'(?:list|show).*(?:all|every).*files?',
-                    r'(?:all|every).*files?.*(?:find|list|show)',
-                    r'^find files$',
-                    r'^list files$',
-                    r'^show files$',
-                ],
-                'command_template': 'find . -type f',
-                'explanation': 'Find all files in current directory and subdirectories',
-                'parameters': []
-            },
-            
             'find_by_extension': {
                 'patterns': [
                     r'find.*(?:all|any).*\.(\w+).*files?',
@@ -77,6 +65,20 @@ class PatternEngine:
                 'command_template': 'find . -name "*.{extension}" -type f',
                 'explanation': 'Find files by extension',
                 'parameters': ['extension']
+            },
+            
+            'find_all_files': {
+                'patterns': [
+                    r'find.*(?:all|every).*files?(?!\s*\.)',  # Negative lookahead to exclude extensions
+                    r'(?:list|show).*(?:all|every).*files?(?!\s*\.)',
+                    r'(?:all|every).*files?.*(?:find|list|show)(?!\s*\.)',
+                    r'^find files$',
+                    r'^list files$',
+                    r'^show files$',
+                ],
+                'command_template': 'find . -type f',
+                'explanation': 'Find all files in current directory and subdirectories',
+                'parameters': []
             },
             
             # System Monitoring Patterns
@@ -409,20 +411,10 @@ class PatternEngine:
         return '8080'
     
     def _convert_extension(self, value: str) -> str:
-        """Convert file type to extension"""
-        extension_mappings = {
-            'python': 'py',
-            'javascript': 'js',
-            'java': 'java',
-            'cpp': 'cpp',
-            'c++': 'cpp',
-            'html': 'html',
-            'css': 'css',
-            'sql': 'sql'
-        }
-        
-        value_lower = value.lower()
-        return extension_mappings.get(value_lower, value_lower)
+        """Convert file extension to standard format using common resolver"""
+        # Use the common extension resolver for consistency
+        normalized = self.extension_resolver.extension_mappings.get(value.lower())
+        return normalized if normalized else value.lower()
     
     def _convert_project_name(self, value: str) -> str:
         """Clean and validate project name"""
@@ -438,6 +430,17 @@ class PatternEngine:
             return parameters
         
         for param in pattern_info['parameters']:
+            # Special handling for extension parameter using common resolver
+            if param == 'extension':
+                extension = self.extension_resolver.extract_extension(text)
+                if extension:
+                    parameters[param] = extension
+                    continue
+                # Fall back to default if not found
+                parameters[param] = 'txt'
+                continue
+            
+            # Handle other parameters with existing extractors
             if param in self.parameter_extractors:
                 extractor = self.parameter_extractors[param]
                 
@@ -472,32 +475,35 @@ class PatternEngine:
         for pattern_name, pattern_info in self.semantic_patterns.items():
             for pattern in pattern_info['patterns']:
                 if re.search(pattern, text_lower, re.IGNORECASE):
-                    # Use parameter resolver for consistent parameter handling
-                    required_params = self.parameter_resolver.get_parameter_definitions(pattern_name)
-                    param_result = self.parameter_resolver.extract_parameters(
-                        text, required_params, {}
-                    )
+                    # Extract parameters using local method with extension resolver
+                    parameters = self.extract_parameters(text, pattern_info)
                     
-                    # Check if pattern should match based on parameter availability
-                    if not self.parameter_resolver.should_match_pattern(
-                        text, required_params, self.confidence_threshold
-                    ):
-                        continue  # Try next pattern
-                    
-                    # Build command with resolved parameters
-                    command = self.parameter_resolver.resolve_template(
-                        pattern_info['command_template'], param_result.extracted
-                    )
+                    # Build command with extracted parameters
+                    try:
+                        command = pattern_info['command_template'].format(**parameters)
+                    except KeyError as e:
+                        logger.warning(f"Missing parameter in template: {e}")
+                        # Fill missing parameters with defaults and try again
+                        for param in pattern_info.get('parameters', []):
+                            if param not in parameters:
+                                if param in self.parameter_extractors:
+                                    parameters[param] = self.parameter_extractors[param]['default']
+                                else:
+                                    parameters[param] = 'default_value'
+                        try:
+                            command = pattern_info['command_template'].format(**parameters)
+                        except Exception:
+                            continue  # Skip this pattern if still can't format
                     
                     return {
                         'command': command,
                         'explanation': pattern_info['explanation'],
-                        'confidence': min(90, int(0.9 * param_result.confidence * 100)),
+                        'confidence': 90,
                         'pattern_type': 'semantic',
                         'pattern_name': pattern_name,
-                        'parameters': param_result.extracted,
-                        'defaults_applied': param_result.defaults_applied,
-                        'parameter_confidence': param_result.confidence
+                        'parameters': parameters,
+                        'defaults_applied': {},
+                        'parameter_confidence': 1.0
                     }
         
         return None

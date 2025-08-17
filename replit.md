@@ -45,6 +45,7 @@ Preferred communication style: Simple, everyday language.
 - COMPLETED: Moved Parameter Resolver from pipeline to utils folder for better architecture organization (Aug 17, 2025)
 - COMPLETED: Fixed critical pipeline flow issues - ShellAdapter method signature and SemanticMatcher None-safety, eliminating all LSP diagnostics and enabling end-to-end pipeline functionality (Aug 17, 2025)
 - COMPLETED: Fixed utils.py issues - subprocess import error and improved TODO example text, eliminating remaining LSP diagnostics (Aug 17, 2025)
+- COMPLETED: Implemented dual solution for file extension search issue - Fixed Pattern Engine priority ordering (Option B) and enhanced Semantic Matcher with extension-specific patterns (Option A), plus created common FileExtensionResolver utility for shared functionality across pipeline levels (Aug 17, 2025)
 
 # System Architecture
 

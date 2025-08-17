@@ -8,6 +8,7 @@ import os
 import pickle
 from typing import Dict, List, Optional, Tuple, Any
 from ..utils.parameter_resolver import ParameterResolver, ParameterDefinition, ParameterType
+from ..utils.file_extension_resolver import FileExtensionResolver
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ class SemanticMatcher:
         
         # Initialize parameter resolver
         self.parameter_resolver = ParameterResolver()
+        self.extension_resolver = FileExtensionResolver()
         
         # Initialize model and embeddings
         self._initialize_model()
@@ -66,6 +68,50 @@ class SemanticMatcher:
                 'variations': [
                     'find files', 'search files', 'locate files', 'find all files',
                     'recursive file search', 'file search', 'search for files'
+                ]
+            },
+            
+            'find_js_files': {
+                'command': 'find . -name "*.js" -type f',
+                'explanation': 'Find JavaScript files',
+                'variations': [
+                    'find js files', 'find javascript files', 'find .js files',
+                    'list js files', 'list javascript files', 'list .js files',
+                    'show js files', 'show javascript files', 'show .js files',
+                    'search js files', 'search javascript files', 'javascript files'
+                ]
+            },
+            
+            'find_python_files': {
+                'command': 'find . -name "*.py" -type f',
+                'explanation': 'Find Python files',
+                'variations': [
+                    'find python files', 'find .py files', 'find py files',
+                    'list python files', 'list .py files', 'list py files',
+                    'show python files', 'show .py files', 'show py files',
+                    'search python files', 'python scripts', 'python files'
+                ]
+            },
+            
+            'find_css_files': {
+                'command': 'find . -name "*.css" -type f',
+                'explanation': 'Find CSS stylesheets',
+                'variations': [
+                    'find css files', 'find .css files', 'find css',
+                    'list css files', 'list .css files', 'list css',
+                    'show css files', 'show .css files', 'show css',
+                    'search css files', 'css files', 'stylesheets'
+                ]
+            },
+            
+            'find_html_files': {
+                'command': 'find . -name "*.html" -type f',
+                'explanation': 'Find HTML files',
+                'variations': [
+                    'find html files', 'find .html files', 'find html',
+                    'list html files', 'list .html files', 'list html',
+                    'show html files', 'show .html files', 'show html',
+                    'search html files', 'html files', 'web pages'
                 ]
             },
             
@@ -498,6 +544,11 @@ class SemanticMatcher:
         archive_match = re.search(r'(?:extract|unpack)\s+(\S+)', natural_input.lower())
         if archive_match:
             parameters['archive'] = archive_match.group(1)
+        
+        # Extension parameter for file operations (shared with pattern engine)
+        extension_match = re.search(r'\.(\w+)\s+files?', natural_input.lower())
+        if extension_match:
+            parameters['extension'] = extension_match.group(1)
         
         return parameters
     
