@@ -1,6 +1,6 @@
 """
-Shell Adapter (Tier 1) - Cross-Platform Shell Intelligence & Context Provider
-Provides comprehensive system context to the translation pipeline
+Shell Adapter (Level 1) - Comprehensive Context Provider & Shell Intelligence
+Centralizes ALL context gathering: platform, shell, git, environment, and system
 """
 
 import os
@@ -12,15 +12,47 @@ from ..utils.utils import setup_logging
 logger = setup_logging()
 
 class ShellAdapter:
-    """Context provider and shell intelligence for the translation pipeline"""
+    """Level 1: Comprehensive context provider and shell intelligence for the translation pipeline"""
     
     def __init__(self):
-        """Initialize shell adapter with platform-aware context"""
+        """Initialize shell adapter with complete context gathering"""
+        # Basic system context
         self.platform = platform.system().lower()
         self.shell_type = self._detect_shell()
+        self.current_directory = os.getcwd()  # Add missing current_directory
+        
+        # Initialize all context managers (centralized here)
+        self._initialize_context_managers()
+        
+        # Load system-specific context
         self._load_context_metadata()
         self._load_available_commands()
         self._load_platform_equivalents()
+    
+    def _initialize_context_managers(self):
+        """Initialize all context managers in Level 1 for centralized context"""
+        try:
+            # Git context for repository awareness
+            from ..context.git_context import GitContextManager
+            self.git_context = GitContextManager()
+            
+            # Environment context for project detection
+            from ..context.environment_context import EnvironmentContextManager
+            self.env_context = EnvironmentContextManager()
+            
+            # Legacy context manager
+            from ..context.context_manager import ContextManager
+            config_dir = os.path.expanduser('~/.nlcli')
+            self.context_manager = ContextManager(config_dir)
+            
+            logger.debug("Context managers initialized in ShellAdapter")
+            
+        except Exception as e:
+            logger.warning(f"Failed to initialize context managers: {e}")
+            # Set fallback None values
+            self.git_context = None
+            self.env_context = None 
+            self.context_manager = None
     
     def _load_context_metadata(self):
         """Load system context metadata for pipeline (Level 1)"""
@@ -264,3 +296,77 @@ class ShellAdapter:
             'available_commands': len([cmd for commands in self.core_commands.values() for cmd in commands]),
             'command_categories': list(self.core_commands.keys())
         }
+    
+    # Context Access Methods (Level 1 provides context to all pipeline levels)
+    
+    def get_git_context(self) -> Dict:
+        """Get Git repository context"""
+        if self.git_context:
+            try:
+                git_state = self.git_context.get_repository_state()
+                # Convert GitRepositoryState to dict
+                return {
+                    'is_git_repo': git_state.is_git_repo,
+                    'current_branch': git_state.current_branch,
+                    'has_staged_changes': git_state.has_staged_changes,
+                    'has_unstaged_changes': git_state.has_unstaged_changes,
+                    'has_untracked_files': git_state.has_untracked_files,
+                    'repository_root': git_state.repository_root
+                }
+            except Exception as e:
+                logger.warning(f"Failed to get git context: {e}")
+        return {'is_git_repo': False}
+    
+    def get_environment_context(self) -> Dict:
+        """Get project environment context"""
+        if self.env_context:
+            try:
+                project_type = self.env_context.detect_project_type()
+                framework = self.env_context.detect_framework(project_type)
+                return {
+                    'project_type': project_type,
+                    'framework': framework,
+                    'project_root': self.current_directory if hasattr(self, 'current_directory') else os.getcwd()
+                }
+            except Exception as e:
+                logger.warning(f"Failed to get environment context: {e}")
+        return {'project_type': 'unknown'}
+    
+    def get_enhanced_context(self, command: str = "") -> Dict:
+        """
+        Get comprehensive context for AI translation (Level 5)
+        
+        Args:
+            command: The command being translated (for context-specific suggestions)
+            
+        Returns:
+            Complete context dictionary combining all sources
+        """
+        context = {
+            # System context (always available)
+            'platform': self.platform,
+            'shell': self.shell_type,
+            'available_commands': self.core_commands,
+            'shell_features': self._get_shell_features(),
+            
+            # Git context (if available)
+            'git': self.get_git_context(),
+            
+            # Environment context (if available)  
+            'environment': self.get_environment_context(),
+            
+            # Command-specific context
+            'command_category': self._get_command_category(command),
+            'is_platform_specific': self._is_platform_specific_command(command)
+        }
+        
+        # Legacy context (if available)
+        if self.context_manager:
+            try:
+                legacy_context = self.context_manager.get_context_info()
+                if legacy_context:
+                    context['legacy'] = legacy_context
+            except Exception as e:
+                logger.warning(f"Failed to get legacy context: {e}")
+        
+        return context
