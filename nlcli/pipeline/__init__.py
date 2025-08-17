@@ -12,7 +12,7 @@ from .ai_translator import AITranslator
 from .command_filter import CommandFilter
 from .fuzzy_engine import FuzzyEngine
 from .pattern_engine import PatternEngine
-from .typo_corrector import TypoCorrector
+from .shell_corrector import ShellCorrector
 from .command_selector import CommandSelector
 
 __all__ = [
@@ -20,6 +20,6 @@ __all__ = [
     'CommandFilter', 
     'FuzzyEngine',
     'PatternEngine',
-    'TypoCorrector',
+    'ShellCorrector',
     'CommandSelector'
 ]

@@ -1,6 +1,6 @@
 """
-Enhanced Typo Correction (Tier 1) - Multi-Shell Support
-Streamlined for sub-millisecond response times with cross-platform corrections
+Multi-Shell Command Corrector (Tier 1) - Cross-Platform Support
+Streamlined for sub-millisecond response times with intelligent shell detection
 """
 
 import platform
@@ -9,11 +9,11 @@ from ..utils.utils import setup_logging
 
 logger = setup_logging()
 
-class TypoCorrector:
-    """Lightweight typo corrector for Tier 1 - multi-shell essential commands"""
+class ShellCorrector:
+    """Lightweight multi-shell command corrector for Tier 1 - cross-platform support"""
     
     def __init__(self):
-        """Initialize typo corrector with multi-shell command corrections"""
+        """Initialize shell corrector with multi-shell command corrections"""
         self.platform = platform.system().lower()
         self._load_multi_shell_typos()
     

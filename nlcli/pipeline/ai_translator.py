@@ -57,9 +57,9 @@ class AITranslator:
         from .command_filter import CommandFilter
         self.command_filter = CommandFilter()
         
-        # Typo corrector for enhanced recognition
-        from .typo_corrector import TypoCorrector
-        self.typo_corrector = TypoCorrector()
+        # Multi-shell corrector for enhanced recognition
+        from .shell_corrector import ShellCorrector
+        self.shell_corrector = ShellCorrector()
         
         # Command selector for interactive choice handling
         from .command_selector import CommandSelector
@@ -204,10 +204,10 @@ class AITranslator:
         """
         
         try:
-            # Step 0: Try typo correction first
-            corrected_input = self.typo_corrector.correct_typo(natural_language)
+            # Step 0: Try shell command correction first
+            corrected_input = self.shell_corrector.correct_typo(natural_language)
             if corrected_input != natural_language:
-                logger.debug(f"Typo corrected: '{natural_language}' -> '{corrected_input}'")
+                logger.debug(f"Shell command corrected: '{natural_language}' -> '{corrected_input}'")
                 # Use corrected input for further processing
                 natural_language = corrected_input
             
@@ -220,7 +220,7 @@ class AITranslator:
                         **direct_result,
                         'cached': False,
                         'instant': True,
-                        'typo_corrected': corrected_input != natural_language
+                        'shell_corrected': corrected_input != natural_language
                     }
             
             # Step 2: Enhanced Pattern Engine - Tier 3 Semantic Recognition (5ms target)
@@ -259,7 +259,7 @@ class AITranslator:
                 }
             
             # Step 2.6: Enhanced fuzzy matching now handles all typo variations
-            # (Removed redundant basic fuzzy matching from typo_corrector)
+            # (Removed redundant basic fuzzy matching from shell_corrector)
             
             # Step 1.4: Enhanced Context Intelligence - Git-aware commands
             git_suggestion = self._check_git_context_commands(natural_language)
