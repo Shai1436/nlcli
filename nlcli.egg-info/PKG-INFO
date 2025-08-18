@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: nlcli
-Version: 1.1.0
+Version: 1.1.1
 Summary: Universal CLI that translates natural language to OS commands
 Home-page: https://github.com/nlcli/nlcli
 Author: NLCLI Team
@@ -33,11 +33,8 @@ Requires-Dist: click>=8.0.0
 Requires-Dist: openai>=1.0.0
 Requires-Dist: rich>=13.0.0
 Requires-Dist: psutil>=5.0.0
+Requires-Dist: build>=1.2.2.post1
 Requires-Dist: setuptools>=75.3.2
-Requires-Dist: pytest>=8.3.5
-Requires-Dist: pytest-cov>=5.0.0
-Requires-Dist: coverage>=7.6.1
-Requires-Dist: anthropic>=0.64.0
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0.0; extra == "dev"
 Requires-Dist: pytest-cov>=4.0.0; extra == "dev"

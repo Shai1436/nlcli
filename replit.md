@@ -32,6 +32,8 @@ Preferred communication style: Simple, everyday language.
 - Added missing critical shell and networking commands
 - Enhanced command argument support
 - Intelligent find patterns implementation
+- **CRITICAL**: Resolved Windows PowerShell deployment and compatibility issues (v1.1.1)
+- Clean Windows installation without fann2/padatious dependency conflicts
 
 # System Architecture
 
