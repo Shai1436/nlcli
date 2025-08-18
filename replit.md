@@ -34,6 +34,15 @@ Preferred communication style: Simple, everyday language.
 - Intelligent find patterns implementation
 - **CRITICAL**: Resolved Windows PowerShell deployment and compatibility issues (v1.1.1)
 - Clean Windows installation without fann2/padatious dependency conflicts
+- **ARCHITECTURE PLAN**: Shared Parameterized Pipeline Design
+  - Base command matching across all pipeline levels (network, status, etc.)
+  - Shared parameter context flows between levels {platform, shell, etc.}
+  - Each pipeline level can resolve to parameterized version when needed
+  - Preserves pipeline matching while enabling context-aware command generation
+- **PENDING FIX**: Pipeline context initialization timing issue
+  - Pattern engine initialization happens before shell adapter context available
+  - Command templates baked in at class creation, can't adapt to runtime context
+  - Need two-phase approach: defer command generation until pipeline execution
 
 # System Architecture
 
@@ -80,6 +89,7 @@ The application employs a modular, cross-platform architecture emphasizing perfo
 - **Modular Fuzzy Architecture**: Shared base architecture for fuzzy matching systems, optimized for both command filtering and complex AI operations.
 - **6-Level Pipeline Architecture**: Level 1 (context) → Level 2 (exact commands) → Level 3 (patterns) → Level 4 (fuzzy/typo) → Level 5 (semantic ML) → Level 6 (AI fallback).
 - **Universal Parameter System**: Common Parameter Resolver integrated across all pipeline levels with intelligent extraction patterns and validation rules.
+- **Shared Parameterized Pipeline**: Base command matching preserved across all levels with shared context {platform, shell} for runtime command resolution.
 - **Performance Optimization**: 5-tier system for sub-millisecond to low-latency command recognition.
 - **Cross-OS Compatibility**: Comprehensive Windows↔Unix translation and terminal coverage (CMD, Bash, Zsh, PowerShell).
 - **Production-Ready Storage System**: High-performance file-based caching, atomic file operations, and accurate command history statistics.
