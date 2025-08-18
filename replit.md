@@ -41,7 +41,7 @@ The application employs a modular, cross-platform architecture emphasizing perfo
 - **Context Intelligence System**: Provides Git repository awareness and environment variable integration for project-specific command suggestions.
 - **Enhanced Shell Adapter**: Centralized system expertise delivering comprehensive context, including platform detection, shell identification, and command categorization.
 - **Context-Driven AI Translation Layer**: Integrates OpenAI's GPT-4o, accepting context from the shell adapter for optimized performance.
-- **Command Filter System**: Directly executes over 265 known commands with sub-1ms response times, supporting platform-aware and cross-platform recognition.
+- **Command Filter System**: Directly executes over 534 known commands with sub-1ms response times, supporting platform-aware and cross-platform recognition including comprehensive destructive command safety patterns.
 - **Common Parameter Resolver**: Universal parameter extraction and validation system supporting 9 parameter types (e.g., size, port, host) with intelligent defaults and regex validation.
 - **Interactive Command Selection**: Manages ambiguous natural language requests by presenting options and learning user preferences.
 - **Modular Fuzzy Matching System**: Refactored architecture eliminating code duplication while maintaining sub-1ms performance.
@@ -86,7 +86,7 @@ The application employs a modular, cross-platform architecture emphasizing perfo
 
 ## Feature Specifications
 - **Enhanced Command Filter**: Supports intelligent command variations with parameters.
-- **Known Commands Expansion**: Over 265 direct commands, including comprehensive typo/variation mappings.
+- **Known Commands Expansion**: Over 534 direct commands (342 base + 192 variations), including comprehensive typo/variation mappings and destructive command safety patterns.
 - **Intelligent Find Patterns**: Natural language find operations directly execute as OS commands.
 - **Command Argument Support**: Over 100 command variations with common arguments.
 - **Smart API Key Prompting**: API key prompted only for unknown commands; many commands available without setup.

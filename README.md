@@ -11,7 +11,7 @@ An advanced AI-powered Natural Language CLI tool that transforms complex user in
 
 ### Core Functionality
 - **6-Level Pipeline Architecture**: Context → Exact Commands → Patterns → Fuzzy Matching → Semantic ML → AI Fallback
-- **265+ Direct Commands**: Sub-1ms response times for known commands without API calls
+- **534+ Direct Commands**: Sub-1ms response times for comprehensive enterprise-grade command coverage
 - **Cross-Platform Intelligence**: Windows↔Unix↔Linux↔macOS command translation with PowerShell support
 - **Smart API Key Management**: Single-prompt setup with persistent storage across sessions
 - **Advanced Context Awareness**: Git repository detection, project type recognition, environment integration
@@ -28,7 +28,7 @@ An advanced AI-powered Natural Language CLI tool that transforms complex user in
 - **100% Test Coverage**: 37 storage tests plus comprehensive pipeline validation
 - **Clean Module Design**: Zero import conflicts with proper entry point configuration
 - **Commercial Licensing**: Enterprise support and commercial deployment ready
-- **Zero Dependencies for Core**: 265+ commands work without external API calls
+- **Zero Dependencies for Core**: 534+ commands work without external API calls for enterprise productivity
 - **Persistent Configuration**: Single setup persists across all sessions and instances
 
 ## 📦 Installation
