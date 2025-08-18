@@ -6,6 +6,7 @@ Provides advanced natural language workflow recognition and parameter intelligen
 import re
 import json
 import logging
+import platform
 from typing import Dict, List, Optional, Tuple, Any
 import os
 from ..utils.parameter_resolver import ParameterResolver
@@ -17,6 +18,7 @@ class PatternEngine:
     """Advanced semantic pattern recognition for complex workflows"""
     
     def __init__(self):
+        self.platform = platform.system().lower()
         self.semantic_patterns = self._load_semantic_patterns()
         self.workflow_templates = self._load_workflow_templates()
         self.parameter_extractors = self._load_parameter_extractors()
@@ -89,7 +91,7 @@ class PatternEngine:
                     r'what.*(?:running|process(?:es)?)',
                     r'(?:top|monitor).*process(?:es)?',
                 ],
-                'command_template': 'ps aux --sort=-%cpu | head -20',
+                'command_template': self._get_processes_command(),
                 'explanation': 'Show running processes sorted by CPU usage',
                 'parameters': []
             },
@@ -126,7 +128,7 @@ class PatternEngine:
                     r'(?:am|are).*(?:i|we).*(?:online|connected)',
                     r'(?:ping|test).*(?:connection|network)',
                 ],
-                'command_template': 'ping -c 4 8.8.8.8 && echo "=== Network Interfaces ===" && ip addr show',
+                'command_template': self._get_network_status_command(),
                 'explanation': 'Test network connectivity and show network status',
                 'parameters': []
             },
@@ -137,7 +139,7 @@ class PatternEngine:
                     r'(?:network|ethernet).*(?:interfaces?|adapters?).*(?:list|status)',
                     r'(?:ip|network).*(?:config|configuration)',
                 ],
-                'command_template': 'ip addr show',
+                'command_template': self._get_network_interfaces_command(),
                 'explanation': 'Show network interface configuration',
                 'parameters': []
             },
@@ -467,6 +469,27 @@ class PatternEngine:
                     parameters[param] = extractor['default']
         
         return parameters
+    
+    def _get_network_status_command(self) -> str:
+        """Get platform-specific network status command"""
+        if self.platform == 'windows':
+            return 'ping -n 4 8.8.8.8 && echo === Network Configuration === && ipconfig /all'
+        else:
+            return 'ping -c 4 8.8.8.8 && echo "=== Network Interfaces ===" && ip addr show'
+    
+    def _get_network_interfaces_command(self) -> str:
+        """Get platform-specific network interfaces command"""
+        if self.platform == 'windows':
+            return 'ipconfig /all'
+        else:
+            return 'ip addr show'
+    
+    def _get_processes_command(self) -> str:
+        """Get platform-specific processes command"""
+        if self.platform == 'windows':
+            return 'tasklist /FO TABLE | findstr /V "Image"'
+        else:
+            return 'ps aux --sort=-%cpu | head -20'
     
     def match_semantic_pattern(self, text: str) -> Optional[Dict]:
         """Match text against semantic patterns"""
