@@ -58,8 +58,8 @@ Homepage = "https://github.com/nlcli/nlcli"
 "Enterprise Support" = "https://nlcli.dev/enterprise"
 
 [project.scripts]
-nlcli = "nlcli.main:cli"
-nl = "nlcli.main:cli"
+nlcli = "nlcli.cli.main:cli"
+nl = "nlcli.cli.main:cli"
 
 [tool.setuptools]
 packages = ["nlcli"]
