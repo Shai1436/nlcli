@@ -3,17 +3,17 @@ Test suite for Enhanced Pattern Engine
 """
 
 import pytest
-from nlcli.pipeline.pattern_engine import AdvancedPatternEngine
+from nlcli.pipeline.pattern_engine import PatternEngine
 
-class TestAdvancedPatternEngine:
-    """Test cases for the Advanced Pattern Engine"""
+class TestPatternEngine:
+    """Test cases for the Pattern Engine"""
     
     def setUp(self):
-        self.engine = AdvancedPatternEngine()
+        self.engine = PatternEngine()
     
     def test_pattern_engine_initialization(self):
         """Test that pattern engine initializes correctly"""
-        engine = AdvancedPatternEngine()
+        engine = PatternEngine()
         assert engine is not None
         assert len(engine.semantic_patterns) > 0
         assert len(engine.workflow_templates) > 0
@@ -21,7 +21,7 @@ class TestAdvancedPatternEngine:
     
     def test_semantic_pattern_matching(self):
         """Test semantic pattern recognition"""
-        engine = AdvancedPatternEngine()
+        engine = PatternEngine()
         
         # Test file size pattern
         result = engine.match_semantic_pattern("find large files bigger than 100MB")
@@ -38,7 +38,7 @@ class TestAdvancedPatternEngine:
     
     def test_workflow_template_matching(self):
         """Test workflow template recognition"""
-        engine = AdvancedPatternEngine()
+        engine = PatternEngine()
         
         # Test Python project setup
         result = engine.match_workflow_template("setup python project called myapp")
@@ -50,7 +50,7 @@ class TestAdvancedPatternEngine:
     
     def test_parameter_extraction(self):
         """Test parameter extraction from natural language"""
-        engine = AdvancedPatternEngine()
+        engine = PatternEngine()
         
         # Test size parameter extraction
         pattern_info = {'parameters': ['size']}
@@ -66,7 +66,7 @@ class TestAdvancedPatternEngine:
     
     def test_process_natural_language(self):
         """Test main processing function"""
-        engine = AdvancedPatternEngine()
+        engine = PatternEngine()
         
         # Test semantic pattern processing
         result = engine.process_natural_language("find all python files")
@@ -86,7 +86,7 @@ class TestAdvancedPatternEngine:
     
     def test_complex_patterns(self):
         """Test complex semantic patterns"""
-        engine = AdvancedPatternEngine()
+        engine = PatternEngine()
         
         # Test complex file search
         result = engine.process_natural_language("find all large files bigger than 200MB")
@@ -101,7 +101,7 @@ class TestAdvancedPatternEngine:
     
     def test_multi_command_workflows(self):
         """Test multi-command workflow generation"""
-        engine = AdvancedPatternEngine()
+        engine = PatternEngine()
         
         result = engine.process_natural_language("setup python project named testapp")
         assert result is not None
@@ -119,7 +119,7 @@ class TestAdvancedPatternEngine:
 
 if __name__ == '__main__':
     # Run basic tests
-    engine = AdvancedPatternEngine()
+    engine = PatternEngine()
     
     print("=== Testing Enhanced Pattern Engine ===")
     

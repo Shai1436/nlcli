@@ -3,14 +3,14 @@ Test suite for Advanced Fuzzy Engine
 """
 
 import pytest
-from nlcli.pipeline.fuzzy_engine import AdvancedFuzzyEngine, LevenshteinMatcher, SemanticMatcher, PhoneticMatcher, IntentMatcher
+from nlcli.pipeline.fuzzy_engine import FuzzyEngine, LevenshteinMatcher, SemanticMatcher, PhoneticMatcher, IntentMatcher
 
-class TestAdvancedFuzzyEngine:
+class TestFuzzyEngine:
     """Test cases for the Advanced Fuzzy Engine"""
     
     def test_fuzzy_engine_initialization(self):
         """Test that fuzzy engine initializes correctly"""
-        engine = AdvancedFuzzyEngine()
+        engine = FuzzyEngine()
         assert engine is not None
         assert len(engine.algorithms) == 4
         assert len(engine.intent_categories) > 0
@@ -18,7 +18,7 @@ class TestAdvancedFuzzyEngine:
     
     def test_multi_algorithm_fuzzy_matching(self):
         """Test multi-algorithm fuzzy matching"""
-        engine = AdvancedFuzzyEngine()
+        engine = FuzzyEngine()
         
         # Test basic typo correction
         result = engine.fuzzy_match("shw files", threshold=0.6)
@@ -37,7 +37,7 @@ class TestAdvancedFuzzyEngine:
     
     def test_intent_based_matching(self):
         """Test intent-based command recognition"""
-        engine = AdvancedFuzzyEngine()
+        engine = FuzzyEngine()
         
         # Test file management intent
         result = engine.fuzzy_match("create new file", threshold=0.6)
@@ -55,7 +55,7 @@ class TestAdvancedFuzzyEngine:
     
     def test_learning_capabilities(self):
         """Test pattern learning and adaptation"""
-        engine = AdvancedFuzzyEngine()
+        engine = FuzzyEngine()
         
         # Simulate successful match learning
         engine._learn_pattern("shw files", "ls", 0.8)
@@ -64,7 +64,7 @@ class TestAdvancedFuzzyEngine:
     
     def test_text_normalization(self):
         """Test text normalization functionality"""
-        engine = AdvancedFuzzyEngine()
+        engine = FuzzyEngine()
         
         # Test basic normalization
         normalized = engine._normalize_text("SHW Files")
@@ -162,7 +162,7 @@ class TestFuzzyAlgorithms:
 
 if __name__ == '__main__':
     # Run basic tests
-    engine = AdvancedFuzzyEngine()
+    engine = FuzzyEngine()
     
     print("=== Testing Advanced Fuzzy Engine ===")
     
