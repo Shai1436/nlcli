@@ -146,25 +146,8 @@ def interactive_mode(obj):
                     api_timeout = float(obj['config'].get('performance', 'api_timeout', fallback='8.0'))
                     translation_result = ai_translator.translate(user_input, context=context, timeout=api_timeout)
                     
-                    # Show performance info with context details
+                    # Calculate elapsed time for formatter display
                     elapsed = time.time() - start_time
-                    if translation_result:
-                        platform = context.get('platform', 'unknown')
-                        shell = context.get('shell', 'unknown')
-                        
-                        if translation_result.get('context_direct'):
-                            console.print(f"[dim blue]🚀 Context-direct ({platform}/{shell}) ({elapsed:.3f}s)[/dim blue]")
-                        elif translation_result.get('direct'):
-                            console.print(f"[dim blue]🚀 Direct execution ({elapsed:.3f}s)[/dim blue]")
-                        elif translation_result.get('context_aware'):
-                            context_type = translation_result.get('context_type', 'unknown')
-                            console.print(f"[dim cyan]🎯 Context-aware ({context_type}) ({elapsed:.3f}s)[/dim cyan]")
-                        elif translation_result.get('instant'):
-                            console.print(f"[dim green]⚡ Instant match ({elapsed:.3f}s)[/dim green]")
-                        elif translation_result.get('cached'):
-                            console.print(f"[dim green]📋 Cached result ({elapsed:.3f}s)[/dim green]")
-                        else:
-                            console.print(f"[dim yellow]🤖 AI translation ({platform}/{shell}) ({elapsed:.3f}s)[/dim yellow]")
                     
                     if not translation_result:
                         console.print("[red]Could not translate the command. Please try rephrasing.[/red]")
