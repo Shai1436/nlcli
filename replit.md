@@ -39,10 +39,11 @@ Preferred communication style: Simple, everyday language.
   - Shared parameter context flows between levels {platform, shell, etc.}
   - Each pipeline level can resolve to parameterized version when needed
   - Preserves pipeline matching while enabling context-aware command generation
-- **PENDING FIX**: Pipeline context initialization timing issue
-  - Pattern engine initialization happens before shell adapter context available
-  - Command templates baked in at class creation, can't adapt to runtime context
-  - Need two-phase approach: defer command generation until pipeline execution
+- **FIXED**: Pipeline context initialization timing issue (v1.1.2)
+  - Implemented runtime command template resolution using shell context
+  - Pattern engine now receives shell_context through pipeline metadata
+  - Commands adapt to platform (Windows/Linux) at execution time instead of initialization
+  - Two-phase approach: command_template_resolver keys instead of static templates
 
 # System Architecture
 

@@ -91,7 +91,7 @@ class PatternEngine:
                     r'what.*(?:running|process(?:es)?)',
                     r'(?:top|monitor).*process(?:es)?',
                 ],
-                'command_template': self._get_processes_command(),
+                'command_template_resolver': 'processes',
                 'explanation': 'Show running processes sorted by CPU usage',
                 'parameters': []
             },
@@ -128,7 +128,7 @@ class PatternEngine:
                     r'(?:am|are).*(?:i|we).*(?:online|connected)',
                     r'(?:ping|test).*(?:connection|network)',
                 ],
-                'command_template': self._get_network_status_command(),
+                'command_template_resolver': 'network_status',
                 'explanation': 'Test network connectivity and show network status',
                 'parameters': []
             },
@@ -139,7 +139,7 @@ class PatternEngine:
                     r'(?:network|ethernet).*(?:interfaces?|adapters?).*(?:list|status)',
                     r'(?:ip|network).*(?:config|configuration)',
                 ],
-                'command_template': self._get_network_interfaces_command(),
+                'command_template_resolver': 'network_interfaces',
                 'explanation': 'Show network interface configuration',
                 'parameters': []
             },
@@ -318,8 +318,8 @@ class PatternEngine:
         return {
             'size': {
                 'patterns': [
-                    r'(?:larger|bigger|more).*than.*(\d+(?:\.\d+)?)\s*([KMGT]?B|bytes?)',
-                    r'(?:over|above).*(\d+(?:\.\d+)?)\s*([KMGT]?B|bytes?)',
+                    r'(?:larger|bigger|more)\s+than\s+(\d+(?:\.\d+)?)\s*([KMGT]?B|bytes?|MB|GB|KB|TB|M|G|K|T)',
+                    r'(?:over|above)\s+(\d+(?:\.\d+)?)\s*([KMGT]?B|bytes?|MB|GB|KB|TB|M|G|K|T)',
                     r'(\d+(?:\.\d+)?)\s*([KMGT]?B|bytes?)',
                     r'(\d+(?:\.\d+)?)\s*(MB|GB|KB|TB|M|G|K|T)',
                 ],
@@ -340,8 +340,9 @@ class PatternEngine:
             },
             'port': {
                 'patterns': [
-                    r'port.*(\d+)',
-                    r'(\d+).*port',
+                    r'port\s+(\d+)',
+                    r'(\d+)\s*port',
+                    r':\s*(\d+)',
                 ],
                 'converter': self._convert_port,
                 'default': '8080'
@@ -470,29 +471,33 @@ class PatternEngine:
         
         return parameters
     
-    def _get_network_status_command(self) -> str:
-        """Get platform-specific network status command"""
-        if self.platform == 'windows':
-            return 'ping -n 4 8.8.8.8 && echo === Network Configuration === && ipconfig /all'
-        else:
-            return 'ping -c 4 8.8.8.8 && echo "=== Network Interfaces ===" && ip addr show'
+    def _resolve_command_template(self, resolver_key: str, shell_context: Optional[Dict] = None) -> str:
+        """Resolve platform-specific command templates at runtime using shell context"""
+        platform = shell_context.get('platform', 'linux') if shell_context else self.platform
+        
+        command_templates = {
+            'network_status': {
+                'windows': 'ping -n 4 8.8.8.8 && echo === Network Configuration === && ipconfig /all',
+                'default': 'ping -c 4 8.8.8.8 && echo "=== Network Interfaces ===" && ip addr show'
+            },
+            'network_interfaces': {
+                'windows': 'ipconfig /all',
+                'default': 'ip addr show'
+            },
+            'processes': {
+                'windows': 'tasklist /FO TABLE | findstr /V "Image"',
+                'default': 'ps aux --sort=-%cpu | head -20'
+            }
+        }
+        
+        if resolver_key in command_templates:
+            templates = command_templates[resolver_key]
+            return templates.get(platform, templates['default'])
+        
+        return ''
     
-    def _get_network_interfaces_command(self) -> str:
-        """Get platform-specific network interfaces command"""
-        if self.platform == 'windows':
-            return 'ipconfig /all'
-        else:
-            return 'ip addr show'
-    
-    def _get_processes_command(self) -> str:
-        """Get platform-specific processes command"""
-        if self.platform == 'windows':
-            return 'tasklist /FO TABLE | findstr /V "Image"'
-        else:
-            return 'ps aux --sort=-%cpu | head -20'
-    
-    def match_semantic_pattern(self, text: str) -> Optional[Dict]:
-        """Match text against semantic patterns"""
+    def match_semantic_pattern(self, text: str, shell_context: Optional[Dict] = None) -> Optional[Dict]:
+        """Match text against semantic patterns with runtime context resolution"""
         text_lower = text.lower()
         
         for pattern_name, pattern_info in self.semantic_patterns.items():
@@ -501,9 +506,18 @@ class PatternEngine:
                     # Extract parameters using local method with extension resolver
                     parameters = self.extract_parameters(text, pattern_info)
                     
+                    # Resolve command template at runtime using shell context
+                    if 'command_template_resolver' in pattern_info:
+                        command_template = self._resolve_command_template(
+                            pattern_info['command_template_resolver'], 
+                            shell_context
+                        )
+                    else:
+                        command_template = pattern_info.get('command_template', '')
+                    
                     # Build command with extracted parameters
                     try:
-                        command = pattern_info['command_template'].format(**parameters)
+                        command = command_template.format(**parameters)
                     except KeyError as e:
                         logger.warning(f"Missing parameter in template: {e}")
                         # Fill missing parameters with defaults and try again
@@ -514,7 +528,7 @@ class PatternEngine:
                                 else:
                                     parameters[param] = 'default_value'
                         try:
-                            command = pattern_info['command_template'].format(**parameters)
+                            command = command_template.format(**parameters)
                         except Exception:
                             continue  # Skip this pattern if still can't format
                     
@@ -577,19 +591,20 @@ class PatternEngine:
         
         return None
     
-    def process_natural_language(self, text: str) -> Optional[Dict]:
+    def process_natural_language(self, text: str, shell_context: Optional[Dict] = None) -> Optional[Dict]:
         """
         Process natural language input through enhanced pattern engine
         
         Args:
             text: Natural language input
+            shell_context: Runtime shell context for platform-specific resolution
             
         Returns:
             Dictionary with command, explanation, and metadata or None
         """
         
         # First try semantic patterns (most specific)
-        semantic_result = self.match_semantic_pattern(text)
+        semantic_result = self.match_semantic_pattern(text, shell_context)
         if semantic_result:
             logger.debug(f"Semantic pattern match: {semantic_result['pattern_name']}")
             return semantic_result
@@ -621,8 +636,8 @@ class PatternEngine:
             Pipeline metadata dict if pattern matched, None otherwise
         """
         
-        # Process through enhanced pattern engine
-        result = self.process_natural_language(natural_language)
+        # Process through enhanced pattern engine with shell context
+        result = self.process_natural_language(natural_language, metadata)
         
         if result:
             # Add pipeline metadata
