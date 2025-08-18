@@ -248,14 +248,7 @@ class ConfigManager:
         
         return self.get_int('storage', 'backup_interval_days', 7)
     
-    def get_all_settings(self) -> Dict[str, Dict[str, str]]:
-        """Get all configuration settings"""
-        
-        settings = {}
-        for section_name in self.config.sections():
-            settings[section_name] = dict(self.config.items(section_name))
-        
-        return settings
+
     
     def reset_to_defaults(self):
         """Reset configuration to defaults"""
