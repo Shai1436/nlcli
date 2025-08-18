@@ -362,6 +362,12 @@ class CommandFilter:
             'mc': {'command': 'mc', 'explanation': 'Midnight Commander file manager', 'confidence': 1.0},
             'ranger': {'command': 'ranger', 'explanation': 'Console file manager', 'confidence': 1.0},
             'nnn': {'command': 'nnn', 'explanation': 'Terminal file manager', 'confidence': 1.0},
+            
+            # System control commands (with safety scoring)
+            'reboot': {'command': 'reboot', 'explanation': 'Restart the system', 'confidence': 0.8},
+            'shutdown': {'command': 'shutdown', 'explanation': 'Shutdown the system', 'confidence': 0.8},
+            'halt': {'command': 'halt', 'explanation': 'Halt the system', 'confidence': 0.8},
+            'poweroff': {'command': 'poweroff', 'explanation': 'Power off the system', 'confidence': 0.8},
         }
         
         # Platform-specific commands
