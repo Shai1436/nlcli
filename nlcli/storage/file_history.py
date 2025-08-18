@@ -354,7 +354,7 @@ class FileHistoryManager:
                 return {
                     'total_commands': total,
                     'successful_commands': successful,
-                    'success_rate': round((successful / total * 100) if total > 0 else 0.0, 2),
+                    'success_rate': round((successful / total) if total > 0 else 0.0, 4),
                     'searches_performed': self._stats['searches_performed']
                 }
                 
