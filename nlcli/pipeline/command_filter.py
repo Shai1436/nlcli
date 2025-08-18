@@ -104,6 +104,10 @@ class CommandFilter:
             'chown': {'command': 'chown', 'explanation': 'Change file ownership', 'confidence': 1.0},
             'chgrp': {'command': 'chgrp', 'explanation': 'Change group ownership', 'confidence': 1.0},
             
+            # Terminal output
+            'echo': {'command': 'echo', 'explanation': 'Display text or variables', 'confidence': 1.0},
+            'printf': {'command': 'printf', 'explanation': 'Formatted output', 'confidence': 1.0},
+            
             # Git commands (exact)
             'git': {'command': 'git', 'explanation': 'Git version control', 'confidence': 1.0},
             'git status': {'command': 'git status', 'explanation': 'Show repository status', 'confidence': 1.0},

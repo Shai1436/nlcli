@@ -51,6 +51,7 @@ Preferred communication style: Simple, everyday language.
 - COMPLETED: Production readiness verification - All 37 storage tests passing, zero blocking issues, comprehensive functionality validated including API key persistence, cross-platform cache isolation, and accurate command history statistics (Aug 18, 2025)
 - COMPLETED: Fixed "Unknown" display issue for pwd command - Updated OutputFormatter to properly recognize 'command_filter' source from Level 2 pipeline, system now correctly shows "⚡ Instant match" instead of "❓ Unknown" for direct command recognition (Aug 18, 2025)
 - COMPLETED: Eliminated duplicate "⚡ Instant match" messages - Removed redundant performance status display in main.py translation phase, now shows only clean formatted result table without duplication (Aug 18, 2025)
+- COMPLETED: Fixed basic command recognition issue - Added `echo` and `printf` to cross-platform commands in Level 2 Command Filter, previously only available for Windows systems, now all basic terminal output commands properly recognized with instant match (Aug 18, 2025)
 
 # System Architecture
 
