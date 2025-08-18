@@ -1,6 +1,6 @@
 # Overview
 
-Natural Language CLI Tool (nlcli) is an advanced AI-powered universal command-line interface that transforms complex user intents into precise OS commands through intelligent semantic processing and adaptive machine learning. Built with enterprise deployment in mind, it features a production-ready 6-level pipeline architecture supporting 265+ direct commands with sub-1ms response times, cross-platform intelligence, and zero external dependencies for core functionality. The business vision is to provide developers and enterprises with an intuitive, efficient, and secure way to interact with their operating systems, reducing cognitive load and increasing productivity through intelligent command translation, comprehensive safety measures, and scalable architecture designed for enterprise expansion.
+The Natural Language CLI Tool (nlcli) is an AI-powered universal command-line interface designed to convert natural language intents into precise OS commands. It features a production-ready 6-level pipeline architecture, offering sub-1ms response times for 265+ direct commands, cross-platform compatibility, and core functionality with zero external dependencies. The primary goal is to enhance developer and enterprise productivity by providing an intuitive, efficient, and secure interaction with operating systems through intelligent command translation, comprehensive safety measures, and a scalable architecture.
 
 # User Preferences
 
@@ -32,90 +32,70 @@ Preferred communication style: Simple, everyday language.
 - Added missing critical shell and networking commands
 - Enhanced command argument support
 - Intelligent find patterns implementation
-- COMPLETED: Three-phase context-driven architecture refactoring (Aug 17, 2025)
-- COMPLETED: Replaced 486+ manual typo mappings with intelligent fuzzy matching system (Aug 17, 2025)
-- COMPLETED: Fuzzy matching architecture refactoring - eliminated code duplication and created shared components (Aug 17, 2025)
-- COMPLETED: Pipeline cleanup and consolidation - 5-level architecture with eliminated redundancy (Aug 17, 2025)
-- COMPLETED: Context architecture refactoring - moved ALL context initialization from Level 5 (AITranslator) to Level 1 (ShellAdapter) for clean separation of concerns (Aug 17, 2025)
-- COMPLETED: Renamed context_cli.py to context_ui.py to properly reflect its UI nature rather than core functionality (Aug 17, 2025)
-- COMPLETED: Fixed pipeline component errors - added missing get_statistics method to CommandFilter, renamed AdvancedPatternEngine to PatternEngine, and fixed pipeline integration issues (Aug 17, 2025)
-- COMPLETED: Added missing 'find_all_files' pattern to Level 3 Pattern Engine and fixed context manager path in main.py for proper Level 3 pattern recognition (Aug 17, 2025)
-- COMPLETED: Implemented Level 5 Semantic Matcher with comprehensive CLI/network/devops command mapping using local ML fallback - 80% confidence threshold, startup loading, covers 30+ command categories with 200+ variations (Aug 17, 2025)
-- COMPLETED: Built Common Parameter Resolver system for all pipeline levels - handles 9 parameter types (size, port, host, target, etc.) with intelligent extraction, validation, and default values across Levels 2-6 (Aug 17, 2025)
-- COMPLETED: Moved Parameter Resolver from pipeline to utils folder for better architecture organization (Aug 17, 2025)
-- COMPLETED: Fixed critical pipeline flow issues - ShellAdapter method signature and SemanticMatcher None-safety, eliminating all LSP diagnostics and enabling end-to-end pipeline functionality (Aug 17, 2025)
-- COMPLETED: Fixed utils.py issues - subprocess import error and improved TODO example text, eliminating remaining LSP diagnostics (Aug 17, 2025)
-- COMPLETED: Implemented dual solution for file extension search issue - Fixed Pattern Engine priority ordering (Option B) and enhanced Semantic Matcher with extension-specific patterns (Option A), plus created common FileExtensionResolver utility for shared functionality across pipeline levels (Aug 17, 2025)
-- COMPLETED: Comprehensive storage system testing and optimization - Fixed critical statistics calculation bug in FileHistoryManager (percentage vs decimal values), verified cross-platform caching with proper isolation, and completed dry run validation of all storage components achieving 100% test pass rate (Aug 18, 2025)
-- COMPLETED: Resolved RuntimeWarning about module import behavior - Fixed entry point configuration inconsistencies between setup.py and pyproject.toml, added proper __main__.py module, and updated workflow execution path eliminating sys.modules conflicts (Aug 18, 2025)
-- COMPLETED: Production readiness verification - All 37 storage tests passing, zero blocking issues, comprehensive functionality validated including API key persistence, cross-platform cache isolation, and accurate command history statistics (Aug 18, 2025)
-- COMPLETED: Fixed "Unknown" display issue for pwd command - Updated OutputFormatter to properly recognize 'command_filter' source from Level 2 pipeline, system now correctly shows "⚡ Instant match" instead of "❓ Unknown" for direct command recognition (Aug 18, 2025)
-- COMPLETED: Eliminated duplicate "⚡ Instant match" messages - Removed redundant performance status display in main.py translation phase, now shows only clean formatted result table without duplication (Aug 18, 2025)
-- COMPLETED: Fixed basic command recognition issue - Added `echo` and `printf` to cross-platform commands in Level 2 Command Filter, previously only available for Windows systems, now all basic terminal output commands properly recognized with instant match (Aug 18, 2025)
 
 # System Architecture
 
-The application follows a modular, cross-platform architecture with clear separation of concerns, designed for performance, security, and extensibility.
+The application employs a modular, cross-platform architecture emphasizing performance, security, and extensibility with clear separation of concerns.
 
 ## Core Components
-- **Context Intelligence System**: Provides advanced Git repository awareness and environment variable integration for project-specific command suggestions (6+ project types, 15+ frameworks).
-- **Enhanced Shell Adapter**: Centralized system expertise providing comprehensive context with 18 metadata fields including platform detection, shell identification, command categorization, cross-platform equivalents, and confidence scoring.
-- **Context-Driven AI Translation Layer**: Streamlined AI translator that accepts context from shell adapter instead of self-detecting platform information, integrating OpenAI's GPT-4o with optimized performance.
-- **Command Filter System**: Directly executes 265+ known commands with sub-1ms response times, supporting platform-aware and cross-platform recognition.
-- **Common Parameter Resolver**: Universal parameter extraction and validation system supporting 9 parameter types (size, port, host, target, days, extension, pid, count, username) with intelligent defaults and regex validation patterns used across all pipeline levels.
-- **Interactive Command Selection**: Handles ambiguous natural language requests by presenting options, extracting parameters, and learning user preferences.
-- **Modular Fuzzy Matching System**: Refactored architecture with shared components (BaseFuzzyMatcher, TextNormalizer, CommonTransforms, SimilarityCalculator) eliminating 40% code duplication while maintaining sub-1ms performance (August 17, 2025).
-- **Safety Validation**: Multi-level safety checking to prevent destructive operations, configurable by the user.
+- **Context Intelligence System**: Provides Git repository awareness and environment variable integration for project-specific command suggestions.
+- **Enhanced Shell Adapter**: Centralized system expertise delivering comprehensive context, including platform detection, shell identification, and command categorization.
+- **Context-Driven AI Translation Layer**: Integrates OpenAI's GPT-4o, accepting context from the shell adapter for optimized performance.
+- **Command Filter System**: Directly executes over 265 known commands with sub-1ms response times, supporting platform-aware and cross-platform recognition.
+- **Common Parameter Resolver**: Universal parameter extraction and validation system supporting 9 parameter types (e.g., size, port, host) with intelligent defaults and regex validation.
+- **Interactive Command Selection**: Manages ambiguous natural language requests by presenting options and learning user preferences.
+- **Modular Fuzzy Matching System**: Refactored architecture eliminating code duplication while maintaining sub-1ms performance.
+- **Safety Validation**: Multi-level safety checking to prevent destructive operations.
 - **Command Execution Engine**: Manages cross-platform command execution, timeout, error handling, and secure subprocess execution.
-- **History Management**: Stores command history in a JSON file storage system.
-- **Configuration System**: Manages settings via INI files for AI parameters, performance, and user preferences.
-- **Cache Management**: High-performance file-based cache system with in-memory LRU layer and cross-instance sharing.
-- **CLI Interface**: Built with `Click` and `Rich`, offering an interactive mode with real-time performance indicators and subcommands using context-driven pipeline flow.
+- **History Management**: Stores command history locally.
+- **Configuration System**: Manages settings via INI files for AI parameters and user preferences.
+- **Cache Management**: High-performance file-based cache with in-memory LRU layer.
+- **CLI Interface**: Built with `Click` and `Rich`, offering an interactive mode with real-time performance indicators.
 - **Interactive Input System**: Provides Readline-based command history navigation, persistence, and search.
-- **Git Context Manager**: Offers Git repository awareness and intelligent Git command suggestions with safety validation.
-- **Environment Context Manager**: Comprehensive project environment detection and context-aware command suggestions.
-- **Typeahead Autocomplete System**: Real-time command completion with history-based suggestions, fuzzy matching, and visual feedback.
+- **Git Context Manager**: Offers Git repository awareness and intelligent Git command suggestions.
+- **Environment Context Manager**: Comprehensive project environment detection.
+- **Typeahead Autocomplete System**: Real-time command completion with history-based suggestions and fuzzy matching.
 
 ## Data Storage
-- **JSON Files**: Local storage for command history and cache.
-- **Configuration Files**: INI format files for user and system configurations.
+- **JSON Files**: For local command history and cache.
+- **Configuration Files**: INI format for configurations.
 
 ## Security Architecture
-- **Multi-layered Safety System**: Pattern-based validation, dangerous command detection, and configurable user confirmation.
+- **Multi-layered Safety System**: Includes pattern-based validation and dangerous command detection.
 - **API Key Management**: Securely handles OpenAI API keys via environment variables.
 
 ## Cross-Platform Design
-- **Platform Abstraction**: Automatically detects OS and shell, applying platform-specific patterns, rules, and preferences.
+- **Platform Abstraction**: Automatically detects OS and shell, applying platform-specific rules.
 
 ## UI/UX Decisions
-- **Terminal Themes**: Complete OutputFormatter with robbyrussell, agnoster, and powerlevel10k themes, performance indicators, syntax highlighting, and enhanced UI.
-- **Prompt Styling**: Simple ">" prompt with an enhanced welcome banner and prompt instructions.
-- **Cursor Styling**: Reliable default cursor with blue chevron prompt styling.
+- **Terminal Themes**: OutputFormatter with themes like robbyrussell, agnoster, and powerlevel10k, including syntax highlighting.
+- **Prompt Styling**: Simple ">" prompt with welcome banner.
+- **Cursor Styling**: Default cursor with blue chevron styling.
 - **Typeahead Visuals**: Muted white visual feedback for command completion.
 
 ## Technical Implementations
-- **Context-Driven Architecture**: Three-phase refactoring completed August 17, 2025, implementing clean separation of concerns where shell adapter provides system expertise to AI translator for language processing.
-- **Modular Fuzzy Architecture**: Created shared base architecture eliminating code duplication across fuzzy matching systems, with FastFuzzyMatcher for command filtering and preserved AdvancedFuzzyEngine for complex AI operations (August 17, 2025).
-- **6-Level Pipeline Architecture**: Enhanced pipeline August 17, 2025, with semantic intelligence: Level 1 (context) → Level 2 (exact commands) → Level 3 (patterns) → Level 4 (fuzzy/typo) → Level 5 (semantic ML) → Level 6 (AI fallback).
-- **Universal Parameter System**: Common Parameter Resolver integrated across all pipeline levels with intelligent extraction patterns, validation rules, and smart defaults eliminating template parameter failures.
-- **Performance Optimization**: 5-tier system for sub-millisecond to low-latency command recognition with context computed once and metadata aggregation eliminating duplicate processing.
-- **Cross-OS Compatibility**: 221 cross-platform mappings in Level 2 with comprehensive Windows↔Unix translation, PowerShell cmdlet support, and CMD/Bash/Zsh/PowerShell terminal coverage.
-- **Production-Ready Storage System**: High-performance file-based caching with in-memory LRU layer, atomic file operations, cross-platform configuration persistence, and accurate command history statistics with 100% test coverage (August 18, 2025).
-- **Clean Module Architecture**: Resolved all import conflicts with proper entry point configuration, eliminated RuntimeWarnings, and implemented clean __main__.py execution path for reliable cross-platform deployment (August 18, 2025).
-- **Comprehensive Test Suite**: 37 storage tests plus comprehensive pipeline testing achieving 100% pass rate with robust error handling, edge case validation, and production readiness verification.
+- **Context-Driven Architecture**: Clean separation of concerns where the shell adapter provides system expertise to the AI translator.
+- **Modular Fuzzy Architecture**: Shared base architecture for fuzzy matching systems, optimized for both command filtering and complex AI operations.
+- **6-Level Pipeline Architecture**: Level 1 (context) → Level 2 (exact commands) → Level 3 (patterns) → Level 4 (fuzzy/typo) → Level 5 (semantic ML) → Level 6 (AI fallback).
+- **Universal Parameter System**: Common Parameter Resolver integrated across all pipeline levels with intelligent extraction patterns and validation rules.
+- **Performance Optimization**: 5-tier system for sub-millisecond to low-latency command recognition.
+- **Cross-OS Compatibility**: Comprehensive Windows↔Unix translation and terminal coverage (CMD, Bash, Zsh, PowerShell).
+- **Production-Ready Storage System**: High-performance file-based caching, atomic file operations, and accurate command history statistics.
+- **Clean Module Architecture**: Resolved import conflicts and implemented a clean execution path.
+- **Comprehensive Test Suite**: Robust testing with high pass rates for error handling and edge cases.
 
 ## Feature Specifications
 - **Enhanced Command Filter**: Supports intelligent command variations with parameters.
-- **Known Commands Expansion**: 265+ direct commands including 150+ comprehensive typo/variation mappings for Tier 2 cross-platform commands.
+- **Known Commands Expansion**: Over 265 direct commands, including comprehensive typo/variation mappings.
 - **Intelligent Find Patterns**: Natural language find operations directly execute as OS commands.
-- **Command Argument Support**: 100+ command variations with common arguments.
-- **Smart API Key Prompting**: API key prompted only for unknown commands; 343 commands available without setup.
-- **Ambigious Request Handling**: 13 ambiguous patterns with multiple options, smart parameter extraction, and user preference learning.
-- **Pattern Learning**: Intelligent command pattern learning from successful executions, directory tracking, project type detection, package operation awareness, and file reference extraction.
+- **Command Argument Support**: Over 100 command variations with common arguments.
+- **Smart API Key Prompting**: API key prompted only for unknown commands; many commands available without setup.
+- **Ambiguous Request Handling**: Addresses ambiguous patterns with multiple options and user preference learning.
+- **Pattern Learning**: Intelligent command pattern learning from successful executions, directory tracking, and project type detection.
 
 # External Dependencies
 
-- **OpenAI API**: Primary service for natural language processing, utilizing GPT-4o for command translation.
+- **OpenAI API**: Used for natural language processing and command translation via GPT-4o.
 - **Python Packages**:
     - `click`: For building the command-line interface.
     - `rich`: For enhanced console output and formatting.
@@ -123,6 +103,5 @@ The application follows a modular, cross-platform architecture with clear separa
     - `configparser`: For managing INI-based configuration files.
 - **System Dependencies**:
     - Python 3.8+ runtime environment.
-    - Standard library modules inherent to Python.
+    - Standard Python library modules.
     - Operating system shell environments (bash, zsh, cmd, PowerShell).
-```
