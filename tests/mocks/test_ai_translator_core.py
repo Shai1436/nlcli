@@ -123,3 +123,86 @@ class TestAITranslatorCore:
         # Test with cache enabled (default)
         translator2 = AITranslator(api_key=None)
         assert translator2.enable_cache is True
+
+    @patch('nlcli.pipeline.ai_translator.console')
+    @patch('nlcli.pipeline.ai_translator.Prompt.ask')
+    @patch('nlcli.pipeline.ai_translator.OpenAI')
+    @patch.dict('os.environ', {}, clear=True)
+    def test_api_key_prompting_first_use(self, mock_openai, mock_prompt, mock_console):
+        """Test that user is prompted for OpenAI API key on first use when needed"""
+        
+        # Setup: No API key provided initially
+        translator = AITranslator(api_key=None, enable_cache=False)
+        assert translator.client is None
+        
+        # Mock user providing API key
+        test_api_key = "sk-test-key-123"
+        mock_prompt.return_value = test_api_key
+        
+        # Mock successful OpenAI client creation and test call
+        mock_client = Mock()
+        mock_openai.return_value = mock_client
+        mock_client.chat.completions.create.return_value = Mock()  # Successful test call
+        
+        # Test the prompting behavior
+        result = translator._prompt_for_api_key()
+        
+        # Verify prompting occurred
+        assert result is True
+        assert translator.api_key == test_api_key
+        assert translator.client == mock_client
+        
+        # Verify console messages were displayed
+        mock_console.print.assert_called()
+        calls = [call.args[0] for call in mock_console.print.call_args_list]
+        assert any("AI Translation Required" in str(call) for call in calls)
+        
+        # Verify API key was prompted for
+        mock_prompt.assert_called_once()
+        
+        # Verify OpenAI client was created with the new key
+        mock_openai.assert_called_with(api_key=test_api_key)
+        
+        # Verify test API call was made
+        mock_client.chat.completions.create.assert_called_once()
+
+    @patch.dict('os.environ', {}, clear=True)
+    @patch('nlcli.pipeline.ai_translator.console')
+    @patch('nlcli.pipeline.ai_translator.Prompt.ask')
+    def test_api_key_prompting_user_cancels(self, mock_prompt, mock_console):
+        """Test when user cancels API key entry"""
+        
+        translator = AITranslator(api_key=None, enable_cache=False)
+        
+        # Mock user canceling (empty input)
+        mock_prompt.return_value = ""
+        
+        result = translator._prompt_for_api_key()
+        
+        # Should return False when user provides no key
+        assert result is False
+        assert translator.api_key is None
+        assert translator.client is None
+        
+        # Verify prompting occurred but was cancelled
+        mock_console.print.assert_called()
+        # Note: Prompt.ask gets called with password=True parameter
+        mock_prompt.assert_called_once_with("\n[cyan]Enter your OpenAI API key[/cyan]", password=True)
+
+    @patch.dict('os.environ', {}, clear=True) 
+    @patch('nlcli.pipeline.ai_translator.console') 
+    def test_api_key_prompting_not_repeated(self, mock_console):
+        """Test that API key prompting only happens once per session"""
+        
+        translator = AITranslator(api_key=None, enable_cache=False)
+        
+        # First call should attempt prompting
+        result1 = translator._prompt_for_api_key()
+        first_call_count = mock_console.print.call_count
+        
+        # Second call should not prompt again (already attempted)
+        result2 = translator._prompt_for_api_key()
+        
+        assert result1 is False  # No key provided in test
+        assert result2 is False  # Still no key, but no re-prompting
+        assert mock_console.print.call_count == first_call_count  # No additional prompts
