@@ -28,6 +28,7 @@ nlcli/pipeline/__init__.py
 nlcli/pipeline/ai_translator.py
 nlcli/pipeline/command_filter.py
 nlcli/pipeline/fuzzy_engine.py
+nlcli/pipeline/partial_match.py
 nlcli/pipeline/pattern_engine.py
 nlcli/pipeline/semantic_matcher.py
 nlcli/pipeline/shell_adapter.py

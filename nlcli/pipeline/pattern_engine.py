@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Tuple, Any
 import os
 from ..utils.parameter_resolver import ParameterResolver
 from ..utils.file_extension_resolver import FileExtensionResolver
+from .partial_match import PartialMatch, PipelineResult
 
 logger = logging.getLogger(__name__)
 
@@ -617,6 +618,44 @@ class PatternEngine:
         
         return None
     
+    def process_with_partial_matching(self, text: str, shell_context: Optional[Dict] = None) -> PipelineResult:
+        """
+        Enhanced processing that returns partial matches for pipeline collaboration
+        
+        Args:
+            text: Natural language input
+            shell_context: Runtime shell context for platform-specific resolution
+            
+        Returns:
+            PipelineResult with partial matches and metadata
+        """
+        result = PipelineResult()
+        
+        # Try semantic patterns with partial matching
+        partial_matches = self._match_semantic_patterns_partial(text, shell_context)
+        for match in partial_matches:
+            result.add_partial_match(match)
+        
+        # Try workflow templates with partial matching
+        workflow_matches = self._match_workflow_templates_partial(text)
+        for match in workflow_matches:
+            result.add_partial_match(match)
+        
+        # Set final result if confidence is high enough
+        if result.has_sufficient_confidence(0.85):
+            best_match = result.get_best_match()
+            if best_match:
+                result.final_result = {
+                    'command': best_match.command,
+                    'explanation': best_match.explanation,
+                    'confidence': best_match.confidence,
+                    'pattern_type': 'semantic',
+                    'corrections': best_match.corrections,
+                    'source': 'pattern_engine_partial'
+                }
+        
+        return result
+    
 
     
     def get_semantic_patterns(self) -> Dict[str, Dict]:
@@ -653,6 +692,98 @@ class PatternEngine:
         return None
     
 
+
+
+    def _match_semantic_patterns_partial(self, text: str, shell_context: Optional[Dict] = None) -> List[PartialMatch]:
+        """Match semantic patterns and return partial matches"""
+        partial_matches = []
+        text_lower = text.lower()
+        
+        for pattern_name, pattern_info in self.semantic_patterns.items():
+            for pattern in pattern_info['patterns']:
+                if re.search(pattern, text_lower, re.IGNORECASE):
+                    parameters = self.extract_parameters(text, pattern_info)
+                    
+                    # Resolve command template using shell context
+                    if 'command_template_resolver' in pattern_info:
+                        command_template = self._resolve_command_template(
+                            pattern_info['command_template_resolver'], shell_context
+                        )
+                    else:
+                        command_template = pattern_info.get('command_template', '')
+                    
+                    try:
+                        command = command_template.format(**parameters)
+                        partial_matches.append(PartialMatch(
+                            original_input=text,
+                            corrected_input=text,
+                            command=command,
+                            explanation=pattern_info['explanation'],
+                            confidence=0.9,
+                            corrections=[],
+                            pattern_matches=[pattern_name],
+                            source_level=3,
+                            metadata={'pattern_name': pattern_name, 'exact_match': True}
+                        ))
+                    except KeyError:
+                        # Fill defaults and try again
+                        for param in pattern_info.get('parameters', []):
+                            if param not in parameters and param in self.parameter_extractors:
+                                parameters[param] = self.parameter_extractors[param]['default']
+                        try:
+                            command = command_template.format(**parameters)
+                            partial_matches.append(PartialMatch(
+                                original_input=text,
+                                corrected_input=text,
+                                command=command,
+                                explanation=pattern_info['explanation'],
+                                confidence=0.75,
+                                corrections=[],
+                                pattern_matches=[pattern_name],
+                                source_level=3,
+                                metadata={'pattern_name': pattern_name, 'used_defaults': True}
+                            ))
+                        except Exception:
+                            continue
+        return partial_matches
+    
+    def _match_workflow_templates_partial(self, text: str) -> List[PartialMatch]:
+        """Match workflow templates and return partial matches"""
+        partial_matches = []
+        text_lower = text.lower()
+        
+        for workflow_name, workflow_info in self.workflow_templates.items():
+            for pattern in workflow_info['patterns']:
+                if re.search(pattern, text_lower, re.IGNORECASE):
+                    parameters = self.extract_parameters(text, workflow_info)
+                    commands = []
+                    for cmd_template in workflow_info['commands']:
+                        try:
+                            command = cmd_template.format(**parameters)
+                            commands.append(command)
+                        except KeyError:
+                            for param in workflow_info.get('parameters', []):
+                                if param not in parameters and param in self.parameter_extractors:
+                                    parameters[param] = self.parameter_extractors[param]['default']
+                            try:
+                                command = cmd_template.format(**parameters)
+                                commands.append(command)
+                            except Exception:
+                                continue
+                    
+                    if commands:
+                        partial_matches.append(PartialMatch(
+                            original_input=text,
+                            corrected_input=text,
+                            command=' && '.join(commands),
+                            explanation=workflow_info['explanation'],
+                            confidence=0.85,
+                            corrections=[],
+                            pattern_matches=[workflow_name],
+                            source_level=3,
+                            metadata={'workflow_name': workflow_name, 'individual_commands': commands}
+                        ))
+        return partial_matches
 
 
 # Alias for backward compatibility

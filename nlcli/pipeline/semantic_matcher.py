@@ -1,720 +1,467 @@
 """
-Level 5: Semantic Matcher using local ML models
-Maps comprehensive CLI, network, and devops commands with variations using sentence transformers
+Enhanced Semantic Matching Engine - Phase 3 Implementation
+Intelligence Hub for Pipeline Level 5 with Unified Typo Correction
+
+This engine combines semantic understanding with typo correction, consolidating
+intelligence from all previous pipeline levels.
 """
 
+import re
+import json
 import logging
-import os
-import pickle
-from typing import Dict, List, Optional, Tuple, Any
-from ..utils.parameter_resolver import ParameterResolver, ParameterDefinition, ParameterType
-from ..utils.file_extension_resolver import FileExtensionResolver
+import difflib
+from typing import Dict, List, Optional, Tuple, Any, Set
+from collections import defaultdict, Counter
+import unicodedata
+
+from .partial_match import PartialMatch, PipelineResult
 
 logger = logging.getLogger(__name__)
 
 class SemanticMatcher:
-    """Level 5: Local ML-based semantic command matching"""
+    """
+    Semantic Matching Engine - Intelligence Hub for Enhanced Partial Matching
     
-    def __init__(self, confidence_threshold: float = 0.80):
-        self.confidence_threshold = confidence_threshold
-        self.model = None
-        self.pattern_embeddings = None
-        self.pattern_commands = {}
-        self.cache_file = os.path.expanduser("~/.nlcli_semantic_cache.pkl")
-        
-        # Initialize parameter resolver
-        self.parameter_resolver = ParameterResolver()
-        self.extension_resolver = FileExtensionResolver()
-        
-        # Initialize model and embeddings
-        self._initialize_model()
-        self._load_or_create_embeddings()
-        
-    def _initialize_model(self):
-        """Initialize sentence transformer model on startup"""
-        try:
-            from sentence_transformers import SentenceTransformer
-            
-            logger.info("Loading semantic model all-MiniLM-L6-v2...")
-            self.model = SentenceTransformer('all-MiniLM-L6-v2')
-            logger.info("Semantic model loaded successfully (22MB)")
-            
-        except ImportError:
-            logger.warning("sentence-transformers not available, using fallback semantic matching")
-            self.model = None
-            self._use_fallback_matching = True
-        except Exception as e:
-            logger.error(f"Failed to load semantic model: {e}, using fallback")
-            self.model = None
-            self._use_fallback_matching = True
+    Consolidates typo correction, semantic understanding, and partial match refinement
+    """
     
-    def _get_comprehensive_command_patterns(self) -> Dict[str, Dict]:
-        """Comprehensive mapping of CLI, network, and devops commands with variations"""
+    def __init__(self):
+        self.semantic_patterns = self._load_semantic_patterns()
+        self.typo_mappings = self._load_comprehensive_typo_mappings()
+        self.command_synonyms = self._load_command_synonyms()
+        self.confidence_threshold = 0.4  # Lower threshold for partial matches
+        
+        # Intelligence hub settings
+        self.min_partial_confidence = 0.3
+        self.typo_correction_bonus = 0.2
+        self.semantic_similarity_threshold = 0.5
+        
+        logger.info("SemanticMatcher initialized as intelligence hub")
+    
+    def _load_comprehensive_typo_mappings(self) -> Dict[str, str]:
+        """Comprehensive typo correction mappings consolidated from all levels"""
         return {
-            # ===== FILE SYSTEM OPERATIONS =====
-            'list_files': {
-                'command': 'ls -la',
+            # Network typos (from pattern engine feedback)
+            'netwok': 'network', 'nework': 'network', 'netowrk': 'network',
+            'netwerk': 'network', 'netowork': 'network', 'netwrk': 'network',
+            
+            # Status typos
+            'staus': 'status', 'stauts': 'status', 'statsu': 'status',
+            'sttus': 'status', 'stats': 'status',
+            
+            # Common command typos  
+            'sl': 'ls', 'lls': 'ls', 'lss': 'ls', 
+            'pwdd': 'pwd', 'cdd': 'cd', 'rmm': 'rm',
+            'cpp': 'cp', 'mvv': 'mv', 'mkdirr': 'mkdir',
+            'toch': 'touch', 'catt': 'cat', 
+            'gti': 'git', 'gt': 'git',
+            'pign': 'ping', 'claer': 'clear', 'clr': 'clear',
+            
+            # System commands
+            'pss': 'ps', 'topp': 'top', 'fnd': 'find', 'gerp': 'grep',
+            'sudoo': 'sudo', 'suod': 'sudo', 'crul': 'curl', 'wegt': 'wget',
+            
+            # Advanced typos from user feedback
+            'shw': 'show', 'lis': 'list', 'finde': 'find',
+            'proces': 'process', 'sytem': 'system', 'conect': 'connect',
+            'chekc': 'check', 'tst': 'test', 'isntall': 'install',
+            'runing': 'running', 'stoped': 'stopped',
+        }
+    
+    def _load_command_synonyms(self) -> Dict[str, List[str]]:
+        """Load command synonyms for semantic understanding"""
+        return {
+            'show': ['display', 'view', 'print', 'output', 'list', 'get'],
+            'list': ['show', 'display', 'dir', 'ls', 'enumerate'],
+            'find': ['search', 'locate', 'look for', 'discover'],
+            'create': ['make', 'build', 'generate', 'new'],
+            'delete': ['remove', 'rm', 'erase', 'destroy'],
+            'copy': ['cp', 'duplicate', 'clone'],
+            'move': ['mv', 'relocate', 'transfer'],
+            'kill': ['stop', 'terminate', 'end', 'quit'],
+            'start': ['run', 'launch', 'begin', 'execute'],
+            'connect': ['link', 'join', 'attach'],
+            'check': ['test', 'verify', 'examine', 'inspect'],
+            'install': ['add', 'setup', 'deploy'],
+            'update': ['upgrade', 'refresh', 'sync'],
+            'download': ['get', 'fetch', 'pull'],
+            'upload': ['send', 'push', 'put']
+        }
+    
+    def _load_semantic_patterns(self) -> Dict[str, Dict]:
+        """Load semantic understanding patterns"""
+        return {
+            'network_status': {
+                'patterns': [
+                    r'(?:network|internet|connection)\s*(?:status|state|check|test)',
+                    r'(?:check|test|verify).*(?:network|internet|connection)',
+                    r'(?:show|display).*(?:network|connectivity)',
+                    r'(?:ping|test).*(?:connection|network)'
+                ],
+                'command_template': 'ping -c 4 8.8.8.8 && echo "=== Network Status ===" && ip addr show',
+                'explanation': 'Check network connectivity and interface status',
+                'confidence_base': 0.8
+            },
+            
+            'system_status': {
+                'patterns': [
+                    r'(?:system|server|machine)\s*(?:status|health|check)',
+                    r'(?:check|show).*(?:system|cpu|memory|disk)',
+                    r'(?:performance|resource).*(?:status|usage|check)',
+                    r'(?:monitor|watch).*(?:system|resources)'
+                ],
+                'command_template': 'top -bn1 | head -20 && echo "=== Disk Usage ===" && df -h',
+                'explanation': 'Display system performance and resource usage',
+                'confidence_base': 0.8
+            },
+            
+            'process_management': {
+                'patterns': [
+                    r'(?:show|list|display).*(?:process|running)',
+                    r'(?:kill|stop|terminate).*(?:process|application)',
+                    r'(?:start|run|launch).*(?:process|application|service)',
+                    r'(?:ps|top|htop|processes)'
+                ],
+                'command_template': 'ps aux | head -15',
+                'explanation': 'Display running processes',
+                'confidence_base': 0.7
+            },
+            
+            'file_management': {
+                'patterns': [
+                    r'(?:list|show|display).*(?:file|directory|folder)',
+                    r'(?:find|search|locate).*(?:file|directory)',
+                    r'(?:create|make|new).*(?:file|directory|folder)',
+                    r'(?:copy|move|delete).*(?:file|directory)'
+                ],
+                'command_template': 'ls -la',
                 'explanation': 'List files and directories with details',
-                'variations': [
-                    'list files', 'show files', 'display files', 'dir', 'directory',
-                    'ls', 'list directory', 'show directory', 'what files', 'file list',
-                    'show contents', 'directory contents', 'folder contents', 'list all files'
-                ]
-            },
-            
-            'find_files': {
-                'command': 'find . -type f',
-                'explanation': 'Find all files recursively',
-                'variations': [
-                    'find files', 'search files', 'locate files', 'find all files',
-                    'recursive file search', 'file search', 'search for files'
-                ]
-            },
-            
-            'find_js_files': {
-                'command': 'find . -name "*.js" -type f',
-                'explanation': 'Find JavaScript files',
-                'variations': [
-                    'find js files', 'find javascript files', 'find .js files',
-                    'list js files', 'list javascript files', 'list .js files',
-                    'show js files', 'show javascript files', 'show .js files',
-                    'search js files', 'search javascript files', 'javascript files'
-                ]
-            },
-            
-            'find_python_files': {
-                'command': 'find . -name "*.py" -type f',
-                'explanation': 'Find Python files',
-                'variations': [
-                    'find python files', 'find .py files', 'find py files',
-                    'list python files', 'list .py files', 'list py files',
-                    'show python files', 'show .py files', 'show py files',
-                    'search python files', 'python scripts', 'python files'
-                ]
-            },
-            
-            'find_css_files': {
-                'command': 'find . -name "*.css" -type f',
-                'explanation': 'Find CSS stylesheets',
-                'variations': [
-                    'find css files', 'find .css files', 'find css',
-                    'list css files', 'list .css files', 'list css',
-                    'show css files', 'show .css files', 'show css',
-                    'search css files', 'css files', 'stylesheets'
-                ]
-            },
-            
-            'find_html_files': {
-                'command': 'find . -name "*.html" -type f',
-                'explanation': 'Find HTML files',
-                'variations': [
-                    'find html files', 'find .html files', 'find html',
-                    'list html files', 'list .html files', 'list html',
-                    'show html files', 'show .html files', 'show html',
-                    'search html files', 'html files', 'web pages'
-                ]
-            },
-            
-            'find_large_files': {
-                'command': 'find . -type f -size +100M -exec ls -lh {} \\; | head -20',
-                'explanation': 'Find large files over 100MB',
-                'variations': [
-                    'find large files', 'show large files', 'big files', 'huge files', 'large file search',
-                    'find lare files', 'show big files', 'list huge files', 'oversized files',
-                    'files bigger than', 'large size files', 'heavy files', 'search large files',
-                    'locate large files', 'display large files'
-                ]
-            },
-            
-            'disk_usage': {
-                'command': 'df -h',
-                'explanation': 'Show disk space usage',
-                'variations': [
-                    'disk space', 'disk usage', 'storage space', 'free space', 'available space',
-                    'check disk', 'disk info', 'storage info', 'space left', 'drive space',
-                    'filesystem usage', 'mount points', 'disk capacity'
-                ]
-            },
-            
-            'directory_size': {
-                'command': 'du -sh *',
-                'explanation': 'Show directory sizes',
-                'variations': [
-                    'directory size', 'folder size', 'dir size', 'space usage',
-                    'directory usage', 'folder space', 'size of directories',
-                    'check directory size', 'du', 'disk usage by directory'
-                ]
-            },
-            
-            # ===== PROCESS MANAGEMENT =====
-            'list_processes': {
-                'command': 'ps aux --sort=-%cpu | head -20',
-                'explanation': 'Show running processes sorted by CPU usage',
-                'variations': [
-                    'show processes', 'list processes', 'running processes', 'active processes',
-                    'show process', 'list process', 'process list', 'running programs',
-                    'active programs', 'what is running', 'ps', 'top processes',
-                    'cpu usage', 'process status', 'running tasks', 'system processes'
-                ]
-            },
-            
-            'kill_process': {
-                'command': 'kill {pid}',
-                'explanation': 'Terminate a process by PID',
-                'variations': [
-                    'kill process', 'stop process', 'terminate process', 'end process',
-                    'kill pid', 'stop pid', 'kill program', 'terminate program'
-                ]
-            },
-            
-            'process_tree': {
-                'command': 'pstree -p',
-                'explanation': 'Show process tree with PIDs',
-                'variations': [
-                    'process tree', 'process hierarchy', 'parent processes',
-                    'child processes', 'process relationships', 'pstree'
-                ]
-            },
-            
-            # ===== SYSTEM MONITORING =====
-            'system_info': {
-                'command': 'uname -a',
-                'explanation': 'Show system information',
-                'variations': [
-                    'system info', 'system information', 'os info', 'kernel info',
-                    'system details', 'machine info', 'platform info', 'uname'
-                ]
-            },
-            
-            'memory_usage': {
-                'command': 'free -h',
-                'explanation': 'Show memory usage',
-                'variations': [
-                    'memory usage', 'memory info', 'ram usage', 'free memory',
-                    'available memory', 'memory status', 'check memory', 'mem usage',
-                    'system memory', 'ram info', 'memory statistics'
-                ]
-            },
-            
-            'cpu_info': {
-                'command': 'lscpu',
-                'explanation': 'Show CPU information',
-                'variations': [
-                    'cpu info', 'processor info', 'cpu details', 'processor details',
-                    'cpu specifications', 'system cpu', 'cpu stats', 'lscpu'
-                ]
-            },
-            
-            'load_average': {
-                'command': 'uptime',
-                'explanation': 'Show system uptime and load average',
-                'variations': [
-                    'load average', 'system load', 'cpu load', 'uptime', 'system uptime',
-                    'load', 'average load', 'system stats', 'performance load'
-                ]
-            },
-            
-            # ===== NETWORK OPERATIONS =====
-            'network_connections': {
-                'command': 'netstat -tulpn',
-                'explanation': 'Show network connections and listening ports',
-                'variations': [
-                    'network connections', 'active connections', 'open connections',
-                    'listening ports', 'open ports', 'network status', 'netstat',
-                    'port status', 'network sockets', 'tcp connections', 'udp connections'
-                ]
-            },
-            
-            'check_port': {
-                'command': 'netstat -tulpn | grep :{port}',
-                'explanation': 'Check what process is using a specific port',
-                'variations': [
-                    'check port', 'port usage', 'who uses port', 'process on port',
-                    'what uses port', 'port check', 'listening on port', 'port process'
-                ]
-            },
-            
-            'ping_host': {
-                'command': 'ping -c 4 {host}',
-                'explanation': 'Ping a host to test connectivity',
-                'variations': [
-                    'ping', 'test connection', 'check connectivity', 'ping host',
-                    'network test', 'connectivity test', 'reachability test'
-                ]
-            },
-            
-            'network_interfaces': {
-                'command': 'ip addr show',
-                'explanation': 'Show network interfaces and IP addresses',
-                'variations': [
-                    'network interfaces', 'ip addresses', 'network config', 'ifconfig',
-                    'ip addr', 'show interfaces', 'network settings', 'interface info',
-                    'ip configuration', 'network details'
-                ]
-            },
-            
-            'dns_lookup': {
-                'command': 'nslookup {domain}',
-                'explanation': 'Perform DNS lookup for domain',
-                'variations': [
-                    'dns lookup', 'resolve domain', 'nslookup', 'dig domain',
-                    'dns resolve', 'domain lookup', 'name resolution'
-                ]
-            },
-            
-            # ===== DEVOPS OPERATIONS =====
-            'git_status': {
-                'command': 'git status',
-                'explanation': 'Show git repository status',
-                'variations': [
-                    'git status', 'repo status', 'repository status', 'git state',
-                    'working tree status', 'changes status', 'git info'
-                ]
-            },
-            
-            'git_log': {
-                'command': 'git log --oneline -10',
-                'explanation': 'Show recent git commits',
-                'variations': [
-                    'git log', 'commit history', 'git history', 'recent commits',
-                    'commit log', 'git commits', 'version history', 'change log'
-                ]
-            },
-            
-            'docker_containers': {
-                'command': 'docker ps -a',
-                'explanation': 'Show all Docker containers',
-                'variations': [
-                    'docker containers', 'docker ps', 'running containers', 'container list',
-                    'docker status', 'container status', 'docker list', 'all containers'
-                ]
-            },
-            
-            'docker_images': {
-                'command': 'docker images',
-                'explanation': 'Show Docker images',
-                'variations': [
-                    'docker images', 'docker image list', 'container images',
-                    'docker img', 'image list', 'available images'
-                ]
-            },
-            
-            'service_status': {
-                'command': 'systemctl status',
-                'explanation': 'Show system service status',
-                'variations': [
-                    'service status', 'systemctl status', 'system services', 'running services',
-                    'service list', 'daemon status', 'system status', 'services'
-                ]
-            },
-            
-            # ===== LOG ANALYSIS =====
-            'system_logs': {
-                'command': 'journalctl -n 50',
-                'explanation': 'Show recent system logs',
-                'variations': [
-                    'system logs', 'log files', 'recent logs', 'system messages',
-                    'journalctl', 'syslog', 'system events', 'log entries'
-                ]
-            },
-            
-            'error_logs': {
-                'command': 'journalctl -p err -n 20',
-                'explanation': 'Show recent error logs',
-                'variations': [
-                    'error logs', 'system errors', 'error messages', 'failed operations',
-                    'error entries', 'system failures', 'error events'
-                ]
-            },
-            
-            # ===== ARCHIVE OPERATIONS =====
-            'create_archive': {
-                'command': 'tar -czf archive_$(date +%Y%m%d_%H%M%S).tar.gz {target}',
-                'explanation': 'Create compressed archive with timestamp',
-                'variations': [
-                    'create archive', 'make archive', 'compress files', 'tar files',
-                    'backup files', 'create backup', 'zip files', 'archive directory'
-                ]
-            },
-            
-            'extract_archive': {
-                'command': 'tar -xzf {archive}',
-                'explanation': 'Extract tar.gz archive',
-                'variations': [
-                    'extract archive', 'unpack archive', 'decompress archive',
-                    'untar', 'extract tar', 'unzip archive', 'open archive'
-                ]
-            },
-            
-            # ===== SYSTEM MAINTENANCE =====
-            'update_system': {
-                'command': 'sudo apt update && sudo apt upgrade -y',
-                'explanation': 'Update system packages',
-                'variations': [
-                    'update system', 'system update', 'update packages', 'upgrade system',
-                    'install updates', 'package update', 'system upgrade', 'apt update'
-                ]
-            },
-            
-            'clean_system': {
-                'command': 'sudo apt autoremove -y && sudo apt autoclean',
-                'explanation': 'Clean system cache and unused packages',
-                'variations': [
-                    'clean system', 'cleanup system', 'clean cache', 'remove unused',
-                    'system cleanup', 'clean packages', 'free space', 'maintenance'
-                ]
+                'confidence_base': 0.7
             }
         }
     
-    def _load_or_create_embeddings(self):
-        """Load cached embeddings or create new ones"""
-        if not self.model:
-            return
-            
-        # Try to load from cache
-        if os.path.exists(self.cache_file):
-            try:
-                with open(self.cache_file, 'rb') as f:
-                    cache_data = pickle.load(f)
-                    self.pattern_embeddings = cache_data['embeddings']
-                    self.pattern_commands = cache_data['commands']
-                    logger.info("Loaded semantic embeddings from cache")
-                    return
-            except Exception as e:
-                logger.warning(f"Failed to load cache: {e}")
-        
-        # Create new embeddings
-        self._create_embeddings()
-    
-    def _create_embeddings(self):
-        """Create embeddings for all command patterns"""
-        if not self.model:
-            return
-            
-        logger.info("Creating semantic embeddings for command patterns...")
-        
-        patterns = self._get_comprehensive_command_patterns()
-        all_variations = []
-        pattern_mapping = {}
-        
-        # Collect all variations with pattern mapping
-        for pattern_name, config in patterns.items():
-            self.pattern_commands[pattern_name] = config
-            
-            for variation in config['variations']:
-                all_variations.append(variation)
-                pattern_mapping[len(all_variations) - 1] = pattern_name
-        
-        # Generate embeddings for all variations
-        embeddings = self.model.encode(all_variations)
-        
-        # Store embeddings with pattern mapping
-        self.pattern_embeddings = {
-            'embeddings': embeddings,
-            'mapping': pattern_mapping,
-            'variations': all_variations
-        }
-        
-        # Cache for future use
-        try:
-            cache_data = {
-                'embeddings': self.pattern_embeddings,
-                'commands': self.pattern_commands
-            }
-            with open(self.cache_file, 'wb') as f:
-                pickle.dump(cache_data, f)
-            logger.info(f"Cached semantic embeddings for {len(all_variations)} variations")
-        except Exception as e:
-            logger.warning(f"Failed to cache embeddings: {e}")
-    
-    def get_pipeline_metadata(self, natural_input: str, context: Dict) -> Optional[Dict]:
+    def process_with_partial_matching(self, text: str, shell_context: Optional[Dict] = None, 
+                                    previous_matches: Optional[List[PartialMatch]] = None) -> PipelineResult:
         """
-        Level 5: Semantic pattern matching using local ML model
+        Enhanced semantic processing as intelligence hub
         
         Args:
-            natural_input: User's natural language input
-            context: Platform context from shell adapter
+            text: Natural language input
+            shell_context: Runtime shell context
+            previous_matches: Partial matches from previous pipeline levels
             
         Returns:
-            Command metadata or None if no match above threshold
+            PipelineResult with enhanced partial matches and typo corrections
         """
-        # Fallback to simple string matching if ML model not available
-        if not self.model:
-            return self._fallback_semantic_matching(natural_input)
-            
-        if not self.pattern_embeddings:
-            return None
+        result = PipelineResult()
         
-        try:
-            # Encode the input
-            input_embedding = self.model.encode([natural_input])
-            
-            # Calculate similarities with all pattern variations
-            similarities = self._cosine_similarity(
-                input_embedding[0], 
-                self.pattern_embeddings['embeddings']
-            )
-            
-            # Find best match
-            best_idx = max(range(len(similarities)), key=lambda i: similarities[i])
-            best_similarity = similarities[best_idx]
-            
-            # Check if above confidence threshold
-            if best_similarity >= self.confidence_threshold:
-                # Get pattern name from mapping
-                pattern_name = self.pattern_embeddings['mapping'][best_idx]
-                pattern_config = self.pattern_commands[pattern_name]
-                
-                # Use parameter resolver for validation
-                required_params = self.parameter_resolver.get_parameter_definitions(pattern_name)
-                param_result = self.parameter_resolver.extract_parameters(
-                    natural_input, required_params, context
-                )
-                
-                # Check if pattern should match based on parameter availability
-                if not self.parameter_resolver.should_match_pattern(
-                    natural_input, required_params, self.confidence_threshold
-                ):
-                    return None  # Fall to next pipeline level
-                
-                # Build command with resolved parameters
-                command = self.parameter_resolver.resolve_template(
-                    pattern_config.get('command', ''), param_result.extracted
-                )
-                
-                result = {
-                    'command': command,
-                    'explanation': pattern_config['explanation'],
-                    'confidence': min(95, int(best_similarity * param_result.confidence * 100)),
-                    'source': 'semantic_matcher',
-                    'pipeline_level': 5,
-                    'pattern_name': pattern_name,
-                    'semantic_similarity': best_similarity,
-                    'matched_variation': self.pattern_embeddings['variations'][best_idx],
-                    'parameters': param_result.extracted,
-                    'defaults_applied': param_result.defaults_applied,
-                    'parameter_confidence': param_result.confidence
+        # Add previous matches with enhanced scoring
+        if previous_matches:
+            for match in previous_matches:
+                # Enhance existing matches with semantic understanding
+                enhanced_match = self._enhance_partial_match(match, text)
+                result.add_partial_match(enhanced_match)
+        
+        # 1. Unified typo correction (consolidates all levels)
+        corrected_text, corrections = self._unified_typo_correction(text)
+        if corrections:
+            typo_match = PartialMatch(
+                original_input=text,
+                corrected_input=corrected_text,
+                command=corrected_text,
+                explanation=f'Typo corrections: {", ".join(corrections)}',
+                confidence=min(0.95, 0.85 + (len(corrections) * 0.05)),
+                corrections=corrections,
+                pattern_matches=[],
+                source_level=5,
+                metadata={
+                    'algorithm': 'unified_typo_correction',
+                    'corrections_applied': len(corrections),
+                    'intelligence_hub': True
                 }
-                
-                logger.debug(f"Level 5 (Semantic): {pattern_name} (similarity: {best_similarity:.3f})")
-                return result
+            )
+            result.add_partial_match(typo_match)
+        
+        # 2. Semantic pattern matching
+        semantic_matches = self._semantic_pattern_match(corrected_text, shell_context)
+        for match in semantic_matches:
+            result.add_partial_match(match)
+        
+        # 3. Synonym-based command enhancement
+        synonym_matches = self._synonym_command_match(corrected_text)
+        for match in synonym_matches:
+            result.add_partial_match(match)
+        
+        # 4. Intelligence hub consolidation
+        consolidated_result = self._consolidate_intelligence(result, text)
+        
+        # Set final result with intelligence hub decision
+        if consolidated_result.has_sufficient_confidence(0.7):
+            best_match = consolidated_result.get_best_match()
+            if best_match:
+                consolidated_result.final_result = {
+                    'command': best_match.command,
+                    'explanation': best_match.explanation,
+                    'confidence': best_match.confidence,
+                    'corrections': best_match.corrections,
+                    'source': 'semantic_intelligence_hub',
+                    'intelligence_path': consolidated_result.pipeline_path
+                }
+        
+        return consolidated_result
+    
+    def _unified_typo_correction(self, text: str) -> Tuple[str, List[str]]:
+        """
+        Unified typo correction consolidating all pipeline levels
+        
+        Returns:
+            Tuple of (corrected_text, list_of_corrections)
+        """
+        corrections = []
+        words = text.lower().split()
+        corrected_words = []
+        
+        for word in words:
+            # Check direct mapping
+            if word in self.typo_mappings:
+                corrected = self.typo_mappings[word]
+                corrections.append(f'{word} → {corrected}')
+                corrected_words.append(corrected)
             
-        except Exception as e:
-            logger.error(f"Semantic matching error: {e}")
+            # Check fuzzy correction for close matches
+            elif len(word) > 2:
+                best_match, similarity = self._find_fuzzy_typo_match(word)
+                if best_match and similarity >= 0.8:
+                    corrections.append(f'{word} → {best_match}')
+                    corrected_words.append(best_match)
+                else:
+                    corrected_words.append(word)
+            else:
+                corrected_words.append(word)
         
-        return None
+        corrected_text = ' '.join(corrected_words)
+        return corrected_text, corrections
     
-    def _extract_parameters(self, natural_input: str, pattern_config: Dict) -> Dict:
-        """Extract parameters from natural language input"""
-        parameters = {}
-        
-        # Extract common parameters
-        import re
-        
-        # Size parameter for file operations
-        size_match = re.search(r'(\d+(?:\.\d+)?)\s*([KMGT]?B|kb|mb|gb|tb)', natural_input.lower())
-        if size_match:
-            value, unit = size_match.groups()
-            unit_map = {'kb': 'k', 'mb': 'M', 'gb': 'G', 'tb': 'T'}
-            unit = unit_map.get(unit.lower(), unit.upper())
-            parameters['size'] = f"+{value}{unit}"
-        
-        # Port parameter for network operations
-        port_match = re.search(r'port\s*(\d+)', natural_input.lower())
-        if port_match:
-            parameters['port'] = port_match.group(1)
-        
-        # PID parameter for process operations
-        pid_match = re.search(r'(?:pid|process)\s*(\d+)', natural_input.lower())
-        if pid_match:
-            parameters['pid'] = pid_match.group(1)
-        
-        # Host/domain parameter for network operations
-        host_match = re.search(r'(?:ping|host|domain)\s+(\S+)', natural_input.lower())
-        if host_match:
-            parameters['host'] = host_match.group(1)
-            parameters['domain'] = host_match.group(1)
-        
-        # Target parameter for archive operations
-        target_match = re.search(r'(?:archive|backup|compress)\s+(\S+)', natural_input.lower())
-        if target_match:
-            parameters['target'] = target_match.group(1)
-        
-        # Archive parameter for extraction
-        archive_match = re.search(r'(?:extract|unpack)\s+(\S+)', natural_input.lower())
-        if archive_match:
-            parameters['archive'] = archive_match.group(1)
-        
-        # Extension parameter for file operations (shared with pattern engine)
-        extension_match = re.search(r'\.(\w+)\s+files?', natural_input.lower())
-        if extension_match:
-            parameters['extension'] = extension_match.group(1)
-        
-        return parameters
-    
-    def _build_command(self, pattern_config: Dict, parameters: Dict) -> str:
-        """Build command from template and extracted parameters"""
-        command_template = pattern_config.get('command', '')
-        
-        try:
-            return command_template.format(**parameters)
-        except (KeyError, IndexError, ValueError):
-            # Return template as-is if parameters missing or formatting fails
-            return command_template
-    
-    def get_statistics(self) -> Dict:
-        """Get statistics about semantic matcher"""
-        patterns = self._get_comprehensive_command_patterns()
-        
-        if not self.model and not patterns:
-            return {
-                'semantic_enabled': False,
-                'total_patterns': 0,
-                'total_variations': 0
-            }
-        
-        total_variations = 0
-        if self.pattern_embeddings:
-            total_variations = len(self.pattern_embeddings['variations'])
-        else:
-            # Count variations from patterns
-            for config in patterns.values():
-                total_variations += len(config.get('variations', []))
-        
-        return {
-            'semantic_enabled': True,
-            'model_name': 'all-MiniLM-L6-v2' if self.model else 'fallback_string_matching',
-            'confidence_threshold': self.confidence_threshold,
-            'total_patterns': len(patterns),
-            'total_variations': total_variations,
-            'categories': ['filesystem', 'processes', 'network', 'devops', 'monitoring', 'maintenance']
-        }
-    
-    def _fallback_semantic_matching(self, natural_input: str) -> Optional[Dict]:
-        """Fallback semantic matching using string similarity when ML model unavailable"""
-        patterns = self._get_comprehensive_command_patterns()
-        natural_lower = natural_input.lower().strip()
+    def _find_fuzzy_typo_match(self, word: str) -> Tuple[Optional[str], float]:
+        """Find fuzzy matches for typo correction"""
+        if len(word) < 3:
+            return None, 0.0
         
         best_match = None
-        best_score = 0.0
-        best_pattern = None
+        best_similarity = 0.0
         
-        for pattern_name, config in patterns.items():
-            for variation in config['variations']:
-                # Simple string similarity scoring
-                score = self._calculate_string_similarity(natural_lower, variation.lower())
+        # Check against all known correct words
+        known_words = set(self.typo_mappings.values())
+        known_words.update(['network', 'status', 'system', 'process', 'file', 'directory',
+                           'show', 'list', 'find', 'create', 'delete', 'copy', 'move'])
+        
+        for known_word in known_words:
+            if abs(len(word) - len(known_word)) > 2:  # Skip if length differs too much
+                continue
                 
-                if score > best_score and score >= self.confidence_threshold:
-                    best_score = score
-                    best_match = pattern_name
-                    best_pattern = config
+            similarity = difflib.SequenceMatcher(None, word, known_word).ratio()
+            if similarity > best_similarity:
+                best_similarity = similarity
+                best_match = known_word
         
-        if best_match and best_score >= self.confidence_threshold:
-            # Use parameter resolver for fallback matching too
-            required_params = self.parameter_resolver.get_parameter_definitions(best_match)
-            param_result = self.parameter_resolver.extract_parameters(
-                natural_input, required_params, {}
-            )
-            
-            # Check if pattern should match based on parameter availability
-            if not self.parameter_resolver.should_match_pattern(
-                natural_input, required_params, self.confidence_threshold
-            ):
-                return None  # Fall to next pipeline level
-            
-            # Build command with resolved parameters
-            if best_pattern is not None:
-                command = self.parameter_resolver.resolve_template(
-                    best_pattern.get('command', ''), param_result.extracted
-                )
-                explanation = best_pattern.get('explanation', 'Semantic match')
-            else:
-                command = ''
-                explanation = 'Semantic match'
-            
-            return {
-                'command': command,
-                'explanation': explanation,
-                'confidence': min(95, int(best_score * param_result.confidence * 100)),
-                'source': 'semantic_matcher_fallback',
-                'pipeline_level': 5,
-                'pattern_name': best_match,
-                'semantic_similarity': best_score,
-                'matched_variation': f'fallback_match_{best_match}',
-                'parameters': param_result.extracted,
-                'defaults_applied': param_result.defaults_applied,
-                'parameter_confidence': param_result.confidence
-            }
-        
-        return None
+        return best_match, best_similarity
     
-    def _calculate_string_similarity(self, str1: str, str2: str) -> float:
-        """Calculate string similarity using multiple methods"""
-        # Exact match
-        if str1 == str2:
-            return 1.0
+    def _semantic_pattern_match(self, text: str, shell_context: Optional[Dict] = None) -> List[PartialMatch]:
+        """Match against semantic patterns with context awareness"""
+        matches = []
+        text_lower = text.lower()
         
-        # Substring match
-        if str1 in str2 or str2 in str1:
-            return 0.9
+        for pattern_name, pattern_info in self.semantic_patterns.items():
+            confidence_base = pattern_info.get('confidence_base', 0.6)
+            
+            for pattern in pattern_info['patterns']:
+                if re.search(pattern, text_lower):
+                    # Adjust command based on shell context
+                    command = pattern_info['command_template']
+                    if shell_context and shell_context.get('platform') == 'windows':
+                        command = self._adapt_for_windows(command)
+                    
+                    match = PartialMatch(
+                        original_input=text,
+                        corrected_input=text,
+                        command=command,
+                        explanation=pattern_info['explanation'],
+                        confidence=confidence_base,
+                        corrections=[],
+                        pattern_matches=[pattern_name],
+                        source_level=5,
+                        metadata={
+                            'algorithm': 'semantic_pattern_match',
+                            'pattern_name': pattern_name,
+                            'intelligence_hub': True
+                        }
+                    )
+                    matches.append(match)
+                    break  # Only match first pattern per category
         
-        # Word overlap scoring
-        words1 = set(str1.split())
-        words2 = set(str2.split())
+        return matches
+    
+    def _synonym_command_match(self, text: str) -> List[PartialMatch]:
+        """Match commands using synonym understanding"""
+        matches = []
+        text_words = set(text.lower().split())
         
-        if not words1 or not words2:
+        for base_command, synonyms in self.command_synonyms.items():
+            # Check if any synonym appears in text
+            matching_synonyms = [syn for syn in synonyms if syn in text_words or syn in text.lower()]
+            
+            if matching_synonyms:
+                confidence = min(0.8, 0.5 + (len(matching_synonyms) * 0.1))
+                
+                match = PartialMatch(
+                    original_input=text,
+                    corrected_input=text,
+                    command=base_command,
+                    explanation=f'Synonym match: {matching_synonyms[0]} → {base_command}',
+                    confidence=confidence,
+                    corrections=[],
+                    pattern_matches=[],
+                    source_level=5,
+                    metadata={
+                        'algorithm': 'synonym_match',
+                        'synonyms_matched': matching_synonyms,
+                        'base_command': base_command
+                    }
+                )
+                matches.append(match)
+        
+        return matches
+    
+    def _enhance_partial_match(self, match: PartialMatch, original_text: str) -> PartialMatch:
+        """Enhance partial matches with semantic intelligence"""
+        # Apply typo correction bonus if corrections were made
+        confidence_boost = 0.0
+        if match.corrections:
+            confidence_boost += self.typo_correction_bonus
+        
+        # Apply semantic similarity boost
+        semantic_score = self._calculate_semantic_similarity(original_text, match.command)
+        if semantic_score > self.semantic_similarity_threshold:
+            confidence_boost += 0.1
+        
+        # Create enhanced match
+        enhanced_match = PartialMatch(
+            original_input=match.original_input,
+            corrected_input=match.corrected_input,
+            command=match.command,
+            explanation=f"Enhanced: {match.explanation}",
+            confidence=min(0.95, match.confidence + confidence_boost),
+            corrections=match.corrections,
+            pattern_matches=match.pattern_matches,
+            source_level=5,  # Enhanced to Level 5
+            metadata={
+                **match.metadata,
+                'enhanced_by': 'semantic_intelligence_hub',
+                'confidence_boost': confidence_boost,
+                'semantic_score': semantic_score
+            }
+        )
+        
+        return enhanced_match
+    
+    def _calculate_semantic_similarity(self, text: str, command: str) -> float:
+        """Calculate semantic similarity between text and command"""
+        # Simple word overlap based similarity
+        text_words = set(text.lower().split())
+        command_words = set(command.lower().split())
+        
+        if not text_words or not command_words:
             return 0.0
         
-        intersection = words1.intersection(words2)
-        union = words1.union(words2)
+        overlap = len(text_words.intersection(command_words))
+        total = len(text_words.union(command_words))
         
-        # Jaccard similarity with bonus for key words
-        jaccard = len(intersection) / len(union)
-        
-        # Boost score for important command words and specific patterns
-        important_words = {'show', 'list', 'find', 'process', 'file', 'network', 'disk', 'memory'}
-        important_overlap = intersection.intersection(important_words)
-        
-        if important_overlap:
-            jaccard += 0.1 * len(important_overlap)
-        
-        # Special boost for exact multi-word phrase matches
-        if len(words1) > 1 and len(words2) > 1:
-            # Check for consecutive word matches (phrase matching)
-            str1_words = str1.split()
-            str2_words = str2.split()
-            
-            # Bonus for matching consecutive words
-            for i in range(len(str1_words)):
-                for j in range(len(str2_words)):
-                    if i < len(str1_words) and j < len(str2_words):
-                        if str1_words[i] == str2_words[j]:
-                            # Check if next word also matches
-                            if (i + 1 < len(str1_words) and j + 1 < len(str2_words) and 
-                                str1_words[i + 1] == str2_words[j + 1]):
-                                jaccard += 0.15  # Bonus for consecutive word pairs
-        
-        return min(jaccard, 1.0)
+        return overlap / total if total > 0 else 0.0
     
-    def _cosine_similarity(self, vec1, vec_list):
-        """Calculate cosine similarity without external dependencies"""
-        similarities = []
+    def _consolidate_intelligence(self, result: PipelineResult, original_text: str) -> PipelineResult:
+        """
+        Intelligence hub consolidation of all partial matches
         
-        # Calculate magnitude of vec1
-        mag1 = sum(x * x for x in vec1) ** 0.5
-        if mag1 == 0:
-            return [0.0] * len(vec_list)
+        Applies advanced scoring and deduplication
+        """
+        if not result.partial_matches:
+            return result
         
-        for vec2 in vec_list:
-            # Calculate dot product
-            dot_product = sum(a * b for a, b in zip(vec1, vec2))
+        # Group similar matches
+        grouped_matches = self._group_similar_matches(result.partial_matches)
+        
+        # Apply intelligence scoring
+        for group in grouped_matches:
+            best_match = max(group, key=lambda m: m.confidence)
+            # Boost confidence for matches with multiple confirmations
+            if len(group) > 1:
+                confidence_boost = min(0.2, (len(group) - 1) * 0.05)
+                best_match.confidence = min(0.95, best_match.confidence + confidence_boost)
+                best_match.metadata['group_confirmation_boost'] = confidence_boost
+        
+        # Create consolidated result
+        consolidated_result = PipelineResult()
+        for group in grouped_matches:
+            best_match = max(group, key=lambda m: m.confidence)
+            consolidated_result.add_partial_match(best_match)
+        
+        # Copy metadata
+        consolidated_result.pipeline_path = result.pipeline_path
+        consolidated_result.pipeline_path.append(5)  # Add semantic level
+        
+        return consolidated_result
+    
+    def _group_similar_matches(self, matches: List[PartialMatch]) -> List[List[PartialMatch]]:
+        """Group similar partial matches for consolidation"""
+        groups = []
+        used_matches = set()
+        
+        for i, match in enumerate(matches):
+            if i in used_matches:
+                continue
             
-            # Calculate magnitude of vec2
-            mag2 = sum(x * x for x in vec2) ** 0.5
+            group = [match]
+            used_matches.add(i)
             
-            if mag2 == 0:
-                similarities.append(0.0)
-            else:
-                similarities.append(dot_product / (mag1 * mag2))
+            # Find similar matches
+            for j, other_match in enumerate(matches[i+1:], i+1):
+                if j in used_matches:
+                    continue
+                
+                if self._are_matches_similar(match, other_match):
+                    group.append(other_match)
+                    used_matches.add(j)
+            
+            groups.append(group)
         
-        return similarities
+        return groups
+    
+    def _are_matches_similar(self, match1: PartialMatch, match2: PartialMatch) -> bool:
+        """Check if two partial matches are similar enough to group"""
+        # Same command
+        if match1.command == match2.command:
+            return True
+        
+        # Similar commands (edit distance)
+        similarity = difflib.SequenceMatcher(None, match1.command, match2.command).ratio()
+        if similarity >= 0.8:
+            return True
+        
+        return False
+    
+    def _adapt_for_windows(self, command: str) -> str:
+        """Adapt Unix commands for Windows when needed"""
+        adaptations = {
+            'ls -la': 'dir',
+            'ps aux': 'tasklist',
+            'top -bn1': 'tasklist',
+            'df -h': 'wmic logicaldisk get size,freespace,caption',
+            'ping -c 4': 'ping -n 4',
+            'ip addr show': 'ipconfig'
+        }
+        
+        for unix_cmd, windows_cmd in adaptations.items():
+            if unix_cmd in command:
+                command = command.replace(unix_cmd, windows_cmd)
+        
+        return command
