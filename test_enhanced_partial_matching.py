@@ -72,7 +72,8 @@ def test_phase_4_integration():
         print(f"  Matches: {len(pattern_result.partial_matches)}")
         if pattern_result.partial_matches:
             best = pattern_result.get_best_match()
-            print(f"  Best: {best.command} (confidence: {best.confidence:.2f})")
+            if best:
+                print(f"  Best: {best.command} (confidence: {best.confidence:.2f})")
         
         # Level 4: Fuzzy Engine
         print("\n🎯 Level 4: Fuzzy Engine")
@@ -82,7 +83,8 @@ def test_phase_4_integration():
         print(f"  Matches: {len(fuzzy_result.partial_matches)}")
         if fuzzy_result.partial_matches:
             best = fuzzy_result.get_best_match()
-            print(f"  Best: {best.command} (confidence: {best.confidence:.2f})")
+            if best:
+                print(f"  Best: {best.command} (confidence: {best.confidence:.2f})")
         
         # Level 5: Semantic Intelligence Hub
         print("\n🧠 Level 5: Semantic Intelligence Hub")

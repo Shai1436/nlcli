@@ -171,7 +171,7 @@ class SemanticMatcher:
                 command=corrected_text,
                 explanation=f'Typo corrections: {", ".join(corrections)}',
                 confidence=min(0.95, 0.85 + (len(corrections) * 0.05)),
-                corrections=corrections,
+                corrections=[(corr.split(' → ')[0], corr.split(' → ')[1]) for corr in corrections],
                 pattern_matches=[],
                 source_level=5,
                 metadata={
@@ -465,3 +465,48 @@ class SemanticMatcher:
                 command = command.replace(unix_cmd, windows_cmd)
         
         return command
+    
+    def get_pipeline_metadata(self, natural_language: str, metadata: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Level 5 Pipeline: Semantic Intelligence Hub
+        Process natural language through enhanced semantic understanding and typo correction
+        
+        Args:
+            natural_language: User's natural language input
+            metadata: Context metadata from shell adapter
+            
+        Returns:
+            Pipeline metadata dict if semantic match found, None otherwise
+        """
+        
+        # Process through semantic intelligence hub  
+        result = self.process_with_partial_matching(natural_language, metadata)
+        
+        if result.final_result:
+            # Return the final result from intelligence hub
+            final = result.final_result
+            final.update({
+                'pipeline_level': 5,
+                'match_type': 'semantic_intelligence',
+                'source': 'semantic_matcher',
+                'metadata': metadata,
+                'pipeline_path': result.pipeline_path
+            })
+            return final
+        
+        # If no final result, check if we have high-confidence partial matches
+        if result.partial_matches and result.combined_confidence >= 0.7:
+            best_match = result.get_best_match()
+            if best_match:
+                return {
+                    'command': best_match.command,
+                    'explanation': best_match.explanation,
+                    'confidence': int(best_match.confidence * 100),
+                    'pipeline_level': 5,
+                    'match_type': 'semantic_partial',
+                    'source': 'semantic_matcher',
+                    'corrections': [f"{t[0]} → {t[1]}" for t in best_match.corrections] if best_match.corrections else [],
+                    'metadata': metadata
+                }
+        
+        return None
