@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: nlcli
-Version: 1.1.2
+Version: 1.2.0
 Summary: Universal CLI that translates natural language to OS commands
 Home-page: https://github.com/nlcli/nlcli
 Author: NLCLI Team
@@ -58,7 +58,7 @@ An advanced AI-powered Natural Language CLI tool that transforms complex user in
 ## 🚀 Key Features
 
 ### Core Functionality
-- **6-Level Pipeline Architecture**: Context → Exact Commands → Patterns → Fuzzy Matching → Semantic ML → AI Fallback
+- **Enhanced 6-Level Pipeline Architecture**: Context → Exact Commands → Patterns → Fuzzy Matching → Semantic Intelligence Hub → AI Fallback
 - **534+ Direct Commands**: Sub-1ms response times for comprehensive enterprise-grade command coverage
 - **Cross-Platform Intelligence**: Windows↔Unix↔Linux↔macOS command translation with PowerShell support
 - **Smart API Key Management**: Single-prompt setup with persistent storage across sessions
@@ -66,7 +66,7 @@ An advanced AI-powered Natural Language CLI tool that transforms complex user in
 
 ### Performance & Intelligence
 - **Sub-Millisecond Recognition**: Lightning-fast command filtering for common operations
-- **Semantic Matching**: Local ML with 80% confidence threshold covering 30+ command categories
+- **Semantic Intelligence Hub**: Collaborative ML with 95% confidence threshold and cross-level enhancement
 - **Fuzzy Typo Correction**: Intelligent correction system replacing 486+ manual mappings
 - **Parameter Intelligence**: Universal resolver supporting 9 parameter types with smart defaults
 - **High-Performance Caching**: File-based cache with in-memory LRU layer and cross-instance sharing
@@ -110,7 +110,7 @@ nl
 ```bash
 # Check version
 nlcli --version
-# Should display: nlcli v1.1.0
+# Should display: nlcli v1.2.0
 
 # Quick test with instant enterprise command recognition
 nlcli
