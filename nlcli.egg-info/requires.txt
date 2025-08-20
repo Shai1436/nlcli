@@ -4,6 +4,7 @@ rich>=13.0.0
 psutil>=5.0.0
 build>=1.2.2.post1
 setuptools>=75.3.2
+twine>=6.1.0
 
 [dev]
 pytest>=7.0.0
