@@ -4,8 +4,21 @@
 [![License](https://img.shields.io/badge/license-Commercial-blue.svg)](COMMERCIAL_LICENSE.md)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](tests/)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](coverage.json)
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://nlcli-demo.replit.app)
 
 An advanced AI-powered Natural Language CLI tool that transforms complex user intents into precise OS commands through intelligent semantic processing and adaptive machine learning. Built for enterprise deployment with production-ready architecture.
+
+## 🌐 Live Demo
+
+**[Try the Enhanced Partial Matching Pipeline Demo →](https://nlcli-demo.replit.app)**
+
+Experience the v1.2.0 Enhanced Partial Matching Pipeline in action:
+- ⚡ **Real-time pipeline visualization** showing processing through all 6 levels
+- 📊 **Performance metrics** demonstrating 35x speed improvements
+- 🧠 **Semantic Intelligence Hub** consolidating cross-level results
+- 🔧 **Interactive examples** for instant recognition, pattern matching, and typo correction
+
+Test commands like `netwok status`, `shw files`, or `docker ps` to see how different pipeline levels handle processing.
 
 ## 🚀 Key Features
 
@@ -42,6 +55,8 @@ pip install nlcli
 # Start using immediately
 nlcli
 ```
+
+**🌐 Want to try it first?** Check out our [live demo](https://nlcli-demo.replit.app) to experience the Enhanced Partial Matching Pipeline without installation.
 
 ### From Source (Development Version)
 
