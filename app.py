@@ -22,10 +22,23 @@ pattern_engine = PatternEngine()
 fuzzy_engine = AdvancedFuzzyEngine()
 semantic_matcher = SemanticMatcher()
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for deployment"""
+    return jsonify({
+        'status': 'healthy',
+        'service': 'nlcli-demo',
+        'version': '1.2.0'
+    })
+
 @app.route('/')
 def index():
     """Main demo page"""
-    return render_template('index.html')
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        # Fallback if template fails
+        return f"<h1>nlcli Demo Server</h1><p>Service is running but template error: {str(e)}</p><p><a href='/health'>Health Check</a></p>"
 
 @app.route('/api/translate', methods=['POST'])
 def translate_command():
