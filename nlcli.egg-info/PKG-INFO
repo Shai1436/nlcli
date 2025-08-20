@@ -108,6 +108,18 @@ nlcli
 
 **🌐 Want to try it first?** Check out our [live demo](https://nlcli-demo.replit.app) to experience the Enhanced Partial Matching Pipeline without installation.
 
+### Direct Installation from Repository
+
+```bash
+# Install directly from source (no PyPI required)
+git clone https://github.com/nlcli/nlcli.git
+cd nlcli
+pip install -e .
+
+# Start using immediately
+nlcli
+```
+
 ### From Source (Development Version)
 
 ```bash
