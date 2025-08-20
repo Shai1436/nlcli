@@ -11,6 +11,7 @@ import concurrent.futures
 import time
 import platform
 from typing import Dict, List, Optional, Tuple, Any, Set
+from .partial_match import PartialMatch, PipelineResult
 from collections import defaultdict
 import difflib
 import unicodedata
@@ -512,6 +513,56 @@ class AdvancedFuzzyEngine:
 
     
 
+
+
+    def process_with_partial_matching(self, text: str, shell_context: Optional[Dict] = None) -> PipelineResult:
+        """Enhanced processing for partial matching pipeline"""
+        result = PipelineResult()
+        
+        # Fast typo correction
+        corrected = self.fast_typo_correction(text)
+        if corrected != text:
+            result.add_partial_match(PartialMatch(
+                original_input=text,
+                corrected_input=corrected,
+                command=corrected,
+                explanation=f'Typo corrected: {text} → {corrected}',
+                confidence=0.95,
+                corrections=[f'{text} → {corrected}'],
+                pattern_matches=[],
+                source_level=4,
+                metadata={'algorithm': 'typo_correction', 'exact_match': True}
+            ))
+        
+        # Advanced fuzzy matching - use existing fuzzy_match method
+        fuzzy_result = self.fuzzy_match(text, threshold=0.3)
+        if fuzzy_result:
+            command, confidence, metadata = fuzzy_result
+            result.add_partial_match(PartialMatch(
+                original_input=text,
+                corrected_input=text,
+                command=command,
+                explanation=f'Fuzzy match: {metadata.get("algorithm", "unknown")}',
+                confidence=confidence,
+                corrections=[],
+                pattern_matches=[],
+                source_level=4,
+                metadata=metadata
+            ))
+        
+        # Set final result if high confidence
+        if result.has_sufficient_confidence(0.85):
+            best_match = result.get_best_match()
+            if best_match:
+                result.final_result = {
+                    'command': best_match.command,
+                    'explanation': best_match.explanation,
+                    'confidence': best_match.confidence,
+                    'corrections': best_match.corrections,
+                    'source': 'fuzzy_engine_partial'
+                }
+        
+        return result
 
 
 class LevenshteinMatcher:

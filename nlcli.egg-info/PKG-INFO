@@ -5,7 +5,7 @@ Summary: Universal CLI that translates natural language to OS commands
 Home-page: https://github.com/nlcli/nlcli
 Author: NLCLI Team
 Author-email: NLCLI Team <team@nlcli.dev>
-License: Commercial/Personal Developer License
+License: MIT
 Project-URL: Homepage, https://github.com/nlcli/nlcli
 Project-URL: Bug Reports, https://github.com/nlcli/nlcli/issues
 Project-URL: Source, https://github.com/nlcli/nlcli
@@ -18,7 +18,7 @@ Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: System Administrators
 Classifier: Topic :: System :: Shells
 Classifier: Topic :: Utilities
-Classifier: License :: Other/Proprietary License
+Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9

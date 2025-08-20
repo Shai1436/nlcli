@@ -230,7 +230,7 @@ class AITranslator:
                 logger.warning(f"Semantic Matcher error: {e}")
             
             # Level 6: AI Translation - OpenAI fallback
-            logger.debug(f"Level 5 (AI Translation): Using OpenAI fallback")
+            logger.debug(f"Level 6 (AI Translation): Using OpenAI fallback")
             api_result = self._translate_with_ai(natural_language, timeout, context)
             
             # Cache the result for future use

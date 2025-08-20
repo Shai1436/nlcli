@@ -799,6 +799,34 @@ class CommandFilter:
                 result['explanation'] += ' (natural language interpreted)'
                 return result
         
+        # Try prefix matching for commands with arguments
+        # This catches cases like "git push -u origin main" matching "git push"
+        words = user_input_lower.split()
+        if len(words) > 1:
+            # Try 2-word combinations first, then 1-word
+            for i in range(min(len(words), 3), 0, -1):  # Try up to 3 words, down to 1
+                base_cmd = " ".join(words[:i])
+                
+                # Check in direct_commands
+                if base_cmd in self.direct_commands:
+                    result = self.direct_commands[base_cmd].copy()
+                    result['pipeline_level'] = 2
+                    result['match_type'] = 'prefix_command_match'
+                    result['source'] = 'command_filter'
+                    result['command'] = user_input.strip()  # Keep original full command
+                    result['explanation'] += f' (matched base command: {base_cmd})'
+                    return result
+                
+                # Check in direct_commands_with_args
+                if base_cmd in self.direct_commands_with_args:
+                    result = self.direct_commands_with_args[base_cmd].copy()
+                    result['pipeline_level'] = 2
+                    result['match_type'] = 'prefix_command_with_args_match'
+                    result['source'] = 'command_filter'
+                    result['command'] = user_input.strip()  # Keep original full command
+                    result['explanation'] += f' (matched base command: {base_cmd})'
+                    return result
+        
         # No exact match found at Level 2
         return None
     
