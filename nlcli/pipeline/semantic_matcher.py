@@ -15,6 +15,8 @@ from collections import defaultdict, Counter
 import unicodedata
 
 from .partial_match import PartialMatch, PipelineResult
+from ..utils.command_validator import get_command_validator
+from ..utils.known_command_registry import get_known_command_registry
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +38,11 @@ class SemanticMatcher:
         self.typo_correction_bonus = 0.2
         self.semantic_similarity_threshold = 0.5
         
-        logger.info("SemanticMatcher initialized as intelligence hub")
+        # Command validation components
+        self.command_validator = get_command_validator()
+        self.command_registry = get_known_command_registry()
+        
+        logger.info("SemanticMatcher initialized as intelligence hub with command validation")
     
     def _load_comprehensive_typo_mappings(self) -> Dict[str, str]:
         """Comprehensive typo correction mappings consolidated from all levels"""
@@ -162,25 +168,50 @@ class SemanticMatcher:
                 enhanced_match = self._enhance_partial_match(match, text)
                 result.add_partial_match(enhanced_match)
         
-        # 1. Unified typo correction (consolidates all levels)
-        corrected_text, corrections = self._unified_typo_correction(text)
+        # 1. Unified typo correction with validation (consolidates all levels)
+        corrected_text, corrections, failed_corrections = self._unified_typo_correction_with_fallback(text)
+        
         if corrections:
+            # Valid corrections found
             typo_match = PartialMatch(
                 original_input=text,
                 corrected_input=corrected_text,
                 command=corrected_text,
-                explanation=f'Typo corrections: {", ".join(corrections)}',
-                confidence=min(0.95, 0.85 + (len(corrections) * 0.05)),
+                explanation=f'Validated typo corrections: {", ".join(corrections)}',
+                confidence=min(0.90, 0.75 + (len(corrections) * 0.05)),  # Slightly lower confidence due to validation
                 corrections=[(corr.split(' → ')[0], corr.split(' → ')[1]) for corr in corrections],
                 pattern_matches=[],
                 source_level=5,
                 metadata={
-                    'algorithm': 'unified_typo_correction',
+                    'algorithm': 'validated_typo_correction',
                     'corrections_applied': len(corrections),
-                    'intelligence_hub': True
+                    'failed_corrections': len(failed_corrections),
+                    'intelligence_hub': True,
+                    'validation_enabled': True
                 }
             )
             result.add_partial_match(typo_match)
+        elif failed_corrections:
+            # Some corrections were attempted but failed validation
+            suggestions = self._get_command_suggestions(text)
+            if suggestions:
+                suggestion_match = PartialMatch(
+                    original_input=text,
+                    corrected_input=text,  # Keep original since corrections failed
+                    command='',  # No command to execute
+                    explanation=f'Invalid command found. Did you mean: {", ".join(suggestions[:3])}?',
+                    confidence=0.3,  # Low confidence, this is just a suggestion
+                    corrections=[],
+                    pattern_matches=[],
+                    source_level=5,
+                    metadata={
+                        'algorithm': 'command_suggestion',
+                        'failed_corrections': failed_corrections,
+                        'suggestions': suggestions,
+                        'validation_failed': True
+                    }
+                )
+                result.add_partial_match(suggestion_match)
         
         # 2. Semantic pattern matching
         semantic_matches = self._semantic_pattern_match(corrected_text, shell_context)
@@ -198,7 +229,7 @@ class SemanticMatcher:
         # Set final result with intelligence hub decision
         if consolidated_result.has_sufficient_confidence(0.7):
             best_match = consolidated_result.get_best_match()
-            if best_match:
+            if best_match and best_match.command:  # Ensure we have a valid command to execute
                 consolidated_result.final_result = {
                     'command': best_match.command,
                     'explanation': best_match.explanation,
@@ -207,64 +238,125 @@ class SemanticMatcher:
                     'source': 'semantic_intelligence_hub',
                     'intelligence_path': consolidated_result.pipeline_path
                 }
+            elif best_match and not best_match.command:
+                # This is a suggestion-only match, don't set final result
+                logger.debug(f"Semantic matcher provided suggestions but no executable command for: {text}")
         
         return consolidated_result
     
-    def _unified_typo_correction(self, text: str) -> Tuple[str, List[str]]:
+    def _unified_typo_correction_with_fallback(self, text: str) -> Tuple[str, List[str], List[str]]:
         """
-        Unified typo correction consolidating all pipeline levels
+        Unified typo correction with validation and fallback handling
         
         Returns:
-            Tuple of (corrected_text, list_of_corrections)
+            Tuple of (corrected_text, successful_corrections, failed_corrections)
         """
-        corrections = []
+        successful_corrections = []
+        failed_corrections = []
         words = text.lower().split()
         corrected_words = []
         
         for word in words:
+            corrected_word = word
+            correction_made = False
+            
             # Check direct mapping
             if word in self.typo_mappings:
-                corrected = self.typo_mappings[word]
-                corrections.append(f'{word} → {corrected}')
-                corrected_words.append(corrected)
-            
-            # Check fuzzy correction for close matches
-            elif len(word) > 2:
-                best_match, similarity = self._find_fuzzy_typo_match(word)
-                if best_match and similarity >= 0.8:
-                    corrections.append(f'{word} → {best_match}')
-                    corrected_words.append(best_match)
+                candidate = self.typo_mappings[word]
+                # Validate the correction exists as a command
+                if self._is_valid_command_correction(word, candidate):
+                    successful_corrections.append(f'{word} → {candidate}')
+                    corrected_word = candidate
+                    correction_made = True
                 else:
-                    corrected_words.append(word)
-            else:
-                corrected_words.append(word)
+                    failed_corrections.append(f'{word} → {candidate} (invalid command)')
+            
+            # Check fuzzy correction for close matches if no direct mapping worked
+            if not correction_made and len(word) > 2:
+                best_match, similarity = self._find_validated_fuzzy_match(word)
+                if best_match and similarity >= 0.8:
+                    successful_corrections.append(f'{word} → {best_match}')
+                    corrected_word = best_match
+                    correction_made = True
+            
+            corrected_words.append(corrected_word)
         
         corrected_text = ' '.join(corrected_words)
-        return corrected_text, corrections
+        return corrected_text, successful_corrections, failed_corrections
     
-    def _find_fuzzy_typo_match(self, word: str) -> Tuple[Optional[str], float]:
-        """Find fuzzy matches for typo correction"""
+    def _unified_typo_correction(self, text: str) -> Tuple[str, List[str]]:
+        """Legacy method for backward compatibility"""
+        corrected_text, successful_corrections, _ = self._unified_typo_correction_with_fallback(text)
+        return corrected_text, successful_corrections
+    
+    def _get_command_suggestions(self, text: str) -> List[str]:
+        """Get command suggestions when validation fails"""
+        suggestions = []
+        words = text.lower().split()
+        
+        # Get suggestions for each word that might be a command
+        for word in words[:2]:  # Only check first two words (likely to be commands)
+            if len(word) > 2:
+                # Get similar valid commands
+                similar_commands = self.command_validator.get_similar_valid_commands(word, max_suggestions=3)
+                suggestions.extend(similar_commands)
+                
+                # Get similar commands from registry
+                registry_similar = self.command_registry.get_similar_commands(word, max_results=3)
+                for cmd in registry_similar:
+                    if cmd not in suggestions:
+                        suggestions.append(cmd)
+        
+        return suggestions[:5]  # Return top 5 suggestions
+    
+    def _is_valid_command_correction(self, original: str, corrected: str) -> bool:
+        """Validate that a typo correction results in a valid system command"""
+        # First check if it's a known command in our registry
+        if self.command_registry.is_known_command(corrected):
+            return True
+        
+        # Then check if it actually exists on the system
+        if self.command_validator.command_exists(corrected):
+            return True
+        
+        # If it's not the first word, it might be an argument/parameter, allow it
+        # This handles cases like "ls -la" where "-la" shouldn't be validated as a command
+        return False
+    
+    def _find_validated_fuzzy_match(self, word: str) -> Tuple[Optional[str], float]:
+        """Find fuzzy matches for typo correction with command validation"""
         if len(word) < 3:
             return None, 0.0
         
         best_match = None
         best_similarity = 0.0
         
-        # Check against all known correct words
-        known_words = set(self.typo_mappings.values())
-        known_words.update(['network', 'status', 'system', 'process', 'file', 'directory',
-                           'show', 'list', 'find', 'create', 'delete', 'copy', 'move'])
+        # Get all known valid commands for fuzzy matching
+        known_commands = self.command_registry.get_all_known_commands()
         
-        for known_word in known_words:
+        # Also include common words that might not be commands but are valid corrections
+        additional_words = {'network', 'status', 'system', 'process', 'file', 'directory',
+                           'show', 'list', 'find', 'create', 'delete', 'copy', 'move',
+                           'running', 'active', 'all', 'current', 'available'}
+        
+        search_words = known_commands.union(additional_words)
+        
+        for known_word in search_words:
             if abs(len(word) - len(known_word)) > 2:  # Skip if length differs too much
                 continue
                 
             similarity = difflib.SequenceMatcher(None, word, known_word).ratio()
             if similarity > best_similarity:
-                best_similarity = similarity
-                best_match = known_word
+                # Validate that this correction makes sense
+                if self._is_valid_command_correction(word, known_word) or known_word in additional_words:
+                    best_similarity = similarity
+                    best_match = known_word
         
         return best_match, best_similarity
+    
+    def _find_fuzzy_typo_match(self, word: str) -> Tuple[Optional[str], float]:
+        """Legacy method - now redirects to validated fuzzy matching"""
+        return self._find_validated_fuzzy_match(word)
     
     def _semantic_pattern_match(self, text: str, shell_context: Optional[Dict] = None) -> List[PartialMatch]:
         """Match against semantic patterns with context awareness"""
@@ -497,7 +589,7 @@ class SemanticMatcher:
         # If no final result, check if we have high-confidence partial matches
         if result.partial_matches and result.combined_confidence >= 0.7:
             best_match = result.get_best_match()
-            if best_match:
+            if best_match and best_match.command:  # Ensure we have an executable command
                 return {
                     'command': best_match.command,
                     'explanation': best_match.explanation,
@@ -508,5 +600,12 @@ class SemanticMatcher:
                     'corrections': [f"{t[0]} → {t[1]}" for t in best_match.corrections] if best_match.corrections else [],
                     'metadata': metadata
                 }
+        
+        # Check if we have suggestion-only matches (no executable command)
+        suggestion_matches = [m for m in result.partial_matches if not m.command and 'suggestions' in m.metadata]
+        if suggestion_matches:
+            best_suggestion = max(suggestion_matches, key=lambda m: m.confidence)
+            logger.info(f"Semantic matcher found invalid command, suggesting alternatives for: {natural_language}")
+            # Don't return suggestions as executable commands - let this fall through to Level 6 (AI Translator)
         
         return None

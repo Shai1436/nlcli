@@ -46,6 +46,8 @@ nlcli/ui/interactive_input.py
 nlcli/ui/output_formatter.py
 nlcli/ui/typeahead.py
 nlcli/utils/__init__.py
+nlcli/utils/command_validator.py
 nlcli/utils/file_extension_resolver.py
+nlcli/utils/known_command_registry.py
 nlcli/utils/parameter_resolver.py
 nlcli/utils/utils.py
