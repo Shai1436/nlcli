@@ -18,6 +18,10 @@ author = "agent"
 task = "workflow.run"
 args = "NLCLI Server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "nlcli Demo Server"
+
 [[workflows.workflow]]
 name = "NLCLI Server"
 author = "agent"
@@ -28,3 +32,19 @@ outputType = "console"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "pip install -e . && python -m nlcli"
+
+[[workflows.workflow]]
+name = "nlcli Demo Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python app.py"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80

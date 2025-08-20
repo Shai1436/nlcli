@@ -36,6 +36,7 @@ Requires-Dist: psutil>=5.0.0
 Requires-Dist: build>=1.2.2.post1
 Requires-Dist: setuptools>=75.3.2
 Requires-Dist: twine>=6.1.0
+Requires-Dist: flask>=3.0.3
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0.0; extra == "dev"
 Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
