@@ -156,14 +156,12 @@ class SemanticMatcher:
                 'confidence_base': 0.8
             },
             
-            'file_operations': {
-                'action_words': ['list', 'show', 'display', 'find', 'search', 'locate', 'ls', 'dir'],
+            'list_files': {
+                'action_words': ['list', 'show', 'display', 'ls', 'dir'],
                 'target_words': ['file', 'files', 'directory', 'folder', 'dirs', 'contents'],
                 'modifiers': {
                     'detail': ['detailed', 'simple', 'full', 'brief'],
-                    'hidden': ['all', 'hidden', 'visible'],
-                    'size': ['large', 'small', 'huge', 'tiny'],
-                    'time': ['recent', 'old', 'new']
+                    'hidden': ['all', 'hidden', 'visible']
                 },
                 'default_modifier': 'detailed',
                 'command_templates': {
@@ -173,6 +171,25 @@ class SemanticMatcher:
                 },
                 'explanation': 'List files and directories with details',
                 'confidence_base': 0.7
+            },
+            
+            'find_files': {
+                'action_words': ['find', 'search', 'locate', 'look for', 'discover'],
+                'target_words': ['file', 'files', 'document', 'documents'],
+                'modifiers': {
+                    'type': ['html', 'css', 'js', 'py', 'txt', 'pdf', 'log', 'config'],
+                    'scope': ['all', 'recursive', 'deep'],
+                    'size': ['large', 'small', 'huge', 'tiny'],
+                    'time': ['recent', 'old', 'new']
+                },
+                'default_modifier': 'all',
+                'command_templates': {
+                    'linux': 'find . -name "*" -type f',
+                    'windows': 'dir /s /b',
+                    'default': 'find . -name "*" -type f'
+                },
+                'explanation': 'Find and search for files',
+                'confidence_base': 0.8
             },
             
             'port_operations': {
@@ -629,7 +646,26 @@ class SemanticMatcher:
                 if platform == 'linux':
                     base_command = 'ps aux --sort=-%mem | head -20'
         
-        elif intent_name == 'file_operations':
+        elif intent_name == 'find_files':
+            # Smart file type detection for find commands
+            file_type = modifiers.get('type')
+            if file_type:
+                if platform == 'linux':
+                    base_command = f'find . -name "*.{file_type}" -type f'
+                elif platform == 'windows':
+                    base_command = f'dir /s /b *.{file_type}'
+                else:
+                    base_command = f'find . -name "*.{file_type}" -type f'
+            else:
+                # Default find command
+                if platform == 'linux':
+                    base_command = 'find . -type f'
+                elif platform == 'windows':  
+                    base_command = 'dir /s /b'
+                else:
+                    base_command = 'find . -type f'
+        
+        elif intent_name == 'list_files':
             if modifiers.get('hidden') == 'all':
                 if platform == 'linux':
                     base_command = 'ls -la'
