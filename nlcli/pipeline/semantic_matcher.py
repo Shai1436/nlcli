@@ -219,53 +219,31 @@ class SemanticMatcher:
         for match in intent_matches:
             result.add_partial_match(match)
 
-        # 2. Unified typo correction with validation (only if no intent match found)
-        if not intent_matches:
-            corrected_text, corrections, failed_corrections = self._unified_typo_correction_with_fallback(text)
+        # 2. Conservative typo correction (only for simple command typos - not natural language)
+        if not intent_matches and self._should_attempt_typo_correction(text):
+            corrected_text, corrections, failed_corrections = self._conservative_typo_correction(text)
             
             if corrections:
-                # Valid corrections found
+                # Valid corrections found for simple command typos
                 typo_match = PartialMatch(
                     original_input=text,
                     corrected_input=corrected_text,
                     command=corrected_text,
-                    explanation=f'Validated typo corrections: {", ".join(corrections)}',
-                    confidence=min(0.85, 0.70 + (len(corrections) * 0.05)),  # Lower confidence than intent classification
+                    explanation=f'Fixed typo: {", ".join(corrections)}',
+                    confidence=min(0.80, 0.65 + (len(corrections) * 0.05)),  # Lower confidence than intent classification
                     corrections=[(corr.split(' → ')[0], corr.split(' → ')[1]) for corr in corrections],
                     pattern_matches=[],
                     source_level=5,
                     metadata={
-                        'algorithm': 'validated_typo_correction',
+                        'algorithm': 'conservative_typo_correction',
                         'corrections_applied': len(corrections),
-                        'failed_corrections': len(failed_corrections),
-                        'intelligence_hub': True,
-                        'validation_enabled': True
+                        'simple_command_typo': True,
+                        'intelligence_hub': True
                     }
                 )
                 result.add_partial_match(typo_match)
-            elif failed_corrections:
-                # Some corrections were attempted but failed validation
-                suggestions = self._get_command_suggestions(text)
-                if suggestions:
-                    suggestion_match = PartialMatch(
-                        original_input=text,
-                        corrected_input=text,  # Keep original since corrections failed
-                        command='',  # No command to execute
-                        explanation=f'Invalid command found. Did you mean: {", ".join(suggestions[:3])}?',
-                        confidence=0.3,  # Low confidence, this is just a suggestion
-                        corrections=[],
-                        pattern_matches=[],
-                        source_level=5,
-                        metadata={
-                            'algorithm': 'command_suggestion',
-                            'failed_corrections': failed_corrections,
-                            'suggestions': suggestions,
-                            'validation_failed': True
-                        }
-                    )
-                    result.add_partial_match(suggestion_match)
         else:
-            corrected_text = text  # Use original text when intent classification succeeded
+            corrected_text = text  # Use original text (no typo correction attempted)
         
         # 3. Synonym-based command enhancement
         synonym_matches = self._synonym_command_match(corrected_text)
@@ -293,9 +271,63 @@ class SemanticMatcher:
         
         return consolidated_result
     
-    def _unified_typo_correction_with_fallback(self, text: str) -> Tuple[str, List[str], List[str]]:
+    def _should_attempt_typo_correction(self, text: str) -> bool:
         """
-        Unified typo correction with validation and fallback handling
+        Determine if we should attempt typo correction
+        
+        Conservative approach: Only fix obvious single-command typos, not natural language
+        """
+        words = text.strip().split()
+        
+        # Skip natural language phrases (3+ words usually indicate intent-based commands)
+        if len(words) >= 3:
+            return False
+        
+        # Skip if it contains known natural language indicators
+        natural_language_indicators = {
+            'show', 'list', 'display', 'find', 'search', 'get', 'check', 'test',
+            'all', 'running', 'active', 'large', 'small', 'recent', 'old', 'new',
+            'files', 'processes', 'network', 'status', 'system', 'log', 'logs',
+            'process', 'file', 'directory', 'folder', 'port', 'service', 'user'
+        }
+        
+        # Whitelist of valid multi-word patterns that should never be typo-corrected
+        valid_patterns = {
+            'show process', 'show all process', 'show running process',
+            'list files', 'list all files', 'find files',  
+            'check network', 'test connection', 'ping internet',
+            'show status', 'system status', 'network status',
+            'find all', 'show all', 'list all'
+        }
+        
+        # Check if the input matches a known valid pattern
+        text_lower = text.lower().strip()
+        if text_lower in valid_patterns:
+            return False
+        
+        # If ANY word is a known natural language word, skip typo correction
+        for word in words:
+            if word.lower() in natural_language_indicators:
+                return False
+        
+        # Only attempt correction for 1-2 word phrases that look like command typos
+        if len(words) <= 2:
+            # Check if first word looks like a command typo
+            first_word = words[0].lower()
+            
+            # Skip if it's already a valid command
+            if self.command_registry.is_known_command(first_word):
+                return False
+            
+            # Only correct if it looks like a genuine typo (not a natural word)
+            if len(first_word) <= 4 and any(char in first_word for char in 'qwerty'):
+                return True
+            
+        return False
+    
+    def _conservative_typo_correction(self, text: str) -> Tuple[str, List[str], List[str]]:
+        """
+        Conservative typo correction - only fix obvious command typos
         
         Returns:
             Tuple of (corrected_text, successful_corrections, failed_corrections)
@@ -305,33 +337,40 @@ class SemanticMatcher:
         words = text.lower().split()
         corrected_words = []
         
-        for word in words:
+        # Only try to correct the first word (likely the command)
+        for i, word in enumerate(words):
             corrected_word = word
             correction_made = False
             
-            # Check direct mapping
-            if word in self.typo_mappings:
-                candidate = self.typo_mappings[word]
-                # Validate the correction exists as a command
-                if self._is_valid_command_correction(word, candidate):
-                    successful_corrections.append(f'{word} → {candidate}')
-                    corrected_word = candidate
-                    correction_made = True
-                else:
-                    failed_corrections.append(f'{word} → {candidate} (invalid command)')
-            
-            # Check fuzzy correction for close matches if no direct mapping worked
-            if not correction_made and len(word) > 2:
-                best_match, similarity = self._find_validated_fuzzy_match(word)
-                if best_match and similarity >= 0.8:
-                    successful_corrections.append(f'{word} → {best_match}')
-                    corrected_word = best_match
-                    correction_made = True
+            # Only correct the first word and only if it's a known typo
+            if i == 0:
+                # Check direct typo mappings only (most conservative)
+                if word in self.typo_mappings:
+                    candidate = self.typo_mappings[word]
+                    # Validate the correction exists as a command
+                    if self._is_valid_command_correction(word, candidate):
+                        successful_corrections.append(f'{word} → {candidate}')
+                        corrected_word = candidate
+                        correction_made = True
+                    else:
+                        failed_corrections.append(f'{word} → {candidate} (invalid command)')
+                
+                # Only use fuzzy matching for very close matches and short words
+                if not correction_made and len(word) <= 4:
+                    best_match, similarity = self._find_validated_fuzzy_match(word)
+                    if best_match and similarity >= 0.85:  # Higher threshold for fuzzy matching
+                        successful_corrections.append(f'{word} → {best_match}')
+                        corrected_word = best_match
+                        correction_made = True
             
             corrected_words.append(corrected_word)
         
         corrected_text = ' '.join(corrected_words)
         return corrected_text, successful_corrections, failed_corrections
+    
+    def _unified_typo_correction_with_fallback(self, text: str) -> Tuple[str, List[str], List[str]]:
+        """Legacy method - redirects to conservative typo correction"""
+        return self._conservative_typo_correction(text)
     
     def _unified_typo_correction(self, text: str) -> Tuple[str, List[str]]:
         """Legacy method for backward compatibility"""
