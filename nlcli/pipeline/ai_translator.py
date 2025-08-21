@@ -627,11 +627,30 @@ class AITranslator:
             Translate this natural language request to an OS command:
             "{natural_language}"
             
-            NATURAL LANGUAGE ANALYSIS INSTRUCTIONS:
+            INTELLIGENT PATTERN RECOGNITION:
             1. **Intent Recognition**: Identify the core intent (find, show, list, check, etc.)
             2. **Object Identification**: What is the user looking for? (files, processes, status, etc.)
-            3. **Context Application**: Use your persistent environment knowledge
-            4. **Smart Defaults**: Apply intelligent defaults based on context
+            3. **Parameter Extraction**: Recognize file types, modifiers, scopes automatically
+            4. **Pattern Understanding**: Automatically understand common patterns like:
+               - "find [all] [type] files" → find . -name "*.{extension}"
+               - "show [thing]" → appropriate display command
+               - "list [scope] [objects]" → appropriate listing command
+               - "check/show [system component]" → appropriate status command
+            
+            AUTOMATIC FILE TYPE RECOGNITION:
+            - html/HTML files → *.html
+            - css/CSS files → *.css  
+            - javascript/JS files → *.js
+            - python/py files → *.py
+            - log files → *.log (or *.log -o *.out -o *.err for comprehensive)
+            - text files → *.txt
+            - config files → *.conf -o *.config -o *.cfg
+            - Any file type mentioned → *.{extension}
+            
+            SMART PATTERN VARIATIONS:
+            - Recognize "all", "every", "any" as comprehensive search modifiers
+            - Understand size qualifiers: "large" → +100M, "small" → -1M
+            - Understand time qualifiers: "recent" → -7 days, "old" → +30 days
             
             CONTEXT-DRIVEN TRANSLATION:
             - Leverage the rich system context provided in your system instructions
