@@ -214,55 +214,58 @@ class SemanticMatcher:
                 enhanced_match = self._enhance_partial_match(match, text)
                 result.add_partial_match(enhanced_match)
         
-        # 1. Unified typo correction with validation (consolidates all levels)
-        corrected_text, corrections, failed_corrections = self._unified_typo_correction_with_fallback(text)
-        
-        if corrections:
-            # Valid corrections found
-            typo_match = PartialMatch(
-                original_input=text,
-                corrected_input=corrected_text,
-                command=corrected_text,
-                explanation=f'Validated typo corrections: {", ".join(corrections)}',
-                confidence=min(0.90, 0.75 + (len(corrections) * 0.05)),  # Slightly lower confidence due to validation
-                corrections=[(corr.split(' → ')[0], corr.split(' → ')[1]) for corr in corrections],
-                pattern_matches=[],
-                source_level=5,
-                metadata={
-                    'algorithm': 'validated_typo_correction',
-                    'corrections_applied': len(corrections),
-                    'failed_corrections': len(failed_corrections),
-                    'intelligence_hub': True,
-                    'validation_enabled': True
-                }
-            )
-            result.add_partial_match(typo_match)
-        elif failed_corrections:
-            # Some corrections were attempted but failed validation
-            suggestions = self._get_command_suggestions(text)
-            if suggestions:
-                suggestion_match = PartialMatch(
+        # 1. Intent Classification FIRST - NEW INTELLIGENT SYSTEM (prioritized over typo correction)
+        intent_matches = self._classify_intent_and_resolve(text, shell_context)
+        for match in intent_matches:
+            result.add_partial_match(match)
+
+        # 2. Unified typo correction with validation (only if no intent match found)
+        if not intent_matches:
+            corrected_text, corrections, failed_corrections = self._unified_typo_correction_with_fallback(text)
+            
+            if corrections:
+                # Valid corrections found
+                typo_match = PartialMatch(
                     original_input=text,
-                    corrected_input=text,  # Keep original since corrections failed
-                    command='',  # No command to execute
-                    explanation=f'Invalid command found. Did you mean: {", ".join(suggestions[:3])}?',
-                    confidence=0.3,  # Low confidence, this is just a suggestion
-                    corrections=[],
+                    corrected_input=corrected_text,
+                    command=corrected_text,
+                    explanation=f'Validated typo corrections: {", ".join(corrections)}',
+                    confidence=min(0.85, 0.70 + (len(corrections) * 0.05)),  # Lower confidence than intent classification
+                    corrections=[(corr.split(' → ')[0], corr.split(' → ')[1]) for corr in corrections],
                     pattern_matches=[],
                     source_level=5,
                     metadata={
-                        'algorithm': 'command_suggestion',
-                        'failed_corrections': failed_corrections,
-                        'suggestions': suggestions,
-                        'validation_failed': True
+                        'algorithm': 'validated_typo_correction',
+                        'corrections_applied': len(corrections),
+                        'failed_corrections': len(failed_corrections),
+                        'intelligence_hub': True,
+                        'validation_enabled': True
                     }
                 )
-                result.add_partial_match(suggestion_match)
-        
-        # 2. Intent Classification - NEW INTELLIGENT SYSTEM
-        intent_matches = self._classify_intent_and_resolve(corrected_text, shell_context)
-        for match in intent_matches:
-            result.add_partial_match(match)
+                result.add_partial_match(typo_match)
+            elif failed_corrections:
+                # Some corrections were attempted but failed validation
+                suggestions = self._get_command_suggestions(text)
+                if suggestions:
+                    suggestion_match = PartialMatch(
+                        original_input=text,
+                        corrected_input=text,  # Keep original since corrections failed
+                        command='',  # No command to execute
+                        explanation=f'Invalid command found. Did you mean: {", ".join(suggestions[:3])}?',
+                        confidence=0.3,  # Low confidence, this is just a suggestion
+                        corrections=[],
+                        pattern_matches=[],
+                        source_level=5,
+                        metadata={
+                            'algorithm': 'command_suggestion',
+                            'failed_corrections': failed_corrections,
+                            'suggestions': suggestions,
+                            'validation_failed': True
+                        }
+                    )
+                    result.add_partial_match(suggestion_match)
+        else:
+            corrected_text = text  # Use original text when intent classification succeeded
         
         # 3. Synonym-based command enhancement
         synonym_matches = self._synonym_command_match(corrected_text)
