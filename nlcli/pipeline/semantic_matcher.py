@@ -160,8 +160,13 @@ class SemanticMatcher:
                 'action_words': ['list', 'show', 'display', 'ls', 'dir'],
                 'target_words': ['file', 'files', 'directory', 'folder', 'dirs', 'contents'],
                 'modifiers': {
-                    'detail': ['detailed', 'simple', 'full', 'brief'],
-                    'hidden': ['all', 'hidden', 'visible']
+                    'detail': ['detailed', 'simple', 'full', 'brief', 'long', 'short'],
+                    'hidden': ['all', 'hidden', 'visible'],
+                    'sorting': ['size', 'time', 'name', 'extension', 'newest', 'oldest', 'largest', 'smallest', 'modified'],
+                    'format': ['human-readable', 'readable', 'colored', 'color', 'one-line', 'columns', 'colorized'],
+                    'scope': ['recursive', 'deep', 'subdirectories', 'all-levels'],
+                    'filter': ['files-only', 'directories-only', 'dirs-only'],
+                    'reverse': ['reverse', 'reversed', 'descending', 'desc']
                 },
                 'default_modifier': 'detailed',
                 'command_templates': {
@@ -684,16 +689,12 @@ class SemanticMatcher:
                     base_command = 'find . -type f'
         
         elif intent_name == 'list_files':
-            if modifiers.get('hidden') == 'all':
-                if platform == 'linux':
-                    base_command = 'ls -la'
-                elif platform == 'windows':
-                    base_command = 'dir /a'
-            elif modifiers.get('detail') == 'simple':
-                if platform == 'linux':
-                    base_command = 'ls'
-                elif platform == 'windows':
-                    base_command = 'dir /b'
+            if platform == 'linux':
+                base_command = self._build_ls_command(modifiers)
+            elif platform == 'windows':
+                base_command = self._build_dir_command(modifiers)
+            else:
+                base_command = self._build_ls_command(modifiers)
         
         return base_command
     
@@ -768,6 +769,119 @@ class SemanticMatcher:
         
         # Return mapped extension or original if no mapping found
         return language_mappings.get(language.lower(), language.lower())
+    
+    def _build_ls_command(self, modifiers: Dict[str, str]) -> str:
+        """
+        Build intelligent ls command based on detected modifiers
+        """
+        flags = set()
+        
+        # Detail flags
+        detail = modifiers.get('detail', 'detailed')
+        if detail in ['detailed', 'full', 'long']:
+            flags.add('-l')
+        elif detail in ['simple', 'short']:
+            pass  # No -l flag for simple listing
+        
+        # Hidden files
+        hidden = modifiers.get('hidden')
+        if hidden == 'all':
+            flags.add('-a')
+        elif hidden == 'hidden':
+            flags.add('-A')  # All except . and ..
+        
+        # Sorting options
+        sorting = modifiers.get('sorting')
+        if sorting in ['size', 'largest', 'smallest']:
+            flags.add('-S')
+        elif sorting in ['time', 'newest', 'oldest', 'modified']:
+            flags.add('-t')
+        
+        # Format options
+        format_opt = modifiers.get('format')
+        if format_opt in ['human-readable', 'readable']:
+            flags.add('-l')  # Required for -h
+            flags.add('-h')
+        elif format_opt in ['colored', 'color', 'colorized']:
+            flags.add('--color=auto')
+        elif format_opt == 'one-line':
+            flags.add('-1')
+        
+        # Scope options
+        scope = modifiers.get('scope')
+        if scope in ['recursive', 'deep', 'subdirectories', 'all-levels']:
+            flags.add('-R')
+        
+        # Reverse order
+        reverse = modifiers.get('reverse')
+        if reverse in ['reverse', 'reversed', 'descending', 'desc']:
+            flags.add('-r')
+        
+        # Build command
+        if flags:
+            # Separate long options from short ones
+            short_flags = [f for f in flags if not f.startswith('--')]
+            long_flags = [f for f in flags if f.startswith('--')]
+            
+            # Combine short flags efficiently
+            combined_short = ""
+            for flag in short_flags:
+                if flag.startswith('-') and len(flag) == 2:
+                    combined_short += flag[1]
+                else:
+                    # Keep multi-character flags separate
+                    pass
+            
+            # Build final command
+            cmd_parts = ['ls']
+            if combined_short:
+                cmd_parts.append(f'-{combined_short}')
+            
+            # Add separate flags that couldn't be combined
+            for flag in short_flags:
+                if flag not in [f'-{c}' for c in combined_short]:
+                    cmd_parts.append(flag)
+            
+            # Add long flags
+            cmd_parts.extend(long_flags)
+            
+            return ' '.join(cmd_parts)
+        else:
+            return 'ls'
+    
+    def _build_dir_command(self, modifiers: Dict[str, str]) -> str:
+        """
+        Build intelligent dir command for Windows based on detected modifiers
+        """
+        flags = []
+        
+        # Hidden files
+        hidden = modifiers.get('hidden')
+        if hidden == 'all':
+            flags.append('/a')
+        
+        # Detail vs simple
+        detail = modifiers.get('detail', 'detailed')
+        if detail in ['simple', 'short']:
+            flags.append('/b')
+        
+        # Sorting
+        sorting = modifiers.get('sorting')
+        if sorting in ['size', 'largest', 'smallest']:
+            flags.append('/o:s')
+        elif sorting in ['time', 'newest', 'oldest']:
+            flags.append('/o:d')
+        
+        # Scope (recursive)
+        scope = modifiers.get('scope')
+        if scope in ['recursive', 'deep', 'subdirectories']:
+            flags.append('/s')
+        
+        # Build command
+        if flags:
+            return f"dir {' '.join(flags)}"
+        else:
+            return 'dir'
     
     def _synonym_command_match(self, text: str) -> List[PartialMatch]:
         """Match commands using synonym understanding"""
