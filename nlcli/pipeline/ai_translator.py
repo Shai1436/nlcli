@@ -395,7 +395,9 @@ class AITranslator:
             
             # Create hash of context for change detection
             import hashlib
-            context_str = json.dumps(self.persistent_context, sort_keys=True)
+            # Convert any unhashable types to strings for JSON serialization
+            hashable_context = self._make_hashable(self.persistent_context)
+            context_str = json.dumps(hashable_context, sort_keys=True)
             self.last_context_hash = hashlib.md5(context_str.encode()).hexdigest()
             
             # Create persistent system prompt with all context
@@ -409,6 +411,19 @@ class AITranslator:
             logger.warning(f"Failed to load persistent context: {e}")
             self.persistent_context = {}
             self._create_persistent_system_prompt()
+    
+    def _make_hashable(self, obj):
+        """Convert unhashable types to hashable ones for JSON serialization"""
+        if isinstance(obj, dict):
+            return {k: self._make_hashable(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._make_hashable(item) for item in obj]
+        elif isinstance(obj, set):
+            return list(obj)  # Convert set to list
+        elif hasattr(obj, '__dict__'):
+            return str(obj)  # Convert objects to string representation
+        else:
+            return obj
     
     def _create_persistent_system_prompt(self):
         """Create comprehensive system prompt with all persistent context"""
@@ -429,15 +444,17 @@ class AITranslator:
         env_context = self.persistent_context.get('environment', {})
         shell_features = self.persistent_context.get('shell_features', [])
         
-        # Build rich context-aware system prompt
+        # Build rich context-aware system prompt with enhanced natural language understanding
         self.persistent_system_prompt = f"""
         You are an expert system administrator assistant that translates natural language requests into OS commands.
+        You have persistent awareness of the user's environment and should leverage this context for intelligent command translation.
         
         CURRENT SYSTEM CONTEXT:
-        - Platform: {platform.title()}
+        - Platform: {platform.title()} 
         - Shell: {shell}
-        - Available Commands: {len(available_commands)} commands available ({', '.join(available_commands[:10])}...)
+        - Available Commands: {len(available_commands)} commands available
         - Shell Features: {', '.join(shell_features)}
+        - Current Working Directory: {env_context.get('project_root', '/unknown')}
         
         GIT REPOSITORY CONTEXT:
         - Git Repository: {'Yes' if git_context.get('is_git_repo') else 'No'}
@@ -450,44 +467,68 @@ class AITranslator:
         - Framework: {env_context.get('framework', 'unknown').title()}
         - Project Root: {env_context.get('project_root', 'N/A')}
         
-        INTELLIGENT TRANSLATION GUIDELINES:
-        1. **Context Awareness**: Use the above context to provide more relevant commands
-           - For Python projects: Prefer `python`, `pip`, `pytest` commands
-           - For Git repos: Include git-aware suggestions when relevant
-           - For specific platforms: Use platform-appropriate syntax
+        INTELLIGENT NATURAL LANGUAGE RESOLUTION:
         
-        2. **Command Selection**: Choose the most appropriate command variant
-           - Use modern command syntax (e.g., `ls -lh` over `ls -l`)
-           - Prefer safe, commonly-used options
-           - Consider available commands on this system
+        1. **Context-Driven Command Selection**:
+           Use environmental context to choose the most appropriate commands:
+           
+           - **"find all log files"** → 
+             * Python Project: `find . -name "*.log" -o -name "*.out" -o -name "*.err"`
+             * Generic: `find . -type f -name "*.log"`
+             
+           - **"show running processes"** →
+             * Linux: `ps aux` or `ps -ef` 
+             * Include memory usage: `ps aux --sort=-%mem | head -20`
+             
+           - **"list files with details"** →
+             * Modern: `ls -lah` (human-readable sizes)
+             * Sort by time: `ls -lat` 
+             
+           - **"check git status"** →
+             * If in git repo: `git status --short` or `git status`
+             * If not in repo: Suggest `git init` or navigate to git directory
+           
+           - **"show network connections"** →
+             * Modern Linux: `ss -tuln` 
+             * Traditional: `netstat -tuln`
+           
+        2. **Pattern Recognition & Smart Defaults**:
+           - "all X files" → Use appropriate file extension patterns
+           - "running X" → Focus on process/service commands  
+           - "show X" → Prefer detailed/verbose output options
+           - "find X" → Use context-appropriate search paths and patterns
+           - "current X" → Focus on status/info commands
         
-        3. **Context-Specific Examples**:
-           - "find python files" → `find . -name "*.py"` (Python project detected)
-           - "show git status" → `git status` (Git repo detected)  
-           - "list files" → `ls -la` ({platform} system, {shell} shell)
-           - "current directory" → `pwd` (universal)
+        3. **Project-Aware Suggestions**:
+           - **Python Projects**: Prioritize `python`, `pip`, `pytest`, `.py` files
+           - **Git Repositories**: Include git-context in explanations
+           - **Web Projects**: Consider `curl`, `wget`, port-related commands
+           - **Development**: Prefer development-friendly command variants
         
-        4. **Safety & Intelligence**:
-           - Always prioritize safe commands
-           - Explain any assumptions made about user intent
-           - Consider project context when suggesting paths/patterns
-           - Mark potentially destructive operations clearly
+        4. **Enhanced Reasoning with Context**:
+           Always explain your command choice using available context:
+           - "Since this is a Python project, I'm searching for .py files"
+           - "Given you're in a git repository, I'm including git status info"
+           - "For {platform}, I'm using the {shell}-compatible syntax"
+           - "Considering your project structure, I'm searching from project root"
         
-        5. **Enhanced Reasoning**:
-           - Reference specific context when relevant ("Since this is a Python project...")
-           - Suggest alternatives when multiple approaches exist
-           - Explain why specific command variants were chosen
+        5. **Safety & Alternatives**:
+           - Always prioritize safe command variants
+           - Suggest alternatives when multiple good options exist
+           - Warn about potentially destructive operations
+           - Reference context when explaining safety considerations
         
         RESPONSE FORMAT:
         Always respond with valid JSON containing:
-        - command: The actual OS command to execute
-        - explanation: Context-aware explanation of what the command does
-        - confidence: Number between 0 and 1 indicating confidence level
-        - safe: Boolean indicating if the command is generally safe
-        - reasoning: Why this command was chosen considering the current context
-        - context_used: List any context factors that influenced the decision
+        - command: The actual OS command optimized for the current environment
+        - explanation: Context-aware explanation referencing environment details
+        - confidence: 0.0-1.0 confidence level 
+        - safe: Boolean indicating command safety
+        - reasoning: Detailed explanation of why this command was chosen using available context
+        - context_used: Array of context factors that influenced the decision
+        - alternatives: Suggest other valid approaches if applicable
         
-        IMPORTANT: You now have persistent awareness of the user's environment. Use this context intelligence to provide more accurate, relevant, and helpful command translations.
+        CRITICAL: Use the rich environmental context provided to give more intelligent, relevant, and accurate command translations that feel natural and context-aware to the user.
         """
     
     def _refresh_context_if_needed(self):
@@ -497,7 +538,8 @@ class AITranslator:
             
             # Create hash of current context
             import hashlib
-            context_str = json.dumps(current_context, sort_keys=True)
+            hashable_current = self._make_hashable(current_context)
+            context_str = json.dumps(hashable_current, sort_keys=True)
             current_hash = hashlib.md5(context_str.encode()).hexdigest()
             
             # If context changed, refresh it
@@ -580,25 +622,36 @@ class AITranslator:
             # Use persistent system prompt with rich context
             system_prompt = self.persistent_system_prompt or self._create_system_prompt(context)
             
-            # Create enhanced user prompt
+            # Create enhanced user prompt with natural language analysis
             user_prompt = f"""
             Translate this natural language request to an OS command:
             "{natural_language}"
             
-            CONTEXT CONSIDERATIONS:
-            - Use the system context provided in your instructions
-            - Consider the current project type and git repository status
-            - Prefer commands appropriate for the detected platform and shell
+            NATURAL LANGUAGE ANALYSIS INSTRUCTIONS:
+            1. **Intent Recognition**: Identify the core intent (find, show, list, check, etc.)
+            2. **Object Identification**: What is the user looking for? (files, processes, status, etc.)
+            3. **Context Application**: Use your persistent environment knowledge
+            4. **Smart Defaults**: Apply intelligent defaults based on context
             
-            Provide your response as JSON with this exact format:
+            CONTEXT-DRIVEN TRANSLATION:
+            - Leverage the rich system context provided in your system instructions
+            - Consider project type, git status, platform, and available commands
+            - Choose command variants that make sense for this specific environment
+            - Reference context factors in your reasoning
+            
+            RESPONSE REQUIREMENTS:
+            Provide JSON with this exact format:
             {{
-                "command": "the actual OS command",
-                "explanation": "context-aware explanation of what the command does",
+                "command": "context-optimized OS command",
+                "explanation": "detailed explanation referencing environmental context",
                 "confidence": 0.95,
                 "safe": true,
-                "reasoning": "why this command was chosen considering the current context",
-                "context_used": ["list any context factors that influenced this decision"]
+                "reasoning": "detailed reasoning using available environmental context",
+                "context_used": ["specific context factors that influenced this decision"],
+                "alternatives": "other valid approaches if applicable"
             }}
+            
+            Remember: You have persistent awareness of this environment. Use it to provide smarter, more relevant command translations.
             """
             
             # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
