@@ -89,6 +89,7 @@ class PatternEngine:
                 'patterns': [
                     r'(?:show|list|display).*(?:running|active|all).*process(?:es)?',
                     r'show\s+all\s+process(?:es)?',  # Specific pattern for "show all process"
+                    r'(?:show|list|display)\s+process(?:es)?(?:\s|$)',  # New: "show process" pattern
                     r'process(?:es)?.*(?:list|status)',
                     r'what.*(?:running|process(?:es)?)',
                     r'(?:top|monitor).*process(?:es)?',
