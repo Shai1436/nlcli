@@ -758,97 +758,19 @@ class CommandFilter:
         }
     
     def _load_intelligent_patterns(self):
-        """Load intelligent natural language patterns with enhanced parameter handling"""
+        """Load basic command patterns for Level 2 - valid command syntax only"""
         self.intelligent_patterns = {
-            # Directory and Navigation
+            # Only exact command synonyms that map to valid syntax
             'current directory': 'pwd',
             'where am i': 'pwd',
-            'show current directory': 'pwd',
-            'print working directory': 'pwd',
-            'go back': 'cd ..',
-            'go up': 'cd ..',
-            'parent directory': 'cd ..',
-            'go home': 'cd ~',
-            'home directory': 'cd ~',
-            
-            # File Listing and Display
-            'list files': 'ls -la',
-            'show files': 'ls -la',
-            'list all files': 'ls -la',
-            'show all files': 'ls -la',
-            'list files with details': 'ls -la',
-            'show hidden files': 'ls -la',
-            'list directory': 'ls -la',
-            'show directory': 'ls -la',
-            
-            # Git Commands  
-            'show git status': 'git status',
-            'check git status': 'git status',
-            'git status': 'git status',
-            'show git log': 'git log --oneline',
-            'git history': 'git log --oneline',
-            'show commits': 'git log --oneline',
-            'git diff': 'git diff',
-            'show changes': 'git diff',
-            'show git changes': 'git diff',
-            
-            # Process and System Information
-            'show processes': 'ps aux',
-            'list processes': 'ps aux',
-            'running processes': 'ps aux',
-            'show running processes': 'ps aux',
-            'all processes': 'ps aux',
-            'show system processes': 'ps aux',
-            
-            # System Information
-            'show disk space': 'df -h',
-            'disk usage': 'df -h',
-            'check disk space': 'df -h',
-            'show memory': 'free -h',
-            'memory usage': 'free -h',
-            'check memory': 'free -h',
-            'system info': 'uname -a',
-            'show system info': 'uname -a',
-            'system details': 'uname -a',
-            'uptime': 'uptime',
-            'system uptime': 'uptime',
-            
-            # File Operations
             'clear screen': 'clear',
-            'clear terminal': 'clear',
-            'show history': 'history',
-            'command history': 'history',
-            
-            # Network  
-            'show network': 'ip addr show',
-            'network status': 'ip addr show',
-            'show ip': 'ip addr show',
-            'network connections': 'ss -tuln',
-            'show connections': 'ss -tuln',
-            'open ports': 'ss -tuln',
         }
         
-        # Enhanced parameter patterns for common commands
+        # Level 2 focuses on valid command syntax with proper parameters
+        # Natural language patterns have been moved to Level 5 (Semantic Matcher)
         self.parameter_patterns = {
-            # Find command patterns
-            'find python files': 'find . -name "*.py"',
-            'find all python files': 'find . -name "*.py"',
-            'find py files': 'find . -name "*.py"',
-            'find log files': 'find . -name "*.log"',
-            'find all log files': 'find . -name "*.log" -o -name "*.out" -o -name "*.err"',
-            'find javascript files': 'find . -name "*.js"',
-            'find js files': 'find . -name "*.js"',
-            'find text files': 'find . -name "*.txt"',
-            'find config files': 'find . -name "*.conf" -o -name "*.config" -o -name "*.cfg"',
-            'find large files': 'find . -size +100M -type f',
-            'find recent files': 'find . -mtime -7 -type f',
-            
-            # Grep patterns
-            'search for error': 'grep -r "error" .',
-            'find errors': 'grep -r -i "error" .',
-            'search in files': 'grep -r',
-            'search text': 'grep -r',
-            'find in files': 'grep -r',
+            # Keep only patterns that represent valid command syntax variations
+            # These are NOT natural language - they are alternate valid syntax forms
         }
     
     def get_pipeline_metadata(self, user_input: str) -> Optional[Dict[str, Any]]:
@@ -873,31 +795,16 @@ class CommandFilter:
             result['source'] = 'command_filter'
             return result
         
-        # Check intelligent exact patterns
+        # Check basic intelligent patterns (exact command synonyms only)
         if user_input_lower in self.intelligent_patterns:
             mapped_command = self.intelligent_patterns[user_input_lower]
             if mapped_command in self.direct_commands:
                 result = self.direct_commands[mapped_command].copy()
                 result['pipeline_level'] = 2
-                result['match_type'] = 'natural_language_exact'
+                result['match_type'] = 'command_synonym'
                 result['source'] = 'command_filter'
-                result['explanation'] += ' (natural language interpreted)'
+                result['explanation'] += ' (command synonym)'
                 return result
-                
-        # Check enhanced parameter patterns
-        if user_input_lower in self.parameter_patterns:
-            enhanced_command = self.parameter_patterns[user_input_lower]
-            # Validate enhanced command syntax
-            enhanced_command = self._validate_and_fix_command(enhanced_command)
-            result = {
-                'command': enhanced_command,
-                'explanation': f'Enhanced from natural language pattern',
-                'confidence': 0.95,
-                'pipeline_level': 2,
-                'match_type': 'enhanced_parameter_pattern',
-                'source': 'command_filter'
-            }
-            return result
         
         # Conservative prefix matching - only for commands with valid syntax patterns
         # This prevents "find all log files" from matching "find" and blocking intent classification
@@ -958,7 +865,7 @@ class CommandFilter:
         
         return command
     
-    def _enhance_command_with_context(self, base_cmd: str, args: list, context: dict = None) -> str:
+    def _enhance_command_with_context(self, base_cmd: str, args: list, context: Optional[Dict] = None) -> str:
         """Enhance commands with intelligent context-aware parameters"""
         
         # Context-aware find enhancements

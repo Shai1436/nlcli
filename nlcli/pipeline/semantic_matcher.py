@@ -99,8 +99,95 @@ class SemanticMatcher:
         }
     
     def _load_intent_definitions(self) -> Dict[str, Dict]:
-        """Load intelligent intent definitions - replaces regex patterns with semantic understanding"""
+        """Load intelligent intent definitions with instant natural language patterns"""
         return {
+            # Instant Natural Language Patterns - Moved from Level 2 for proper architecture
+            'instant_patterns': {
+                'patterns': {
+                    # Directory and Navigation
+                    'show current directory': 'pwd',
+                    'print working directory': 'pwd', 
+                    'go back': 'cd ..',
+                    'go up': 'cd ..',
+                    'parent directory': 'cd ..',
+                    'go home': 'cd ~',
+                    'home directory': 'cd ~',
+                    
+                    # File Listing and Display
+                    'list files': 'ls -la',
+                    'show files': 'ls -la',
+                    'list all files': 'ls -la',
+                    'show all files': 'ls -la',
+                    'list files with details': 'ls -la',
+                    'show hidden files': 'ls -la',
+                    'list directory': 'ls -la',
+                    'show directory': 'ls -la',
+                    
+                    # Git Commands  
+                    'show git status': 'git status',
+                    'check git status': 'git status',
+                    'show git log': 'git log --oneline',
+                    'git history': 'git log --oneline',
+                    'show commits': 'git log --oneline',
+                    'show changes': 'git diff',
+                    'show git changes': 'git diff',
+                    
+                    # Process and System Information
+                    'show processes': 'ps aux',
+                    'list processes': 'ps aux',
+                    'running processes': 'ps aux',
+                    'show running processes': 'ps aux',
+                    'all processes': 'ps aux',
+                    'show system processes': 'ps aux',
+                    
+                    # System Information
+                    'show disk space': 'df -h',
+                    'disk usage': 'df -h',
+                    'check disk space': 'df -h',
+                    'show memory': 'free -h',
+                    'memory usage': 'free -h',
+                    'check memory': 'free -h',
+                    'system info': 'uname -a',
+                    'show system info': 'uname -a',
+                    'system details': 'uname -a',
+                    'system uptime': 'uptime',
+                    
+                    # File Operations
+                    'clear terminal': 'clear',
+                    'show history': 'history',
+                    'command history': 'history',
+                    
+                    # Network  
+                    'show network': 'ip addr show',
+                    'network status': 'ip addr show',
+                    'show ip': 'ip addr show',
+                    'network connections': 'ss -tuln',
+                    'show connections': 'ss -tuln',
+                    'open ports': 'ss -tuln',
+                    
+                    # Enhanced Find Patterns
+                    'find python files': 'find . -name "*.py"',
+                    'find all python files': 'find . -name "*.py"',
+                    'find py files': 'find . -name "*.py"',
+                    'find log files': 'find . -name "*.log"',
+                    'find all log files': 'find . -name "*.log" -o -name "*.out" -o -name "*.err"',
+                    'find javascript files': 'find . -name "*.js"',
+                    'find js files': 'find . -name "*.js"',
+                    'find text files': 'find . -name "*.txt"',
+                    'find config files': 'find . -name "*.conf" -o -name "*.config" -o -name "*.cfg"',
+                    'find large files': 'find . -size +100M -type f',
+                    'find recent files': 'find . -mtime -7 -type f',
+                    
+                    # Search Patterns
+                    'search for error': 'grep -r "error" .',
+                    'find errors': 'grep -r -i "error" .',
+                    'search in files': 'grep -r',
+                    'search text': 'grep -r',
+                    'find in files': 'grep -r',
+                },
+                'explanation': 'Natural language pattern matched at semantic level',
+                'confidence_base': 0.95
+            },
             'monitor_processes': {
                 'action_words': ['show', 'list', 'display', 'view', 'monitor', 'watch', 'check', 'ps', 'top'],
                 'target_words': ['process', 'processes', 'proc', 'running', 'tasks', 'apps', 'applications'],
@@ -207,6 +294,21 @@ class SemanticMatcher:
         """
         result = PipelineResult()
         
+        # Level 5: First check for instant natural language patterns
+        instant_match = self._check_instant_patterns(text)
+        if instant_match:
+            result.add_partial_match(instant_match)
+            # Return early for instant patterns - no need for further processing
+            result.final_result = {
+                'command': instant_match.command,
+                'explanation': instant_match.explanation,
+                'confidence': instant_match.confidence,
+                'corrections': [],
+                'source': 'semantic_instant_pattern',
+                'intelligence_path': ['Level 5: Instant Pattern Match']
+            }
+            return result
+        
         # Add previous matches with enhanced scoring
         if previous_matches:
             for match in previous_matches:
@@ -270,6 +372,35 @@ class SemanticMatcher:
                 logger.debug(f"Semantic matcher provided suggestions but no executable command for: {text}")
         
         return consolidated_result
+    
+    def _check_instant_patterns(self, text: str) -> Optional[PartialMatch]:
+        """Check for instant natural language patterns - Level 5 instant matching"""
+        text_lower = text.lower().strip()
+        
+        # Get instant patterns from intent definitions
+        instant_patterns = self.intent_definitions.get('instant_patterns', {})
+        patterns = instant_patterns.get('patterns', {})
+        
+        # Direct pattern match
+        if text_lower in patterns:
+            command = patterns[text_lower]
+            return PartialMatch(
+                original_input=text,
+                corrected_input=text,
+                command=command,
+                explanation=f'Instant semantic pattern: {text_lower}',
+                confidence=0.95,
+                corrections=[],
+                pattern_matches=[text_lower],
+                source_level=5,
+                metadata={
+                    'algorithm': 'instant_semantic_pattern',
+                    'pattern_matched': text_lower,
+                    'semantic_level': True
+                }
+            )
+        
+        return None
     
     def _should_attempt_typo_correction(self, text: str) -> bool:
         """
