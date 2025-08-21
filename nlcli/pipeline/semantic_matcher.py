@@ -177,7 +177,23 @@ class SemanticMatcher:
                 'action_words': ['find', 'search', 'locate', 'look for', 'discover'],
                 'target_words': ['file', 'files', 'document', 'documents'],
                 'modifiers': {
-                    'type': ['html', 'css', 'js', 'py', 'txt', 'pdf', 'log', 'config'],
+                    'type': [
+                        # Web Technologies
+                        'html', 'css', 'js', 'javascript', 'php', 'jsp', 'xml', 'json', 'yaml', 'yml',
+                        # Programming Languages  
+                        'py', 'python', 'java', 'cpp', 'c++', 'c', 'h', 'cs', 'csharp', 'rb', 'ruby',
+                        'go', 'rs', 'rust', 'swift', 'kt', 'kotlin', 'scala', 'pl', 'perl', 'sh', 'bash',
+                        'ps1', 'powershell', 'bat', 'cmd', 'r', 'matlab', 'm', 'vb', 'vbs', 'lua', 'dart',
+                        # Data & Config Files
+                        'txt', 'csv', 'tsv', 'json', 'xml', 'yaml', 'yml', 'ini', 'cfg', 'conf', 'config',
+                        'env', 'properties', 'toml', 'sql', 'db', 'sqlite', 'md', 'markdown', 'rst',
+                        # Documents & Media
+                        'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'rtf', 'odt', 'ods', 'odp',
+                        'png', 'jpg', 'jpeg', 'gif', 'svg', 'bmp', 'tiff', 'ico', 'mp3', 'mp4', 'wav', 'avi',
+                        # System & Archive Files
+                        'log', 'tmp', 'temp', 'backup', 'bak', 'zip', 'tar', 'gz', 'rar', '7z', 'jar', 'war',
+                        'deb', 'rpm', 'dmg', 'exe', 'msi', 'app', 'so', 'dll', 'dylib', 'lib', 'o', 'obj'
+                    ],
                     'scope': ['all', 'recursive', 'deep'],
                     'size': ['large', 'small', 'huge', 'tiny'],
                     'time': ['recent', 'old', 'new']
@@ -647,15 +663,17 @@ class SemanticMatcher:
                     base_command = 'ps aux --sort=-%mem | head -20'
         
         elif intent_name == 'find_files':
-            # Smart file type detection for find commands
+            # Smart file type detection for find commands with language mapping
             file_type = modifiers.get('type')
             if file_type:
+                # Map language names to file extensions
+                extension = self._map_language_to_extension(file_type)
                 if platform == 'linux':
-                    base_command = f'find . -name "*.{file_type}" -type f'
+                    base_command = f'find . -name "*.{extension}" -type f'
                 elif platform == 'windows':
-                    base_command = f'dir /s /b *.{file_type}'
+                    base_command = f'dir /s /b *.{extension}'
                 else:
-                    base_command = f'find . -name "*.{file_type}" -type f'
+                    base_command = f'find . -name "*.{extension}" -type f'
             else:
                 # Default find command
                 if platform == 'linux':
@@ -698,6 +716,58 @@ class SemanticMatcher:
                 modifier_text = f" ({', '.join(modifier_descriptions)})"
         
         return base_explanation + modifier_text
+    
+    def _map_language_to_extension(self, language: str) -> str:
+        """
+        Map language names to file extensions for intelligent file searching
+        """
+        language_mappings = {
+            # Programming Languages
+            'python': 'py',
+            'javascript': 'js', 
+            'java': 'java',
+            'csharp': 'cs',
+            'c++': 'cpp',
+            'cpp': 'cpp',
+            'ruby': 'rb',
+            'rust': 'rs',
+            'kotlin': 'kt',
+            'perl': 'pl',
+            'bash': 'sh',
+            'powershell': 'ps1',
+            'matlab': 'm',
+            'visualbasic': 'vb',
+            'cplus': 'cpp',
+            'cplusplus': 'cpp',
+            
+            # Web Technologies
+            'javascript': 'js',
+            'typescript': 'ts',
+            'markup': 'html',
+            'stylesheet': 'css',
+            
+            # Data Files
+            'comma-separated': 'csv',
+            'tab-separated': 'tsv',
+            'markdown': 'md',
+            'restructured': 'rst',
+            'configuration': 'config',
+            'environment': 'env',
+            
+            # Documents
+            'microsoft-word': 'docx',
+            'microsoft-excel': 'xlsx', 
+            'microsoft-powerpoint': 'pptx',
+            'portable-document': 'pdf',
+            
+            # Archive Files
+            'compressed': 'zip',
+            'tarball': 'tar',
+            'archive': 'zip'
+        }
+        
+        # Return mapped extension or original if no mapping found
+        return language_mappings.get(language.lower(), language.lower())
     
     def _synonym_command_match(self, text: str) -> List[PartialMatch]:
         """Match commands using synonym understanding"""
