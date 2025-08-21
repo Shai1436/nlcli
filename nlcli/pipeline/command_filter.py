@@ -799,8 +799,8 @@ class CommandFilter:
                 result['explanation'] += ' (natural language interpreted)'
                 return result
         
-        # Try prefix matching for commands with arguments
-        # This catches cases like "git push -u origin main" matching "git push"
+        # Conservative prefix matching - only for commands with valid syntax patterns
+        # This prevents "find all log files" from matching "find" and blocking intent classification
         words = user_input_lower.split()
         if len(words) > 1:
             # Try 2-word combinations first, then 1-word
@@ -809,16 +809,19 @@ class CommandFilter:
                 
                 # Check in direct_commands
                 if base_cmd in self.direct_commands:
-                    result = self.direct_commands[base_cmd].copy()
-                    result['pipeline_level'] = 2
-                    result['match_type'] = 'prefix_command_match'
-                    result['source'] = 'command_filter'
-                    result['command'] = user_input.strip()  # Keep original full command
-                    result['explanation'] += f' (matched base command: {base_cmd})'
-                    return result
+                    # Conservative validation: only match if arguments look like valid command syntax
+                    if self._is_valid_command_syntax(base_cmd, words[i:]):
+                        result = self.direct_commands[base_cmd].copy()
+                        result['pipeline_level'] = 2
+                        result['match_type'] = 'prefix_command_match'
+                        result['source'] = 'command_filter'
+                        result['command'] = user_input.strip()  # Keep original full command
+                        result['explanation'] += f' (matched base command: {base_cmd})'
+                        return result
                 
                 # Check in direct_commands_with_args
                 if base_cmd in self.direct_commands_with_args:
+                    # These are pre-validated patterns, so they're safer to match
                     result = self.direct_commands_with_args[base_cmd].copy()
                     result['pipeline_level'] = 2
                     result['match_type'] = 'prefix_command_with_args_match'
@@ -829,6 +832,71 @@ class CommandFilter:
         
         # No exact match found at Level 2
         return None
+    
+    def _is_valid_command_syntax(self, base_cmd: str, remaining_args: List[str]) -> bool:
+        """
+        Conservative validation: only match prefix if arguments look like valid command syntax
+        
+        This prevents natural language phrases like "find all log files" from being treated
+        as command matches, allowing Intent Classification to handle them properly.
+        """
+        if not remaining_args:
+            return True  # No additional args is always valid
+        
+        # Get the remaining arguments as a single string
+        args_str = " ".join(remaining_args)
+        
+        # Natural language indicators that suggest this is NOT command syntax
+        natural_language_patterns = {
+            'all', 'every', 'some', 'many', 'few', 'large', 'small', 'recent', 'old',
+            'running', 'active', 'stopped', 'current', 'available',
+            'log files', 'python files', 'text files', 'config files',
+            'network status', 'system status', 'disk space',
+            'processes', 'services', 'connections'
+        }
+        
+        # If arguments contain natural language patterns, it's probably intent-based
+        for pattern in natural_language_patterns:
+            if pattern in args_str:
+                return False
+        
+        # Command-specific syntax validation
+        if base_cmd == 'find':
+            # Valid find syntax usually starts with path, option (-name, -type), or standard patterns
+            first_arg = remaining_args[0] if remaining_args else ""
+            valid_find_patterns = {
+                '.', '/', '~', '-name', '-type', '-size', '-mtime', '-exec', '-print'
+            }
+            # If first argument doesn't match valid find patterns, it's likely natural language
+            if not any(first_arg.startswith(pattern) for pattern in valid_find_patterns):
+                return False
+                
+        elif base_cmd == 'git':
+            # Git has well-known subcommands
+            valid_git_subcommands = {
+                'add', 'commit', 'push', 'pull', 'clone', 'status', 'log', 'diff',
+                'branch', 'checkout', 'merge', 'reset', 'init', 'remote'
+            }
+            first_arg = remaining_args[0] if remaining_args else ""
+            if first_arg not in valid_git_subcommands:
+                return False
+                
+        elif base_cmd == 'ls':
+            # ls arguments usually start with - or are paths
+            first_arg = remaining_args[0] if remaining_args else ""
+            if not (first_arg.startswith('-') or first_arg.startswith('.') or 
+                    first_arg.startswith('/') or first_arg.startswith('~')):
+                # Could be natural language like "ls all files"
+                return False
+                
+        elif base_cmd == 'ps':
+            # ps arguments usually start with - or are specific patterns
+            first_arg = remaining_args[0] if remaining_args else ""
+            valid_ps_patterns = {'aux', 'ef', '-e', '-f', '-A', '-a'}
+            if first_arg not in valid_ps_patterns and not first_arg.startswith('-'):
+                return False
+        
+        return True  # Default to valid if no natural language patterns detected
     
     def is_direct_command(self, command: str) -> bool:
         """Check if command has exact match at Level 2"""
