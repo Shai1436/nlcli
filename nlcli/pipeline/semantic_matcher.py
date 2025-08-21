@@ -28,7 +28,7 @@ class SemanticMatcher:
     """
     
     def __init__(self):
-        self.semantic_patterns = self._load_semantic_patterns()
+        self.intent_definitions = self._load_intent_definitions()  # New: Intent-based patterns
         self.typo_mappings = self._load_comprehensive_typo_mappings()
         self.command_synonyms = self._load_command_synonyms()
         self.confidence_threshold = 0.4  # Lower threshold for partial matches
@@ -36,13 +36,17 @@ class SemanticMatcher:
         # Intelligence hub settings
         self.min_partial_confidence = 0.3
         self.typo_correction_bonus = 0.2
-        self.semantic_similarity_threshold = 0.5
+        self.semantic_similarity_threshold = 0.7  # Higher threshold for better precision
         
         # Command validation components
         self.command_validator = get_command_validator()
         self.command_registry = get_known_command_registry()
         
-        logger.info("SemanticMatcher initialized as intelligence hub with command validation")
+        # Intent classification settings
+        self.min_word_similarity = 0.6  # Minimum similarity for semantic matching
+        self.intent_confidence_boost = 0.1  # Boost for successful intent classification
+        
+        logger.info("SemanticMatcher initialized with Intent Classification Engine and command validation")
     
     def _load_comprehensive_typo_mappings(self) -> Dict[str, str]:
         """Comprehensive typo correction mappings consolidated from all levels"""
@@ -94,55 +98,97 @@ class SemanticMatcher:
             'upload': ['send', 'push', 'put']
         }
     
-    def _load_semantic_patterns(self) -> Dict[str, Dict]:
-        """Load semantic understanding patterns"""
+    def _load_intent_definitions(self) -> Dict[str, Dict]:
+        """Load intelligent intent definitions - replaces regex patterns with semantic understanding"""
         return {
+            'monitor_processes': {
+                'action_words': ['show', 'list', 'display', 'view', 'monitor', 'watch', 'check', 'ps', 'top'],
+                'target_words': ['process', 'processes', 'proc', 'running', 'tasks', 'apps', 'applications'],
+                'modifiers': {
+                    'scope': ['all', 'running', 'active', 'stopped', 'zombie'],
+                    'sorting': ['cpu', 'memory', 'name', 'time'],
+                    'count': ['top', 'first', 'few', 'many']
+                },
+                'default_modifier': 'all',
+                'command_templates': {
+                    'linux': 'ps aux --sort=-%cpu | head -20',
+                    'windows': 'tasklist /FO TABLE | findstr /V "Image"',
+                    'default': 'ps aux | head -15'
+                },
+                'explanation': 'Display running processes',
+                'confidence_base': 0.8
+            },
+            
             'network_status': {
-                'patterns': [
-                    r'(?:network|internet|connection)\s*(?:status|state|check|test)',
-                    r'(?:check|test|verify).*(?:network|internet|connection)',
-                    r'(?:show|display).*(?:network|connectivity)',
-                    r'(?:ping|test).*(?:connection|network)'
-                ],
-                'command_template': 'ping -c 4 8.8.8.8 && echo "=== Network Status ===" && ip addr show',
+                'action_words': ['check', 'test', 'show', 'display', 'ping', 'verify'],
+                'target_words': ['network', 'internet', 'connection', 'connectivity', 'online'],
+                'modifiers': {
+                    'target': ['google', 'dns', 'gateway', 'external', 'local'],
+                    'type': ['status', 'speed', 'latency', 'interface']
+                },
+                'default_modifier': 'status',
+                'command_templates': {
+                    'linux': 'ping -c 4 8.8.8.8 && echo "=== Network Interfaces ===" && ip addr show',
+                    'windows': 'ping -n 4 8.8.8.8 && ipconfig',
+                    'default': 'ping -c 4 8.8.8.8'
+                },
                 'explanation': 'Check network connectivity and interface status',
                 'confidence_base': 0.8
             },
             
             'system_status': {
-                'patterns': [
-                    r'(?:system|server|machine)\s*(?:status|health|check)',
-                    r'(?:check|show).*(?:system|cpu|memory|disk)',
-                    r'(?:performance|resource).*(?:status|usage|check)',
-                    r'(?:monitor|watch).*(?:system|resources)'
-                ],
-                'command_template': 'top -bn1 | head -20 && echo "=== Disk Usage ===" && df -h',
+                'action_words': ['check', 'show', 'display', 'monitor', 'watch', 'status'],
+                'target_words': ['system', 'server', 'machine', 'cpu', 'memory', 'disk', 'performance', 'resources'],
+                'modifiers': {
+                    'component': ['cpu', 'memory', 'disk', 'all'],
+                    'detail': ['brief', 'detailed', 'full'],
+                    'time': ['current', 'live', 'continuous']
+                },
+                'default_modifier': 'all',
+                'command_templates': {
+                    'linux': 'top -bn1 | head -20 && echo "=== Disk Usage ===" && df -h',
+                    'windows': 'tasklist /FO TABLE && echo "=== Disk Usage ===" && wmic logicaldisk get size,freespace,caption',
+                    'default': 'ps aux | head -10 && df -h'
+                },
                 'explanation': 'Display system performance and resource usage',
                 'confidence_base': 0.8
             },
             
-            'process_management': {
-                'patterns': [
-                    r'(?:show|list|display).*(?:process|running)',
-                    r'(?:kill|stop|terminate).*(?:process|application)',
-                    r'(?:start|run|launch).*(?:process|application|service)',
-                    r'(?:ps|top|htop|processes)'
-                ],
-                'command_template': 'ps aux | head -15',
-                'explanation': 'Display running processes',
+            'file_operations': {
+                'action_words': ['list', 'show', 'display', 'find', 'search', 'locate', 'ls', 'dir'],
+                'target_words': ['file', 'files', 'directory', 'folder', 'dirs', 'contents'],
+                'modifiers': {
+                    'detail': ['detailed', 'simple', 'full', 'brief'],
+                    'hidden': ['all', 'hidden', 'visible'],
+                    'size': ['large', 'small', 'huge', 'tiny'],
+                    'time': ['recent', 'old', 'new']
+                },
+                'default_modifier': 'detailed',
+                'command_templates': {
+                    'linux': 'ls -la',
+                    'windows': 'dir',
+                    'default': 'ls -la'
+                },
+                'explanation': 'List files and directories with details',
                 'confidence_base': 0.7
             },
             
-            'file_management': {
-                'patterns': [
-                    r'(?:list|show|display).*(?:file|directory|folder)',
-                    r'(?:find|search|locate).*(?:file|directory)',
-                    r'(?:create|make|new).*(?:file|directory|folder)',
-                    r'(?:copy|move|delete).*(?:file|directory)'
-                ],
-                'command_template': 'ls -la',
-                'explanation': 'List files and directories with details',
-                'confidence_base': 0.7
+            'port_operations': {
+                'action_words': ['check', 'show', 'list', 'find', 'scan'],
+                'target_words': ['port', 'ports', 'socket', 'connection', 'listening'],
+                'modifiers': {
+                    'state': ['open', 'listening', 'closed', 'active'],
+                    'protocol': ['tcp', 'udp', 'all'],
+                    'scope': ['local', 'remote', 'all']
+                },
+                'default_modifier': 'listening',
+                'command_templates': {
+                    'linux': 'netstat -tulpn',
+                    'windows': 'netstat -an',
+                    'default': 'netstat -an'
+                },
+                'explanation': 'Show network ports and connections',
+                'confidence_base': 0.8
             }
         }
     
@@ -213,9 +259,9 @@ class SemanticMatcher:
                 )
                 result.add_partial_match(suggestion_match)
         
-        # 2. Semantic pattern matching
-        semantic_matches = self._semantic_pattern_match(corrected_text, shell_context)
-        for match in semantic_matches:
+        # 2. Intent Classification - NEW INTELLIGENT SYSTEM
+        intent_matches = self._classify_intent_and_resolve(corrected_text, shell_context)
+        for match in intent_matches:
             result.add_partial_match(match)
         
         # 3. Synonym-based command enhancement
@@ -358,40 +404,188 @@ class SemanticMatcher:
         """Legacy method - now redirects to validated fuzzy matching"""
         return self._find_validated_fuzzy_match(word)
     
-    def _semantic_pattern_match(self, text: str, shell_context: Optional[Dict] = None) -> List[PartialMatch]:
-        """Match against semantic patterns with context awareness"""
+    def _classify_intent_and_resolve(self, text: str, shell_context: Optional[Dict] = None) -> List[PartialMatch]:
+        """
+        NEW: Intent Classification Engine - Replaces regex-based pattern matching
+        
+        Intelligently classifies user intent and resolves to appropriate commands
+        """
         matches = []
-        text_lower = text.lower()
+        words = text.lower().split()
         
-        for pattern_name, pattern_info in self.semantic_patterns.items():
-            confidence_base = pattern_info.get('confidence_base', 0.6)
+        # Analyze each intent for semantic matches
+        for intent_name, intent_def in self.intent_definitions.items():
+            confidence, detected_modifiers = self._analyze_intent_match(words, intent_def)
             
-            for pattern in pattern_info['patterns']:
-                if re.search(pattern, text_lower):
-                    # Adjust command based on shell context
-                    command = pattern_info['command_template']
-                    if shell_context and shell_context.get('platform') == 'windows':
-                        command = self._adapt_for_windows(command)
-                    
-                    match = PartialMatch(
-                        original_input=text,
-                        corrected_input=text,
-                        command=command,
-                        explanation=pattern_info['explanation'],
-                        confidence=confidence_base,
-                        corrections=[],
-                        pattern_matches=[pattern_name],
-                        source_level=5,
-                        metadata={
-                            'algorithm': 'semantic_pattern_match',
-                            'pattern_name': pattern_name,
-                            'intelligence_hub': True
-                        }
-                    )
-                    matches.append(match)
-                    break  # Only match first pattern per category
+            if confidence >= self.min_partial_confidence:
+                # Generate platform-appropriate command
+                platform = shell_context.get('platform', 'default') if shell_context else 'default'
+                command = self._resolve_intent_to_command(intent_name, intent_def, detected_modifiers, platform)
+                
+                # Create explanation with detected context
+                explanation = self._generate_intent_explanation(intent_name, intent_def, detected_modifiers)
+                
+                match = PartialMatch(
+                    original_input=text,
+                    corrected_input=text,
+                    command=command,
+                    explanation=explanation,
+                    confidence=min(0.95, confidence + self.intent_confidence_boost),
+                    corrections=[],
+                    pattern_matches=[],
+                    source_level=5,
+                    metadata={
+                        'algorithm': 'intent_classification',
+                        'intent': intent_name,
+                        'detected_modifiers': detected_modifiers,
+                        'platform': platform,
+                        'intelligence_hub': True
+                    }
+                )
+                matches.append(match)
         
-        return matches
+        # Sort by confidence, return top matches
+        matches.sort(key=lambda m: m.confidence, reverse=True)
+        return matches[:3]  # Return top 3 matches
+    
+    def _analyze_intent_match(self, words: List[str], intent_def: Dict) -> Tuple[float, Dict[str, str]]:
+        """
+        Analyze how well the input words match an intent definition
+        
+        Returns:
+            Tuple of (confidence_score, detected_modifiers)
+        """
+        action_score = 0.0
+        target_score = 0.0
+        detected_modifiers = {}
+        
+        # Check action words (verbs: show, list, display, etc.)
+        action_words = intent_def['action_words']
+        for word in words:
+            best_action_sim = max(
+                [self._semantic_word_similarity(word, action) for action in action_words],
+                default=0.0
+            )
+            if best_action_sim > action_score:
+                action_score = best_action_sim
+        
+        # Check target words (nouns: process, file, network, etc.)
+        target_words = intent_def['target_words']
+        for word in words:
+            best_target_sim = max(
+                [self._semantic_word_similarity(word, target) for target in target_words],
+                default=0.0
+            )
+            if best_target_sim > target_score:
+                target_score = best_target_sim
+        
+        # Detect modifiers (context: running, all, detailed, etc.)
+        modifiers = intent_def.get('modifiers', {})
+        for modifier_type, modifier_list in modifiers.items():
+            for word in words:
+                for modifier in modifier_list:
+                    if self._semantic_word_similarity(word, modifier) > self.min_word_similarity:
+                        detected_modifiers[modifier_type] = modifier
+                        break
+        
+        # Set default modifier if none detected
+        if not detected_modifiers and 'default_modifier' in intent_def:
+            detected_modifiers['default'] = intent_def['default_modifier']
+        
+        # Calculate overall confidence
+        # Both action and target needed for high confidence
+        if action_score > self.min_word_similarity and target_score > self.min_word_similarity:
+            confidence = (action_score + target_score) / 2 * intent_def['confidence_base']
+        elif action_score > self.min_word_similarity or target_score > self.min_word_similarity:
+            # Only one component matched - lower confidence  
+            confidence = max(action_score, target_score) * intent_def['confidence_base'] * 0.6
+        else:
+            confidence = 0.0
+        
+        return confidence, detected_modifiers
+    
+    def _semantic_word_similarity(self, word1: str, word2: str) -> float:
+        """
+        Calculate semantic similarity between two words
+        
+        Uses multiple similarity metrics:
+        1. Exact match
+        2. Synonym mapping
+        3. String similarity (fuzzy matching)
+        """
+        # Exact match
+        if word1 == word2:
+            return 1.0
+        
+        # Synonym mapping
+        if word1 in self.command_synonyms:
+            if word2 in self.command_synonyms[word1]:
+                return 0.9  # High similarity for known synonyms
+        
+        if word2 in self.command_synonyms:
+            if word1 in self.command_synonyms[word2]:
+                return 0.9
+        
+        # String similarity for typos and variations
+        string_sim = difflib.SequenceMatcher(None, word1, word2).ratio()
+        if string_sim > 0.8:
+            return string_sim * 0.8  # Reduce confidence for string similarity
+        
+        return 0.0
+    
+    def _resolve_intent_to_command(self, intent_name: str, intent_def: Dict, 
+                                 modifiers: Dict[str, str], platform: str) -> str:
+        """
+        Resolve intent + context to platform-specific command
+        """
+        # Get base command template
+        templates = intent_def['command_templates']
+        base_command = templates.get(platform, templates.get('default', ''))
+        
+        # Apply modifier-based customizations
+        if intent_name == 'monitor_processes':
+            if modifiers.get('scope') == 'running':
+                if platform == 'linux':
+                    base_command = 'ps aux --no-headers | grep -v "\\[.*\\]" | head -20'
+                elif platform == 'windows':
+                    base_command = 'tasklist /fi "status eq running"'
+            elif modifiers.get('sorting') == 'memory':
+                if platform == 'linux':
+                    base_command = 'ps aux --sort=-%mem | head -20'
+        
+        elif intent_name == 'file_operations':
+            if modifiers.get('hidden') == 'all':
+                if platform == 'linux':
+                    base_command = 'ls -la'
+                elif platform == 'windows':
+                    base_command = 'dir /a'
+            elif modifiers.get('detail') == 'simple':
+                if platform == 'linux':
+                    base_command = 'ls'
+                elif platform == 'windows':
+                    base_command = 'dir /b'
+        
+        return base_command
+    
+    def _generate_intent_explanation(self, intent_name: str, intent_def: Dict, 
+                                   modifiers: Dict[str, str]) -> str:
+        """
+        Generate context-aware explanation based on detected intent and modifiers
+        """
+        base_explanation = intent_def['explanation']
+        
+        # Add modifier context to explanation
+        modifier_text = ""
+        if modifiers:
+            modifier_descriptions = []
+            for mod_type, mod_value in modifiers.items():
+                if mod_type != 'default':
+                    modifier_descriptions.append(f"{mod_value} {mod_type}")
+            
+            if modifier_descriptions:
+                modifier_text = f" ({', '.join(modifier_descriptions)})"
+        
+        return base_explanation + modifier_text
     
     def _synonym_command_match(self, text: str) -> List[PartialMatch]:
         """Match commands using synonym understanding"""
