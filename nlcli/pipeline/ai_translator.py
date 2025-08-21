@@ -52,9 +52,8 @@ class AITranslator:
         # Level 1: Context (owns ALL context managers)
         self.shell_adapter = ShellAdapter()
         
-        # Level 2-4: Processing components
+        # Level 2,4: Processing components (Pattern Engine removed - handled by Semantic Matcher)
         self.command_filter = CommandFilter()
-        self.pattern_engine = PatternEngine()
         self.fuzzy_engine = AdvancedFuzzyEngine()
         self.command_selector = CommandSelector()
         
@@ -190,7 +189,7 @@ class AITranslator:
         """
         
         try:
-            # NEW PIPELINE FLOW (Levels 1-5)
+            # STREAMLINED PIPELINE FLOW (Levels 1,2,4,5,6 - Skipping Pattern Engine)
             
             # Level 1: Shell Adapter - Get context
             context = self.shell_adapter.get_pipeline_metadata(natural_language)
@@ -202,19 +201,13 @@ class AITranslator:
                 logger.debug(f"Level 2 (Command Filter): Direct match found")
                 return {**level2_result, 'cached': False, 'instant': True}
             
-            # Level 3: Pattern Engine - Natural language patterns
-            level3_result = self.pattern_engine.get_pipeline_metadata(natural_language, context)
-            if level3_result:
-                logger.debug(f"Level 3 (Pattern Engine): Pattern match found")
-                return {**level3_result, 'cached': False, 'instant': True}
-            
             # Level 4: Fuzzy Engine - Fuzzy matching + typo correction
             level4_result = self.fuzzy_engine.get_pipeline_metadata(natural_language, context)
             if level4_result:
                 logger.debug(f"Level 4 (Fuzzy Engine): Fuzzy match found")
                 return {**level4_result, 'cached': False, 'instant': True}
             
-            # Level 5: Semantic Matcher - Local ML model semantic matching
+            # Level 5: Semantic Matcher - Intelligent Intent Classification
             try:
                 from .semantic_matcher import SemanticMatcher
                 if not hasattr(self, '_semantic_matcher'):
@@ -222,7 +215,7 @@ class AITranslator:
                 
                 level5_result = self._semantic_matcher.get_pipeline_metadata(natural_language, context)
                 if level5_result:
-                    logger.debug(f"Level 5 (Semantic Matcher): Semantic match found")
+                    logger.debug(f"Level 5 (Semantic Matcher): Intent classified")
                     return {**level5_result, 'cached': False, 'instant': True}
             except ImportError:
                 logger.debug("Semantic Matcher not available")
