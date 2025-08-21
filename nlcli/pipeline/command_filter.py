@@ -758,20 +758,18 @@ class CommandFilter:
         }
     
     def _load_intelligent_patterns(self):
-        """Load basic command patterns for Level 2 - valid command syntax only"""
+        """Load basic command patterns for Level 2 - ONLY exact command synonyms"""
+        # Level 2 should ONLY handle exact command synonyms, NO natural language processing
+        # All natural language patterns belong in Level 5 (Semantic Matcher)
         self.intelligent_patterns = {
-            # Only exact command synonyms that map to valid syntax
-            'current directory': 'pwd',
-            'where am i': 'pwd',
-            'clear screen': 'clear',
+            # Remove natural language - these should go to Level 5
+            # Keep only if they're truly exact command equivalents
         }
         
-        # Level 2 focuses on valid command syntax with proper parameters
-        # Natural language patterns have been moved to Level 5 (Semantic Matcher)
-        self.parameter_patterns = {
-            # Keep only patterns that represent valid command syntax variations
-            # These are NOT natural language - they are alternate valid syntax forms
-        }
+        # Level 2 focuses ONLY on valid command syntax - no parameter patterns
+        self.parameter_patterns = {}
+        
+        # ARCHITECTURAL PRINCIPLE: Level 2 = Syntax validation, Level 5 = Semantic understanding
     
     def get_pipeline_metadata(self, user_input: str) -> Optional[Dict[str, Any]]:
         """
@@ -818,13 +816,13 @@ class CommandFilter:
                 if base_cmd in self.direct_commands:
                     # Conservative validation: only match if arguments look like valid command syntax
                     if self._is_valid_command_syntax(base_cmd, words[i:]):
-                        # Enhance and validate the command
-                        enhanced_command = self._validate_and_fix_command(user_input.strip())
+                        # ONLY syntax validation and fixing - no semantic enhancement
+                        validated_command = self._validate_and_fix_command(user_input.strip())
                         result = self.direct_commands[base_cmd].copy()
                         result['pipeline_level'] = 2
                         result['match_type'] = 'prefix_command_match'
                         result['source'] = 'command_filter'
-                        result['command'] = enhanced_command  # Use enhanced command
+                        result['command'] = validated_command  # Use syntax-validated command only
                         result['explanation'] += f' (matched base command: {base_cmd})'
                         return result
                 
@@ -866,50 +864,14 @@ class CommandFilter:
         return command
     
     def _enhance_command_with_context(self, base_cmd: str, args: list, context: Optional[Dict] = None) -> str:
-        """Enhance commands with intelligent context-aware parameters"""
+        """REMOVED: Level 2 should NOT do semantic enhancement - this belongs in Level 5
         
-        # Context-aware find enhancements
-        if base_cmd == 'find' and args:
-            if any(word in ' '.join(args) for word in ['python', 'py']):
-                if 'log' in ' '.join(args):
-                    return 'find . -name "*.log" -o -name "*.out" -o -name "*.err"'
-                else:
-                    return 'find . -name "*.py"'
-            elif any(word in ' '.join(args) for word in ['log', 'logs']):
-                if context and context.get('project_type') == 'python':
-                    return 'find . -name "*.log" -o -name "*.out" -o -name "*.err"'
-                else:
-                    return 'find . -name "*.log"'
-            elif any(word in ' '.join(args) for word in ['javascript', 'js']):
-                return 'find . -name "*.js"'
-            elif any(word in ' '.join(args) for word in ['text', 'txt']):
-                return 'find . -name "*.txt"'
-            elif any(word in ' '.join(args) for word in ['config', 'configuration']):
-                return 'find . -name "*.conf" -o -name "*.config" -o -name "*.cfg"'
-            elif any(word in ' '.join(args) for word in ['large', 'big']):
-                return 'find . -size +100M -type f'
-            elif any(word in ' '.join(args) for word in ['recent', 'new']):
-                return 'find . -mtime -7 -type f'
-        
-        # Git command enhancements
-        if base_cmd == 'git' and args:
-            if 'status' in args:
-                return 'git status --short' if len(' '.join(args).split()) <= 2 else 'git status'
-            elif 'log' in args or 'history' in args:
-                return 'git log --oneline'
-            elif 'diff' in args:
-                return 'git diff'
-        
-        # Process command enhancements
-        if base_cmd == 'ps' and args:
-            if any(word in ' '.join(args) for word in ['memory', 'mem']):
-                return 'ps aux --sort=-%mem | head -20'
-            elif any(word in ' '.join(args) for word in ['cpu']):
-                return 'ps aux --sort=-%cpu | head -20'
-            else:
-                return 'ps aux'
-        
-        # Default: return original command
+        ARCHITECTURAL VIOLATION: This method was doing natural language processing at Level 2
+        Natural language patterns like 'find python files' should be handled by Level 5 Semantic Matcher
+        Level 2 should ONLY handle valid command syntax
+        """
+        # Level 2 ONLY does syntax validation - no semantic enhancement!
+        # Return original command without any natural language processing
         return f"{base_cmd} {' '.join(args)}".strip()
     
     def _is_valid_command_syntax(self, base_cmd: str, remaining_args: List[str]) -> bool:
@@ -997,11 +959,32 @@ class CommandFilter:
             return False
         
         elif base_cmd in ['grep', 'search']:
-            # Enhanced grep validation - very permissive since most patterns are valid
-            return len(remaining_args) >= 1  # grep needs at least a search term
+            # Conservative grep validation - only accept valid grep syntax
+            first_arg = remaining_args[0] if remaining_args else ""
+            
+            # Block natural language patterns
+            natural_language_words = ['for', 'all', 'errors', 'in', 'files', 'text']
+            if any(word in args_str for word in natural_language_words):
+                return False  # Send to Level 5
+            
+            # Accept if first arg looks like a search pattern or flag
+            return len(remaining_args) >= 1 and (first_arg.startswith('-') or len(first_arg) >= 1)
         
-        # For other commands, be reasonably permissive
-        return len(remaining_args) <= 4
+        # Default fallback - VERY conservative for Level 2
+        # Only accept simple commands that don't look like natural language
+        if len(remaining_args) > 2:
+            return False  # Complex commands should go to Level 5
+            
+        # Check for natural language indicators
+        natural_language_indicators = [
+            'all', 'show', 'list', 'display', 'find', 'search', 'get', 'check', 'files', 
+            'processes', 'running', 'memory', 'disk', 'space', 'status', 'history', 
+            'large', 'small', 'recent', 'old', 'new', 'log', 'logs', 'config', 'text'
+        ]
+        if any(word in args_str for word in natural_language_indicators):
+            return False  # Send to Level 5 semantic matcher
+            
+        return len(remaining_args) <= 2  # Very conservative
     
     def is_direct_command(self, command: str) -> bool:
         """Check if command has exact match at Level 2"""
