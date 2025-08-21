@@ -173,8 +173,12 @@ class SemanticMatcher:
                     'find all log files': 'find . -name "*.log" -o -name "*.out" -o -name "*.err"',
                     'find javascript files': 'find . -name "*.js"',
                     'find js files': 'find . -name "*.js"',
+                    'find html files': 'find . -name "*.html"',
+                    'find all html files': 'find . -name "*.html"',
                     'find text files': 'find . -name "*.txt"',
                     'find config files': 'find . -name "*.conf" -o -name "*.config" -o -name "*.cfg"',
+                    'find css files': 'find . -name "*.css"',
+                    'find all css files': 'find . -name "*.css"',
                     'find large files': 'find . -size +100M -type f',
                     'find recent files': 'find . -mtime -7 -type f',
                     
