@@ -64,123 +64,9 @@ class AITranslator:
         # Load persistent context from shell adapter
         self._load_persistent_context()
         
-        # Common command patterns for instant recognition (50+ patterns)
-        self.instant_patterns = {
-            # File and Directory Operations
-            'ls': ['list files', 'show files', 'list directory', 'dir', 'what files', 'show contents'],
-            'ls -la': ['list all files', 'show hidden files', 'detailed list', 'list with details', 'show file details'],
-            'ls -lh': ['list files with sizes', 'show file sizes', 'human readable list', 'list with size'],
-            'pwd': ['current directory', 'where am i', 'current path', 'show path', 'current location'],
-            'cd': ['change directory', 'go to', 'navigate to', 'move to directory'],
-            'cd ..': ['go back', 'parent directory', 'go up', 'previous directory'],
-            'cd ~': ['go home', 'home directory', 'user directory'],
-            'cat': ['show file', 'read file', 'display file', 'view file', 'print file'],
-            'head': ['show first lines', 'beginning of file', 'first 10 lines'],
-            'tail': ['show last lines', 'end of file', 'last 10 lines'],
-            'tail -f': ['follow file', 'watch file', 'monitor file', 'tail file'],
-            'less': ['page through file', 'view file page', 'scroll file'],
-            'more': ['view file', 'page file', 'read file pages'],
-            'mkdir': ['create directory', 'make folder', 'new folder', 'create folder'],
-            'mkdir -p': ['create nested directories', 'make directory tree', 'create path'],
-            'rmdir': ['remove directory', 'delete folder', 'remove folder'],
-            'rm': ['delete file', 'remove file', 'delete'],
-            'rm -rf': ['force delete', 'delete recursively', 'remove all'],
-            'cp': ['copy file', 'duplicate file', 'copy'],
-            'cp -r': ['copy directory', 'copy folder', 'recursive copy'],
-            'mv': ['move file', 'rename file', 'move'],
-            'touch': ['create file', 'new file', 'make file'],
-            'find .': ['find files', 'search files', 'locate files'],
-            'locate': ['find file location', 'search for file'],
-            'which': ['find command', 'locate command', 'where is command'],
-            'ln -s': ['create link', 'symbolic link', 'symlink'],
-            
-            # File Content and Text Processing
-            'grep': ['search in file', 'find text', 'search text'],
-            'sort': ['sort file', 'sort lines', 'arrange lines'],
-            'uniq': ['unique lines', 'remove duplicates', 'filter duplicates'],
-            'wc': ['count words', 'word count', 'line count'],
-            'wc -l': ['count lines', 'number of lines', 'line count'],
-            'diff': ['compare files', 'file difference', 'diff files'],
-            'cut': ['extract columns', 'cut fields', 'select columns'],
-            'awk': ['process text', 'extract fields', 'text processing'],
-            'sed': ['replace text', 'substitute text', 'edit text'],
-            
-            # System Information and Monitoring
-            'ps': ['show processes', 'list processes', 'running processes'],
-            'ps aux': ['all processes', 'detailed processes', 'process list'],
-            'top': ['system monitor', 'cpu usage', 'memory usage', 'resource monitor'],
-            'htop': ['interactive top', 'better top', 'system stats'],
-            'df': ['disk usage', 'disk space', 'storage usage'],
-            'df -h': ['disk space human readable', 'storage info', 'disk info'],
-            'du': ['directory size', 'folder size', 'space used'],
-            'du -sh': ['folder size summary', 'directory size human'],
-            'free': ['memory usage', 'ram usage', 'memory info'],
-            'free -h': ['memory info human readable', 'ram info'],
-            'uname': ['system info', 'os info', 'kernel info'],
-            'uname -a': ['detailed system info', 'full system info'],
-            'uptime': ['system uptime', 'how long running', 'boot time'],
-            'whoami': ['current user', 'username', 'who am i'],
-            'id': ['user id', 'user info', 'group info'],
-            'w': ['who is logged in', 'logged users', 'user activity'],
-            'last': ['login history', 'last logins', 'user sessions'],
-            
-            # Network and Connectivity
-            'ping': ['test connection', 'check connectivity', 'network test'],
-            'wget': ['download file', 'fetch file', 'get file'],
-            'curl': ['web request', 'http request', 'fetch url'],
-            'netstat': ['network connections', 'open ports', 'network status'],
-            'ss': ['socket statistics', 'network sockets', 'connection info'],
-            'ifconfig': ['network interface', 'ip address', 'network config'],
-            'ip addr': ['show ip', 'network interfaces', 'ip info'],
-            
-            # Archives and Compression
-            'tar -xzf': ['extract tar', 'unpack tar', 'decompress tar'],
-            'tar -czf': ['create tar', 'compress tar', 'make archive'],
-            'zip': ['create zip', 'compress files', 'make zip'],
-            'unzip': ['extract zip', 'decompress zip', 'unpack zip'],
-            'gzip': ['compress file', 'gzip file'],
-            'gunzip': ['decompress file', 'unzip file'],
-            
-            # File Permissions and Ownership
-            'chmod': ['change permissions', 'file permissions', 'modify permissions'],
-            'chmod +x': ['make executable', 'add execute permission'],
-            'chown': ['change owner', 'file owner', 'change ownership'],
-            'chgrp': ['change group', 'file group'],
-            
-            # Environment and Variables
-            'env': ['environment variables', 'show variables', 'environment'],
-            'export': ['set variable', 'environment variable'],
-            'echo': ['print text', 'display text', 'show text'],
-            'date': ['current time', 'show date', 'what time', 'current date'],
-            'cal': ['calendar', 'show calendar', 'current month'],
-            'history': ['command history', 'previous commands', 'past commands'],
-            'alias': ['command aliases', 'shortcuts', 'command shortcuts'],
-            
-            # Terminal and Session
-            'clear': ['clear screen', 'clean terminal', 'clear terminal'],
-            'reset': ['reset terminal', 'fix terminal'],
-            'exit': ['quit', 'logout', 'close terminal'],
-            'logout': ['log out', 'end session'],
-            'screen': ['new session', 'terminal session'],
-            'tmux': ['terminal multiplexer', 'multiple terminals'],
-            
-            # Package Management (Linux)
-            'sudo apt update': ['update packages', 'refresh packages', 'update package list'],
-            'sudo apt upgrade': ['upgrade system', 'update all packages'],
-            'sudo apt install': ['install package', 'add software'],
-            'apt search': ['search packages', 'find software'],
-            'dpkg -l': ['list installed packages', 'installed software'],
-            
-            # Git Commands
-            'git status': ['git status', 'repo status', 'working tree status'],
-            'git log': ['git history', 'commit history', 'git commits'],
-            'git diff': ['git changes', 'file changes', 'working changes'],
-            'git add .': ['stage all changes', 'add all files'],
-            'git commit': ['commit changes', 'save changes'],
-            'git push': ['push to remote', 'upload changes'],
-            'git pull': ['pull changes', 'update from remote'],
-            'git clone': ['clone repository', 'copy repo']
-        }
+        # REMOVED: Hard-coded instant patterns - defeats the purpose of AI intelligence
+        # Let semantic understanding and AI translation handle all natural language patterns
+        self.instant_patterns = {}
         
     def translate(self, natural_language: str, context: Optional[Dict] = None, timeout: float = 8.0) -> Optional[Dict]:
         """
@@ -632,7 +518,7 @@ class AITranslator:
             2. **Object Identification**: What is the user looking for? (files, processes, status, etc.)
             3. **Parameter Extraction**: Recognize file types, modifiers, scopes automatically
             4. **Pattern Understanding**: Automatically understand common patterns like:
-               - "find [all] [type] files" → find . -name "*.{extension}"
+               - "find [all] [type] files" → find . -name "*.EXT"
                - "show [thing]" → appropriate display command
                - "list [scope] [objects]" → appropriate listing command
                - "check/show [system component]" → appropriate status command
@@ -645,7 +531,7 @@ class AITranslator:
             - log files → *.log (or *.log -o *.out -o *.err for comprehensive)
             - text files → *.txt
             - config files → *.conf -o *.config -o *.cfg
-            - Any file type mentioned → *.{extension}
+            - Any file type mentioned → *.EXT (where EXT is the file extension)
             
             SMART PATTERN VARIATIONS:
             - Recognize "all", "every", "any" as comprehensive search modifiers
