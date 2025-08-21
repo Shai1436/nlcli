@@ -758,12 +758,97 @@ class CommandFilter:
         }
     
     def _load_intelligent_patterns(self):
-        """Load intelligent exact command patterns"""
+        """Load intelligent natural language patterns with enhanced parameter handling"""
         self.intelligent_patterns = {
-            # Only exact natural language patterns that map to specific commands
+            # Directory and Navigation
             'current directory': 'pwd',
             'where am i': 'pwd',
+            'show current directory': 'pwd',
+            'print working directory': 'pwd',
+            'go back': 'cd ..',
+            'go up': 'cd ..',
+            'parent directory': 'cd ..',
+            'go home': 'cd ~',
+            'home directory': 'cd ~',
+            
+            # File Listing and Display
+            'list files': 'ls -la',
+            'show files': 'ls -la',
+            'list all files': 'ls -la',
+            'show all files': 'ls -la',
+            'list files with details': 'ls -la',
+            'show hidden files': 'ls -la',
+            'list directory': 'ls -la',
+            'show directory': 'ls -la',
+            
+            # Git Commands  
+            'show git status': 'git status',
+            'check git status': 'git status',
+            'git status': 'git status',
+            'show git log': 'git log --oneline',
+            'git history': 'git log --oneline',
+            'show commits': 'git log --oneline',
+            'git diff': 'git diff',
+            'show changes': 'git diff',
+            'show git changes': 'git diff',
+            
+            # Process and System Information
+            'show processes': 'ps aux',
+            'list processes': 'ps aux',
+            'running processes': 'ps aux',
+            'show running processes': 'ps aux',
+            'all processes': 'ps aux',
+            'show system processes': 'ps aux',
+            
+            # System Information
+            'show disk space': 'df -h',
+            'disk usage': 'df -h',
+            'check disk space': 'df -h',
+            'show memory': 'free -h',
+            'memory usage': 'free -h',
+            'check memory': 'free -h',
+            'system info': 'uname -a',
+            'show system info': 'uname -a',
+            'system details': 'uname -a',
+            'uptime': 'uptime',
+            'system uptime': 'uptime',
+            
+            # File Operations
             'clear screen': 'clear',
+            'clear terminal': 'clear',
+            'show history': 'history',
+            'command history': 'history',
+            
+            # Network  
+            'show network': 'ip addr show',
+            'network status': 'ip addr show',
+            'show ip': 'ip addr show',
+            'network connections': 'ss -tuln',
+            'show connections': 'ss -tuln',
+            'open ports': 'ss -tuln',
+        }
+        
+        # Enhanced parameter patterns for common commands
+        self.parameter_patterns = {
+            # Find command patterns
+            'find python files': 'find . -name "*.py"',
+            'find all python files': 'find . -name "*.py"',
+            'find py files': 'find . -name "*.py"',
+            'find log files': 'find . -name "*.log"',
+            'find all log files': 'find . -name "*.log" -o -name "*.out" -o -name "*.err"',
+            'find javascript files': 'find . -name "*.js"',
+            'find js files': 'find . -name "*.js"',
+            'find text files': 'find . -name "*.txt"',
+            'find config files': 'find . -name "*.conf" -o -name "*.config" -o -name "*.cfg"',
+            'find large files': 'find . -size +100M -type f',
+            'find recent files': 'find . -mtime -7 -type f',
+            
+            # Grep patterns
+            'search for error': 'grep -r "error" .',
+            'find errors': 'grep -r -i "error" .',
+            'search in files': 'grep -r',
+            'search text': 'grep -r',
+            'find in files': 'grep -r',
         }
     
     def get_pipeline_metadata(self, user_input: str) -> Optional[Dict[str, Any]]:
@@ -798,6 +883,21 @@ class CommandFilter:
                 result['source'] = 'command_filter'
                 result['explanation'] += ' (natural language interpreted)'
                 return result
+                
+        # Check enhanced parameter patterns
+        if user_input_lower in self.parameter_patterns:
+            enhanced_command = self.parameter_patterns[user_input_lower]
+            # Validate enhanced command syntax
+            enhanced_command = self._validate_and_fix_command(enhanced_command)
+            result = {
+                'command': enhanced_command,
+                'explanation': f'Enhanced from natural language pattern',
+                'confidence': 0.95,
+                'pipeline_level': 2,
+                'match_type': 'enhanced_parameter_pattern',
+                'source': 'command_filter'
+            }
+            return result
         
         # Conservative prefix matching - only for commands with valid syntax patterns
         # This prevents "find all log files" from matching "find" and blocking intent classification
@@ -811,11 +911,13 @@ class CommandFilter:
                 if base_cmd in self.direct_commands:
                     # Conservative validation: only match if arguments look like valid command syntax
                     if self._is_valid_command_syntax(base_cmd, words[i:]):
+                        # Enhance and validate the command
+                        enhanced_command = self._validate_and_fix_command(user_input.strip())
                         result = self.direct_commands[base_cmd].copy()
                         result['pipeline_level'] = 2
                         result['match_type'] = 'prefix_command_match'
                         result['source'] = 'command_filter'
-                        result['command'] = user_input.strip()  # Keep original full command
+                        result['command'] = enhanced_command  # Use enhanced command
                         result['explanation'] += f' (matched base command: {base_cmd})'
                         return result
                 
@@ -833,70 +935,146 @@ class CommandFilter:
         # No exact match found at Level 2
         return None
     
+    def _validate_and_fix_command(self, command: str) -> str:
+        """Validate and fix common command syntax issues"""
+        import re
+        
+        # Fix find command quoting issues
+        if command.startswith('find '):
+            # Fix unquoted patterns like: find . -name *.py -> find . -name "*.py"
+            command = re.sub(r'-name\s+(\*\.\w+)', r'-name "\1"', command)
+            command = re.sub(r'-name\s+([^\s"\']+\*[^\s"\']*)', r'-name "\1"', command)
+            command = re.sub(r'-type\s+([fd])\s+-name\s+([^\s"\']+)', r'-type \1 -name "\2"', command)
+        
+        # Fix grep command quoting
+        if 'grep ' in command:
+            # Ensure search patterns are quoted
+            command = re.sub(r'grep\s+(-[a-zA-Z]*\s+)?([^\s"\']+)', r'grep \1"\2"', command)
+        
+        # Fix ls commands - ensure proper flag syntax
+        if command.startswith('ls '):
+            # Combine flags like ls -l -a -> ls -la
+            command = re.sub(r'ls\s+-([lah]+)\s+-([lah]+)', lambda m: f'ls -{set(m.group(1) + m.group(2))}', command)
+        
+        return command
+    
+    def _enhance_command_with_context(self, base_cmd: str, args: list, context: dict = None) -> str:
+        """Enhance commands with intelligent context-aware parameters"""
+        
+        # Context-aware find enhancements
+        if base_cmd == 'find' and args:
+            if any(word in ' '.join(args) for word in ['python', 'py']):
+                if 'log' in ' '.join(args):
+                    return 'find . -name "*.log" -o -name "*.out" -o -name "*.err"'
+                else:
+                    return 'find . -name "*.py"'
+            elif any(word in ' '.join(args) for word in ['log', 'logs']):
+                if context and context.get('project_type') == 'python':
+                    return 'find . -name "*.log" -o -name "*.out" -o -name "*.err"'
+                else:
+                    return 'find . -name "*.log"'
+            elif any(word in ' '.join(args) for word in ['javascript', 'js']):
+                return 'find . -name "*.js"'
+            elif any(word in ' '.join(args) for word in ['text', 'txt']):
+                return 'find . -name "*.txt"'
+            elif any(word in ' '.join(args) for word in ['config', 'configuration']):
+                return 'find . -name "*.conf" -o -name "*.config" -o -name "*.cfg"'
+            elif any(word in ' '.join(args) for word in ['large', 'big']):
+                return 'find . -size +100M -type f'
+            elif any(word in ' '.join(args) for word in ['recent', 'new']):
+                return 'find . -mtime -7 -type f'
+        
+        # Git command enhancements
+        if base_cmd == 'git' and args:
+            if 'status' in args:
+                return 'git status --short' if len(' '.join(args).split()) <= 2 else 'git status'
+            elif 'log' in args or 'history' in args:
+                return 'git log --oneline'
+            elif 'diff' in args:
+                return 'git diff'
+        
+        # Process command enhancements
+        if base_cmd == 'ps' and args:
+            if any(word in ' '.join(args) for word in ['memory', 'mem']):
+                return 'ps aux --sort=-%mem | head -20'
+            elif any(word in ' '.join(args) for word in ['cpu']):
+                return 'ps aux --sort=-%cpu | head -20'
+            else:
+                return 'ps aux'
+        
+        # Default: return original command
+        return f"{base_cmd} {' '.join(args)}".strip()
+    
     def _is_valid_command_syntax(self, base_cmd: str, remaining_args: List[str]) -> bool:
         """
-        Conservative validation: only match prefix if arguments look like valid command syntax
-        
-        This prevents natural language phrases like "find all log files" from being treated
-        as command matches, allowing Intent Classification to handle them properly.
+        Enhanced validation: intelligently determine if arguments are valid command syntax
+        or natural language that should be enhanced/translated.
         """
         if not remaining_args:
             return True  # No additional args is always valid
         
-        # Get the remaining arguments as a single string
-        args_str = " ".join(remaining_args)
+        args_str = " ".join(remaining_args).lower()
         
-        # Natural language indicators that suggest this is NOT command syntax
-        natural_language_patterns = {
-            'all', 'every', 'some', 'many', 'few', 'large', 'small', 'recent', 'old',
-            'running', 'active', 'stopped', 'current', 'available',
-            'log files', 'python files', 'text files', 'config files',
-            'network status', 'system status', 'disk space',
-            'processes', 'services', 'connections'
-        }
+        # Strong natural language indicators that definitely need AI translation
+        strong_natural_language_indicators = [
+            'please', 'can you', 'could you', 'would you', 'help me',
+            'show me', 'tell me', 'i want', 'i need', 'how do i'
+        ]
         
-        # If arguments contain natural language patterns, it's probably intent-based
-        for pattern in natural_language_patterns:
-            if pattern in args_str:
-                return False
+        # Check for strong natural language indicators first
+        if any(indicator in args_str for indicator in strong_natural_language_indicators):
+            return False
         
-        # Command-specific syntax validation
+        # Command-specific enhanced syntax patterns
         if base_cmd == 'find':
-            # Valid find syntax usually starts with path, option (-name, -type), or standard patterns
-            first_arg = remaining_args[0] if remaining_args else ""
-            valid_find_patterns = {
-                '.', '/', '~', '-name', '-type', '-size', '-mtime', '-exec', '-print'
-            }
-            # If first argument doesn't match valid find patterns, it's likely natural language
-            if not any(first_arg.startswith(pattern) for pattern in valid_find_patterns):
-                return False
+            # Enhanced find validation - accept both syntax and natural language we can handle
+            valid_find_patterns = [
+                # Traditional syntax
+                '.', '/', '~', '-name', '-type', '-size', '-mtime', '-exec', '-print',
+                # Enhanced patterns we can intelligently handle
+                'python', 'py', 'javascript', 'js', 'log', 'logs', 'txt', 'config',
+                'large', 'big', 'recent', 'new', '*.', 'all'
+            ]
+            # Accept if it contains any valid patterns or reasonable file type references
+            return any(pattern in args_str for pattern in valid_find_patterns)
                 
         elif base_cmd == 'git':
-            # Git has well-known subcommands
-            valid_git_subcommands = {
+            # Enhanced git validation - accept subcommands and natural language variants
+            valid_git_patterns = [
+                # Traditional subcommands
                 'add', 'commit', 'push', 'pull', 'clone', 'status', 'log', 'diff',
-                'branch', 'checkout', 'merge', 'reset', 'init', 'remote'
-            }
-            first_arg = remaining_args[0] if remaining_args else ""
-            if first_arg not in valid_git_subcommands:
-                return False
+                'branch', 'checkout', 'merge', 'reset', 'init', 'remote',
+                # Natural language variations we can enhance
+                'show', 'check', 'history', 'changes'
+            ]
+            return any(pattern in args_str for pattern in valid_git_patterns)
                 
         elif base_cmd == 'ls':
-            # ls arguments usually start with - or are paths
-            first_arg = remaining_args[0] if remaining_args else ""
-            if not (first_arg.startswith('-') or first_arg.startswith('.') or 
-                    first_arg.startswith('/') or first_arg.startswith('~')):
-                # Could be natural language like "ls all files"
-                return False
+            # Enhanced ls validation - accept flags, paths, and natural language
+            valid_ls_patterns = [
+                # Traditional flags and paths
+                '-', '.', '/', '~', 
+                # Natural language we can enhance
+                'all', 'files', 'hidden', 'details', 'long', 'directory'
+            ]
+            return any(pattern in args_str for pattern in valid_ls_patterns) or len(remaining_args) <= 3
                 
         elif base_cmd == 'ps':
-            # ps arguments usually start with - or are specific patterns
-            first_arg = remaining_args[0] if remaining_args else ""
-            valid_ps_patterns = {'aux', 'ef', '-e', '-f', '-A', '-a'}
-            if first_arg not in valid_ps_patterns and not first_arg.startswith('-'):
-                return False
+            # Enhanced ps validation - accept flags and natural language
+            valid_ps_patterns = [
+                # Traditional flags
+                'aux', 'ef', '-e', '-f', '-A', '-a', 
+                # Natural language we can enhance
+                'all', 'processes', 'running', 'memory', 'cpu'
+            ]
+            return any(pattern in args_str for pattern in valid_ps_patterns)
         
-        return True  # Default to valid if no natural language patterns detected
+        elif base_cmd in ['grep', 'search']:
+            # Enhanced grep validation - very permissive since most patterns are valid
+            return len(remaining_args) >= 1  # grep needs at least a search term
+        
+        # For other commands, be reasonably permissive
+        return len(remaining_args) <= 4
     
     def is_direct_command(self, command: str) -> bool:
         """Check if command has exact match at Level 2"""
