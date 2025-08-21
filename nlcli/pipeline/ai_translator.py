@@ -35,12 +35,16 @@ class AITranslator:
             except Exception as e:
                 logger.warning(f"Failed to initialize OpenAI client: {e}")
                 self.client = None
-        # Platform info will be provided via context from shell adapter
         
         # Performance optimizations
         self.enable_cache = enable_cache
         self.cache_manager = CacheManager() if enable_cache else None
         self.executor = ThreadPoolExecutor(max_workers=2)
+        
+        # Persistent context system
+        self.persistent_context = None
+        self.persistent_system_prompt = None
+        self.last_context_hash = None
         
         # Initialize Pipeline Components (Level 1-4) - Clean Architecture
         from .shell_adapter import ShellAdapter
@@ -56,6 +60,9 @@ class AITranslator:
         self.command_filter = CommandFilter()
         self.fuzzy_engine = AdvancedFuzzyEngine()
         self.command_selector = CommandSelector()
+        
+        # Load persistent context from shell adapter
+        self._load_persistent_context()
         
         # Common command patterns for instant recognition (50+ patterns)
         self.instant_patterns = {
@@ -380,6 +387,133 @@ class AITranslator:
         
         return explanations.get(cmd, f'Executes the {cmd} command')
     
+    def _load_persistent_context(self):
+        """Load persistent context from ShellAdapter - called once at initialization"""
+        try:
+            # Get comprehensive context from shell adapter
+            self.persistent_context = self.shell_adapter.get_enhanced_context()
+            
+            # Create hash of context for change detection
+            import hashlib
+            context_str = json.dumps(self.persistent_context, sort_keys=True)
+            self.last_context_hash = hashlib.md5(context_str.encode()).hexdigest()
+            
+            # Create persistent system prompt with all context
+            self._create_persistent_system_prompt()
+            
+            logger.debug(f"Persistent context loaded: platform={self.persistent_context.get('platform')}, "
+                        f"git_repo={self.persistent_context.get('git', {}).get('is_git_repo')}, "
+                        f"project_type={self.persistent_context.get('environment', {}).get('project_type')}")
+            
+        except Exception as e:
+            logger.warning(f"Failed to load persistent context: {e}")
+            self.persistent_context = {}
+            self._create_persistent_system_prompt()
+    
+    def _create_persistent_system_prompt(self):
+        """Create comprehensive system prompt with all persistent context"""
+        
+        if not self.persistent_context:
+            # Fallback system prompt
+            self.persistent_system_prompt = """
+            You are an expert system administrator assistant that translates natural language requests into OS commands.
+            Provide clear, safe, and appropriate commands for the user's system.
+            """
+            return
+        
+        # Extract context information
+        platform = self.persistent_context.get('platform', 'unknown')
+        shell = self.persistent_context.get('shell', 'unknown')
+        available_commands = self.persistent_context.get('available_commands', [])
+        git_context = self.persistent_context.get('git', {})
+        env_context = self.persistent_context.get('environment', {})
+        shell_features = self.persistent_context.get('shell_features', [])
+        
+        # Build rich context-aware system prompt
+        self.persistent_system_prompt = f"""
+        You are an expert system administrator assistant that translates natural language requests into OS commands.
+        
+        CURRENT SYSTEM CONTEXT:
+        - Platform: {platform.title()}
+        - Shell: {shell}
+        - Available Commands: {len(available_commands)} commands available ({', '.join(available_commands[:10])}...)
+        - Shell Features: {', '.join(shell_features)}
+        
+        GIT REPOSITORY CONTEXT:
+        - Git Repository: {'Yes' if git_context.get('is_git_repo') else 'No'}
+        - Current Branch: {git_context.get('current_branch', 'N/A')}
+        - Has Changes: {'Yes' if git_context.get('has_staged_changes') or git_context.get('has_unstaged_changes') else 'No'}
+        - Repository Root: {git_context.get('repository_root', 'N/A')}
+        
+        PROJECT ENVIRONMENT:
+        - Project Type: {env_context.get('project_type', 'unknown').title()}
+        - Framework: {env_context.get('framework', 'unknown').title()}
+        - Project Root: {env_context.get('project_root', 'N/A')}
+        
+        INTELLIGENT TRANSLATION GUIDELINES:
+        1. **Context Awareness**: Use the above context to provide more relevant commands
+           - For Python projects: Prefer `python`, `pip`, `pytest` commands
+           - For Git repos: Include git-aware suggestions when relevant
+           - For specific platforms: Use platform-appropriate syntax
+        
+        2. **Command Selection**: Choose the most appropriate command variant
+           - Use modern command syntax (e.g., `ls -lh` over `ls -l`)
+           - Prefer safe, commonly-used options
+           - Consider available commands on this system
+        
+        3. **Context-Specific Examples**:
+           - "find python files" → `find . -name "*.py"` (Python project detected)
+           - "show git status" → `git status` (Git repo detected)  
+           - "list files" → `ls -la` ({platform} system, {shell} shell)
+           - "current directory" → `pwd` (universal)
+        
+        4. **Safety & Intelligence**:
+           - Always prioritize safe commands
+           - Explain any assumptions made about user intent
+           - Consider project context when suggesting paths/patterns
+           - Mark potentially destructive operations clearly
+        
+        5. **Enhanced Reasoning**:
+           - Reference specific context when relevant ("Since this is a Python project...")
+           - Suggest alternatives when multiple approaches exist
+           - Explain why specific command variants were chosen
+        
+        RESPONSE FORMAT:
+        Always respond with valid JSON containing:
+        - command: The actual OS command to execute
+        - explanation: Context-aware explanation of what the command does
+        - confidence: Number between 0 and 1 indicating confidence level
+        - safe: Boolean indicating if the command is generally safe
+        - reasoning: Why this command was chosen considering the current context
+        - context_used: List any context factors that influenced the decision
+        
+        IMPORTANT: You now have persistent awareness of the user's environment. Use this context intelligence to provide more accurate, relevant, and helpful command translations.
+        """
+    
+    def _refresh_context_if_needed(self):
+        """Refresh persistent context if environment has changed"""
+        try:
+            current_context = self.shell_adapter.get_enhanced_context()
+            
+            # Create hash of current context
+            import hashlib
+            context_str = json.dumps(current_context, sort_keys=True)
+            current_hash = hashlib.md5(context_str.encode()).hexdigest()
+            
+            # If context changed, refresh it
+            if current_hash != self.last_context_hash:
+                logger.debug("Context changed, refreshing persistent context")
+                self.persistent_context = current_context
+                self.last_context_hash = current_hash
+                self._create_persistent_system_prompt()
+                return True
+            
+            return False
+            
+        except Exception as e:
+            logger.warning(f"Failed to refresh context: {e}")
+            return False
+    
     def _prompt_for_api_key(self) -> bool:
         """Prompt user for OpenAI API key and save it"""
         
@@ -432,29 +566,38 @@ class AITranslator:
             return False
     
     def _translate_with_ai(self, natural_language: str, timeout: float, context: Optional[Dict] = None) -> Optional[Dict]:
-        """Perform AI translation with timeout"""
+        """Perform AI translation with timeout using persistent context"""
         
         # Check if we have a valid client, if not try to prompt for API key
         if not self.client:
             if not self._prompt_for_api_key():
                 return None
         
+        # Refresh context if needed (lightweight check)
+        self._refresh_context_if_needed()
+        
         def api_call():
-            # Create system prompt based on context
-            system_prompt = self._create_system_prompt(context)
+            # Use persistent system prompt with rich context
+            system_prompt = self.persistent_system_prompt or self._create_system_prompt(context)
             
-            # Create user prompt
+            # Create enhanced user prompt
             user_prompt = f"""
             Translate this natural language request to an OS command:
             "{natural_language}"
             
+            CONTEXT CONSIDERATIONS:
+            - Use the system context provided in your instructions
+            - Consider the current project type and git repository status
+            - Prefer commands appropriate for the detected platform and shell
+            
             Provide your response as JSON with this exact format:
             {{
                 "command": "the actual OS command",
-                "explanation": "clear explanation of what the command does",
+                "explanation": "context-aware explanation of what the command does",
                 "confidence": 0.95,
                 "safe": true,
-                "reasoning": "why this command is appropriate"
+                "reasoning": "why this command was chosen considering the current context",
+                "context_used": ["list any context factors that influenced this decision"]
             }}
             """
             
@@ -470,7 +613,7 @@ class AITranslator:
                 ],
                 response_format={"type": "json_object"},
                 temperature=0.1,  # Lower temperature for faster, more deterministic responses
-                max_tokens=300   # Reduced tokens for faster response
+                max_tokens=600   # Increased tokens for detailed context-aware explanations
             )
             
             content = response.choices[0].message.content
