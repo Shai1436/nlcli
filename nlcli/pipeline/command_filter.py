@@ -932,49 +932,69 @@ class CommandFilter:
         if any(indicator in args_str for indicator in strong_natural_language_indicators):
             return False
         
-        # Command-specific enhanced syntax patterns
+        # Command-specific conservative syntax patterns - Level 2 should only handle valid syntax
         if base_cmd == 'find':
-            # Enhanced find validation - accept both syntax and natural language we can handle
-            valid_find_patterns = [
-                # Traditional syntax
-                '.', '/', '~', '-name', '-type', '-size', '-mtime', '-exec', '-print',
-                # Enhanced patterns we can intelligently handle
-                'python', 'py', 'javascript', 'js', 'log', 'logs', 'txt', 'config',
-                'large', 'big', 'recent', 'new', '*.', 'all'
-            ]
-            # Accept if it contains any valid patterns or reasonable file type references
-            return any(pattern in args_str for pattern in valid_find_patterns)
+            # Conservative find validation - only accept VALID find command syntax
+            # Natural language like "find all log files" should go to Level 5
+            first_arg = remaining_args[0] if remaining_args else ""
+            
+            # Valid find syntax patterns
+            if (first_arg.startswith('.') or first_arg.startswith('/') or first_arg.startswith('~') or
+                first_arg.startswith('-')):  # Paths or options
+                return True
+            
+            # Block natural language patterns - these should go to semantic matcher
+            natural_language_words = ['all', 'log', 'logs', 'files', 'python', 'javascript', 
+                                    'large', 'small', 'recent', 'old', 'config', 'text']
+            if any(word in args_str for word in natural_language_words):
+                return False  # Send to Level 5 semantic matcher
+                
+            # Accept only if it looks like valid syntax
+            return len(remaining_args) <= 2
                 
         elif base_cmd == 'git':
-            # Enhanced git validation - accept subcommands and natural language variants
-            valid_git_patterns = [
-                # Traditional subcommands
+            # Conservative git validation - only accept VALID git subcommands
+            # Natural language like "show git status" should go to Level 5
+            first_arg = remaining_args[0] if remaining_args else ""
+            
+            # Valid git subcommands
+            valid_git_subcommands = [
                 'add', 'commit', 'push', 'pull', 'clone', 'status', 'log', 'diff',
-                'branch', 'checkout', 'merge', 'reset', 'init', 'remote',
-                # Natural language variations we can enhance
-                'show', 'check', 'history', 'changes'
+                'branch', 'checkout', 'merge', 'reset', 'init', 'remote', 'fetch', 'rebase'
             ]
-            return any(pattern in args_str for pattern in valid_git_patterns)
+            return first_arg in valid_git_subcommands
                 
         elif base_cmd == 'ls':
-            # Enhanced ls validation - accept flags, paths, and natural language
-            valid_ls_patterns = [
-                # Traditional flags and paths
-                '-', '.', '/', '~', 
-                # Natural language we can enhance
-                'all', 'files', 'hidden', 'details', 'long', 'directory'
-            ]
-            return any(pattern in args_str for pattern in valid_ls_patterns) or len(remaining_args) <= 3
+            # Conservative ls validation - only accept VALID ls syntax
+            # Natural language like "list all files" should go to Level 5  
+            first_arg = remaining_args[0] if remaining_args else ""
+            
+            # Valid ls patterns: flags or paths
+            if (first_arg.startswith('-') or first_arg.startswith('.') or 
+                first_arg.startswith('/') or first_arg.startswith('~')):
+                return True
+                
+            # Block natural language - these should go to semantic matcher
+            if any(word in args_str for word in ['all', 'files', 'hidden', 'details', 'directory']):
+                return False  # Send to Level 5
+                
+            return len(remaining_args) <= 2
                 
         elif base_cmd == 'ps':
-            # Enhanced ps validation - accept flags and natural language
-            valid_ps_patterns = [
-                # Traditional flags
-                'aux', 'ef', '-e', '-f', '-A', '-a', 
-                # Natural language we can enhance
-                'all', 'processes', 'running', 'memory', 'cpu'
-            ]
-            return any(pattern in args_str for pattern in valid_ps_patterns)
+            # Conservative ps validation - only accept VALID ps flags
+            # Natural language like "show processes" should go to Level 5
+            first_arg = remaining_args[0] if remaining_args else ""
+            
+            # Valid ps flags
+            valid_ps_flags = ['aux', 'ef', '-e', '-f', '-A', '-a', '-u', '-x']
+            if first_arg in valid_ps_flags:
+                return True
+                
+            # Block natural language
+            if any(word in args_str for word in ['all', 'processes', 'running', 'memory', 'cpu']):
+                return False  # Send to Level 5
+                
+            return False
         
         elif base_cmd in ['grep', 'search']:
             # Enhanced grep validation - very permissive since most patterns are valid
