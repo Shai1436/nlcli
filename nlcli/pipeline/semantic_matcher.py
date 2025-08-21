@@ -586,8 +586,10 @@ class SemanticMatcher:
         matches = []
         words = text.lower().split()
         
-        # Analyze each intent for semantic matches
+        # Analyze each intent for semantic matches (skip instant_patterns - handled separately)
         for intent_name, intent_def in self.intent_definitions.items():
+            if intent_name == 'instant_patterns':
+                continue  # Skip instant patterns - they're handled by _check_instant_patterns
             confidence, detected_modifiers = self._analyze_intent_match(words, intent_def)
             
             if confidence >= self.min_partial_confidence:
