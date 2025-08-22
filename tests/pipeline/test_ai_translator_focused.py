@@ -219,7 +219,7 @@ class TestAITranslatorFocused:
             # Verify all components exist
             required_components = [
                 'command_filter', 'shell_adapter', 'command_selector',
-                'pattern_engine', 'fuzzy_engine', 'context_manager',
+                'pattern_engine', 'typo_corrector', 'context_manager',
                 'git_context', 'env_context'
             ]
             

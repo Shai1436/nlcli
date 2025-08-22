@@ -86,7 +86,7 @@ class TestAITranslatorInitialization:
         assert hasattr(translator, 'shell_adapter')
         assert hasattr(translator, 'command_selector')
         assert hasattr(translator, 'pattern_engine')
-        assert hasattr(translator, 'fuzzy_engine')
+        assert hasattr(translator, 'typo_corrector')
         assert hasattr(translator, 'context_manager')
         assert hasattr(translator, 'git_context')
         assert hasattr(translator, 'env_context')
@@ -178,25 +178,27 @@ class TestTranslationLogic:
         assert result['enhanced_pattern'] is True
 
     @patch('nlcli.pipeline.ai_translator.OpenAI')
-    def test_fuzzy_engine_tier4(self, mock_openai):
-        """Test Tier 4 - Advanced fuzzy engine"""
+    def test_typo_corrector_tier4(self, mock_openai):
+        """Test Tier 4 - Simple typo corrector"""
         translator = AITranslator(api_key=self.api_key, enable_cache=False)
         
         # Mock components to bypass earlier tiers
-        translator.shell_adapter.correct_typo = Mock(return_value='show processes')
+        translator.shell_adapter.correct_typo = Mock(return_value='lsit files')
         translator.command_filter.is_direct_command = Mock(return_value=False)
         translator.pattern_engine.process_natural_language = Mock(return_value=None)
-        translator.fuzzy_engine.fuzzy_match = Mock(return_value=(
-            'ps aux', 0.85, {'algorithm': 'levenshtein', 'method': 'fuzzy'}
-        ))
+        translator.typo_corrector.get_pipeline_metadata = Mock(return_value={
+            'command': 'ls',
+            'explanation': 'Typo correction: "lsit" → "ls"',
+            'confidence': 0.95,
+            'source': 'typo_corrector_levenshtein'
+        })
         
-        result = translator.translate('show processes')
+        result = translator.translate('lsit files')
         
         assert result is not None
-        assert 'ps' in result['command']
+        assert result['command'] == 'ls'
         assert result.get('tier', 4) == 4  # May or may not have tier field
-        assert result['advanced_fuzzy'] is True
-        assert result['algorithm'] == 'levenshtein'
+        assert result['source'] == 'typo_corrector_levenshtein'
 
     @patch('nlcli.pipeline.ai_translator.OpenAI')
     def test_instant_patterns(self, mock_openai):
@@ -207,7 +209,7 @@ class TestTranslationLogic:
         translator.shell_adapter.correct_typo = Mock(return_value='list files')
         translator.command_filter.is_direct_command = Mock(return_value=False)
         translator.pattern_engine.process_natural_language = Mock(return_value=None)
-        translator.fuzzy_engine.fuzzy_match = Mock(return_value=None)
+        translator.typo_corrector.get_pipeline_metadata = Mock(return_value=None)
         
         result = translator.translate('list files')
         
@@ -234,7 +236,7 @@ class TestCachingSystem:
         translator.shell_adapter.correct_typo = Mock(return_value=unique_input)
         translator.command_filter.is_direct_command = Mock(return_value=False)
         translator.pattern_engine.process_natural_language = Mock(return_value=None)
-        translator.fuzzy_engine.fuzzy_match = Mock(return_value=None)
+        translator.typo_corrector.get_pipeline_metadata = Mock(return_value=None)
         translator.context_manager.get_contextual_suggestions = Mock(return_value=None)
         translator.context_manager.get_context_suggestions = Mock(return_value=None)
         translator.command_selector.is_ambiguous = Mock(return_value=False)
@@ -278,7 +280,7 @@ class TestCachingSystem:
         translator.shell_adapter.correct_typo = Mock(return_value='find python files')
         translator.command_filter.is_direct_command = Mock(return_value=False)
         translator.pattern_engine.process_natural_language = Mock(return_value=None)
-        translator.fuzzy_engine.fuzzy_match = Mock(return_value=None)
+        translator.typo_corrector.get_pipeline_metadata = Mock(return_value=None)
         translator.context_manager.get_contextual_suggestions = Mock(return_value=None)
         translator.context_manager.get_context_suggestions = Mock(return_value=None)
         translator.command_selector.is_ambiguous = Mock(return_value=False)
@@ -318,7 +320,7 @@ class TestContextAwareness:
         translator.shell_adapter.correct_typo = Mock(return_value='repo status')
         translator.command_filter.is_direct_command = Mock(return_value=False)
         translator.pattern_engine.process_natural_language = Mock(return_value=None)
-        translator.fuzzy_engine.fuzzy_match = Mock(return_value=None)
+        translator.typo_corrector.get_pipeline_metadata = Mock(return_value=None)
         
         result = translator.translate('repo status')
         
@@ -344,7 +346,7 @@ class TestContextAwareness:
         translator.shell_adapter.correct_typo = Mock(return_value='start app')
         translator.command_filter.is_direct_command = Mock(return_value=False)
         translator.pattern_engine.process_natural_language = Mock(return_value=None)
-        translator.fuzzy_engine.fuzzy_match = Mock(return_value=None)
+        translator.typo_corrector.get_pipeline_metadata = Mock(return_value=None)
         
         result = translator.translate('start app')
         
@@ -368,7 +370,7 @@ class TestContextAwareness:
         translator.shell_adapter.correct_typo = Mock(return_value='list containers')
         translator.command_filter.is_direct_command = Mock(return_value=False)
         translator.pattern_engine.process_natural_language = Mock(return_value=None)
-        translator.fuzzy_engine.fuzzy_match = Mock(return_value=None)
+        translator.typo_corrector.get_pipeline_metadata = Mock(return_value=None)
         translator._check_git_context_commands = Mock(return_value=None)
         translator._check_environment_context_commands = Mock(return_value=None)
         translator.context_manager.get_contextual_suggestions = Mock(return_value=contextual_suggestions)
@@ -401,7 +403,7 @@ class TestErrorHandling:
         translator.shell_adapter.correct_typo = Mock(return_value='complex command')
         translator.command_filter.is_direct_command = Mock(return_value=False)
         translator.pattern_engine.process_natural_language = Mock(return_value=None)
-        translator.fuzzy_engine.fuzzy_match = Mock(return_value=None)
+        translator.typo_corrector.get_pipeline_metadata = Mock(return_value=None)
         translator.context_manager.get_contextual_suggestions = Mock(return_value=None)
         translator.context_manager.get_context_suggestions = Mock(return_value=None)
         translator.command_selector.is_ambiguous = Mock(return_value=False)
@@ -426,7 +428,7 @@ class TestErrorHandling:
         translator.shell_adapter.correct_typo = Mock(return_value='test command')
         translator.command_filter.is_direct_command = Mock(return_value=False)
         translator.pattern_engine.process_natural_language = Mock(return_value=None)
-        translator.fuzzy_engine.fuzzy_match = Mock(return_value=None)
+        translator.typo_corrector.get_pipeline_metadata = Mock(return_value=None)
         translator.context_manager.get_contextual_suggestions = Mock(return_value=None)
         translator.context_manager.get_context_suggestions = Mock(return_value=None)
         translator.command_selector.is_ambiguous = Mock(return_value=False)
@@ -445,7 +447,7 @@ class TestErrorHandling:
         translator.shell_adapter.correct_typo = Mock(return_value='unknown command')
         translator.command_filter.is_direct_command = Mock(return_value=False)
         translator.pattern_engine.process_natural_language = Mock(return_value=None)
-        translator.fuzzy_engine.fuzzy_match = Mock(return_value=None)
+        translator.typo_corrector.get_pipeline_metadata = Mock(return_value=None)
         translator.context_manager.get_contextual_suggestions = Mock(return_value=None)
         translator.context_manager.get_context_suggestions = Mock(return_value=None)
         translator.command_selector.is_ambiguous = Mock(return_value=False)
@@ -627,7 +629,7 @@ class TestAdvancedScenarios:
         translator.shell_adapter.correct_typo = Mock(return_value='ambiguous_cmd')
         translator.command_filter.is_direct_command = Mock(return_value=False)
         translator.pattern_engine.process_natural_language = Mock(return_value=None)
-        translator.fuzzy_engine.fuzzy_match = Mock(return_value=None)
+        translator.typo_corrector.get_pipeline_metadata = Mock(return_value=None)
         translator._check_instant_patterns = Mock(return_value=None)
         translator._check_git_context_commands = Mock(return_value=None)
         translator._check_environment_context_commands = Mock(return_value=None)
@@ -692,7 +694,7 @@ class TestAdvancedScenarios:
         translator.shell_adapter.correct_typo = Mock(return_value='show files')
         translator.command_filter.is_direct_command = Mock(return_value=False)
         translator.pattern_engine.process_natural_language = Mock(return_value=None)
-        translator.fuzzy_engine.fuzzy_match = Mock(return_value=None)
+        translator.typo_corrector.get_pipeline_metadata = Mock(return_value=None)
         translator._check_git_context_commands = Mock(return_value=None)
         translator._check_environment_context_commands = Mock(return_value=None)
         translator.context_manager.get_contextual_suggestions = Mock(return_value=None)
