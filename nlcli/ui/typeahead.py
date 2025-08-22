@@ -139,7 +139,7 @@ class TypeaheadEngine:
         
         return 0.0
     
-    def get_suggestions(self, prefix: str, max_results: int = None) -> List[Tuple[str, float]]:
+    def get_suggestions(self, prefix: str, max_results: Optional[int] = None) -> List[Tuple[str, float]]:
         """
         Get autocomplete suggestions for the given prefix
         
@@ -287,10 +287,12 @@ class TypeaheadEngine:
                     if prefix.lower() in pattern.lower():
                         suggestions.append(pattern)
             
-            # Try L4: Advanced Fuzzy Engine
-            if hasattr(self.ai_translator, 'fuzzy_engine'):
-                fuzzy_matches = self.ai_translator.fuzzy_engine.find_fuzzy_matches(prefix)
-                suggestions.extend(fuzzy_matches[:3])
+            # Try L4: Simple Typo Corrector
+            if hasattr(self.ai_translator, 'typo_corrector'):
+                # Simple typo correction - check if input looks like a typo
+                typo_result = self.ai_translator.typo_corrector.get_pipeline_metadata(prefix)
+                if typo_result and 'command' in typo_result:
+                    suggestions.append(typo_result['command'])
             
         except Exception as e:
             logger.debug(f"Pipeline suggestion error: {e}")

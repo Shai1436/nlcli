@@ -9,7 +9,7 @@ from nlcli.pipeline.ai_translator import AITranslator
 from nlcli.pipeline.shell_adapter import ShellAdapter
 from nlcli.pipeline.command_filter import CommandFilter
 from nlcli.pipeline.pattern_engine import PatternEngine
-from nlcli.pipeline.fuzzy_engine import AdvancedFuzzyEngine
+from nlcli.pipeline.simple_typo_corrector import SimpleTypoCorrector
 from nlcli.pipeline.semantic_matcher import SemanticMatcher
 
 app = Flask(__name__)
@@ -19,7 +19,7 @@ translator = AITranslator()
 shell_adapter = ShellAdapter()
 command_filter = CommandFilter()
 pattern_engine = PatternEngine()
-fuzzy_engine = AdvancedFuzzyEngine()
+typo_corrector = SimpleTypoCorrector()
 semantic_matcher = SemanticMatcher()
 
 @app.route('/health')
@@ -124,26 +124,26 @@ def translate_command():
                     'details': 'Continuing to next level'
                 })
                 
-                # Level 4: Fuzzy Engine
+                # Level 4: Simple Typo Corrector  
                 level4_start = time.time()
-                level4_result = fuzzy_engine.get_pipeline_metadata(natural_input, context)
+                level4_result = typo_corrector.get_pipeline_metadata(natural_input, context)
                 level4_time = (time.time() - level4_start) * 1000
                 
                 if level4_result:
                     pipeline_results['final_result'] = level4_result
                     pipeline_results['pipeline_breakdown'].append({
                         'level': 4,
-                        'name': 'Fuzzy Engine',
-                        'description': 'Typo correction',
+                        'name': 'Typo Corrector',
+                        'description': 'Levenshtein + Phonetic correction',
                         'time_ms': round(level4_time, 3),
                         'result': 'MATCH FOUND',
-                        'details': f"Corrected: {level4_result.get('match_type', 'fuzzy')}"
+                        'details': f"Corrected: {level4_result.get('source', 'typo_correction')}"
                     })
                 else:
                     pipeline_results['pipeline_breakdown'].append({
                         'level': 4,
-                        'name': 'Fuzzy Engine',
-                        'description': 'Typo correction',
+                        'name': 'Typo Corrector',
+                        'description': 'Levenshtein + Phonetic correction',
                         'time_ms': round(level4_time, 3),
                         'result': 'No match',
                         'details': 'Continuing to next level'

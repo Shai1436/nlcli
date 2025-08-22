@@ -32,6 +32,7 @@ nlcli/pipeline/partial_match.py
 nlcli/pipeline/pattern_engine.py
 nlcli/pipeline/semantic_matcher.py
 nlcli/pipeline/shell_adapter.py
+nlcli/pipeline/simple_typo_corrector.py
 nlcli/storage/__init__.py
 nlcli/storage/cache_manager.py
 nlcli/storage/cache_migrator.py

@@ -85,8 +85,9 @@ class OutputFormatter:
             'intelligent_pattern': ('🎯', 'bright_cyan', 'Smart pattern'),
             'context_aware': ('🎯', 'bright_cyan', 'Context aware'),
             
-            # Level 4: Fuzzy Engine
-            'fuzzy_engine': ('🔍', 'bright_blue', 'Fuzzy match'),
+            # Level 4: Typo Corrector
+            'typo_corrector_levenshtein': ('🔍', 'bright_blue', 'Typo correction'),
+            'typo_corrector_phonetic': ('🔊', 'bright_blue', 'Phonetic correction'),
             
             # Level 5: Semantic Matcher
             'semantic_matcher': ('🧠', 'bright_magenta', 'Semantic ML'),

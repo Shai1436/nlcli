@@ -50,7 +50,7 @@ class AITranslator:
         from .shell_adapter import ShellAdapter
         from .command_filter import CommandFilter 
         from .pattern_engine import PatternEngine
-        from .fuzzy_engine import AdvancedFuzzyEngine
+        from .simple_typo_corrector import SimpleTypoCorrector
         from ..ui.command_selector import CommandSelector
         
         # Level 1: Context (owns ALL context managers)
@@ -58,7 +58,7 @@ class AITranslator:
         
         # Level 2,4: Processing components (Pattern Engine removed - handled by Semantic Matcher)
         self.command_filter = CommandFilter()
-        self.fuzzy_engine = AdvancedFuzzyEngine()
+        self.typo_corrector = SimpleTypoCorrector()
         self.command_selector = CommandSelector()
         
         # Load persistent context from shell adapter
@@ -82,7 +82,7 @@ class AITranslator:
         """
         
         try:
-            # STREAMLINED PIPELINE FLOW (Levels 1,2,4,5,6 - Skipping Pattern Engine)
+            # STREAMLINED PIPELINE FLOW (Levels 1,2,4,5,6 - Simplified Architecture)
             
             # Level 1: Shell Adapter - Get context
             context = self.shell_adapter.get_pipeline_metadata(natural_language)
@@ -94,10 +94,10 @@ class AITranslator:
                 logger.debug(f"Level 2 (Command Filter): Direct match found")
                 return {**level2_result, 'cached': False, 'instant': True}
             
-            # Level 4: Fuzzy Engine - Fuzzy matching + typo correction
-            level4_result = self.fuzzy_engine.get_pipeline_metadata(natural_language, context)
+            # Level 4: Typo Corrector - Simple typo correction (Levenshtein + Phonetic)
+            level4_result = self.typo_corrector.get_pipeline_metadata(natural_language, context)
             if level4_result:
-                logger.debug(f"Level 4 (Fuzzy Engine): Fuzzy match found")
+                logger.debug(f"Level 4 (Typo Corrector): Typo correction found")
                 return {**level4_result, 'cached': False, 'instant': True}
             
             # Level 5: Semantic Matcher - Intelligent Intent Classification
