@@ -616,6 +616,11 @@ class SemanticMatcher:
         else:
             confidence = 0.0
         
+        # Special boost for find_files when specific file type is detected
+        if 'type' in detected_modifiers and confidence > 0:
+            # Strong boost for file type searches - this is a strong signal for find_files intent
+            confidence = min(0.95, confidence + 0.3)
+        
         return confidence, detected_modifiers
     
     def _semantic_word_similarity(self, word1: str, word2: str) -> float:
@@ -741,8 +746,7 @@ class SemanticMatcher:
             'cplus': 'cpp',
             'cplusplus': 'cpp',
             
-            # Web Technologies
-            'javascript': 'js',
+            # Web Technologies  
             'typescript': 'ts',
             'markup': 'html',
             'stylesheet': 'css',
