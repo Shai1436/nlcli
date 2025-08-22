@@ -114,7 +114,37 @@ nlcli
 > ansible-playbook main.yml  # Configuration management
 ```
 
+### Windows Installation Guide
 
+If you see a PATH warning during installation or `nlcli` command is not recognized:
+
+**Quick Solution:**
+```cmd
+# Try running with Python module syntax
+python -m nlcli
+```
+
+**Permanent Solution (Recommended):**
+1. Open **System Properties** → **Advanced** → **Environment Variables**
+2. Under **User Variables**, select **Path** and click **Edit**
+3. Click **New** and add: `%APPDATA%\Python\Python311\Scripts`
+   (Replace `Python311` with your Python version if different)
+4. Click **OK** to save all dialogs
+5. Open a **new** Command Prompt or PowerShell window
+6. Run `nlcli` - it should now work directly
+
+**Find Your Python Scripts Directory:**
+```cmd
+# Run this to find your exact Scripts path
+python -c "import site; print(site.USER_BASE + '\\Scripts')"
+# Then add the displayed path to your PATH environment variable
+```
+
+**Verification:**
+```cmd
+nlcli --version
+# Should display: nlcli v1.2.0
+```
 
 ## 🔑 Setup & First Run
 
