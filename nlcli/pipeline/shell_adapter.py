@@ -56,7 +56,7 @@ class ShellAdapter:
     
     def _load_context_metadata(self):
         """Load system context metadata for pipeline (Level 1)"""
-        # Context-only metadata - typo corrections moved to fuzzy_engine (Level 4)
+        # Context-only metadata - typo corrections moved to typo_corrector (Level 4)
         pass
     
     def _detect_shell(self) -> str:

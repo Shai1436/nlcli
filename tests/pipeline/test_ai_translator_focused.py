@@ -118,7 +118,7 @@ class TestAITranslatorFocused:
             translator.client = mock_client
             translator.enable_cache = False
             translator.cache_manager = None
-            translator.platform_info = {'platform': 'Linux'}
+            # Platform info is handled by shell adapter
             
             # Mock internal methods to bypass other tiers
             translator.command_filter = Mock()
@@ -147,7 +147,7 @@ class TestAITranslatorFocused:
             translator = AITranslator()
             translator.api_key = self.api_key
             translator.client = mock_client
-            translator.platform_info = {'platform': 'Linux'}
+            # Platform info is handled by shell adapter
             
             result = translator.translate("test query")
             assert result is None
@@ -171,7 +171,7 @@ class TestAITranslatorFocused:
             translator = AITranslator()
             translator.api_key = self.api_key
             translator.client = mock_client
-            translator.platform_info = {'platform': 'Linux'}
+            # Platform info is handled by shell adapter
             
             result = translator.translate("test query")
             assert result is None
@@ -200,15 +200,14 @@ class TestAITranslatorFocused:
             assert translator.enable_cache is False
 
     def test_platform_info_collection(self):
-        """Test that platform information is collected"""
+        """Test that platform information is available via shell adapter"""
         
         with patch('nlcli.pipeline.ai_translator.OpenAI'):
             translator = AITranslator(api_key=self.api_key)
             
-            # Verify platform info exists
-            assert hasattr(translator, 'platform_info')
-            assert isinstance(translator.platform_info, dict)
-            assert 'platform' in translator.platform_info
+            # Verify platform info is available through shell adapter
+            assert hasattr(translator.shell_adapter, 'platform')
+            assert translator.shell_adapter.platform is not None
 
     def test_component_existence(self):
         """Test that all expected components are created"""
@@ -219,8 +218,7 @@ class TestAITranslatorFocused:
             # Verify all components exist
             required_components = [
                 'command_filter', 'shell_adapter', 'command_selector',
-                'pattern_engine', 'typo_corrector', 'context_manager',
-                'git_context', 'env_context'
+                'typo_corrector'
             ]
             
             for component in required_components:
